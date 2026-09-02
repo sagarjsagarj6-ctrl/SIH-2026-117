@@ -1,34 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  --color-bg-primary: #07090e;
-  --color-bg-surface: #0e121d;
-  --color-bg-card: #151b2c;
-  --color-bg-glass: rgba(21, 27, 44, 0.7);
-
-  --color-accent-cyan: #06b6d4;
-  --color-accent-indigo: #6366f1;
-  --color-accent-purple: #a855f7;
-  --color-accent-green: #10b981;
-  --color-accent-amber: #f59e0b;
-  --color-accent-rose: #f43f5e;
-
-  --color-text-main: #f3f4f6;
-  --color-text-muted: #9ca3af;
-  --color-text-dim: #6b7280;
-}
-
-:root {
+/* Theme 1: Sovereign Cyber (Default) */
+:root, [data-theme="sovereign-cyber"] {
   --bg-primary: #07090e;
   --bg-surface: #0e121d;
   --bg-card: #151b2c;
-  --bg-glass: rgba(21, 27, 44, 0.7);
+  --bg-glass: rgba(21, 27, 44, 0.75);
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-highlight: rgba(99, 102, 241, 0.3);
+  --border-highlight: rgba(99, 102, 241, 0.35);
   
   --accent-cyan: #06b6d4;
   --accent-indigo: #6366f1;
@@ -46,6 +26,60 @@
 
   --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
   --shadow-cyan: 0 0 25px rgba(6, 182, 212, 0.2);
+}
+
+/* Theme 2: Corporate Slate */
+[data-theme="corporate-slate"] {
+  --bg-primary: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-card: #273549;
+  --bg-glass: rgba(30, 41, 59, 0.8);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-highlight: rgba(56, 189, 248, 0.4);
+  
+  --accent-cyan: #38bdf8;
+  --accent-indigo: #818cf8;
+  --accent-purple: #c084fc;
+  --accent-green: #34d399;
+  --accent-amber: #fbbf24;
+  --accent-rose: #fb7185;
+  
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --text-dim: #94a3b8;
+
+  --font-main: 'Outfit', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.2);
+  --shadow-cyan: 0 0 25px rgba(52, 211, 153, 0.2);
+}
+
+/* Theme 3: Quantum Matrix */
+[data-theme="quantum-matrix"] {
+  --bg-primary: #04130e;
+  --bg-surface: #0a2219;
+  --bg-card: #103326;
+  --bg-glass: rgba(10, 34, 25, 0.8);
+  --border-color: rgba(16, 185, 129, 0.2);
+  --border-highlight: rgba(0, 255, 204, 0.45);
+  
+  --accent-cyan: #00f5d4;
+  --accent-indigo: #10b981;
+  --accent-purple: #6ee7b7;
+  --accent-green: #00ff87;
+  --accent-amber: #f59e0b;
+  --accent-rose: #ff4757;
+  
+  --text-main: #e6fcf5;
+  --text-muted: #a3e635;
+  --text-dim: #6ee7b7;
+
+  --font-main: 'Space Grotesk', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  --shadow-glow: 0 0 30px rgba(16, 185, 129, 0.25);
+  --shadow-cyan: 0 0 25px rgba(0, 245, 212, 0.25);
 }
 
 body {

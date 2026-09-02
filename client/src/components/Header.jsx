@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useHardware } from '../context/HardwareContext';
+import { ThemeSelector } from './ThemeSelector';
 import { ShieldCheck, User, Building2, Cpu, LogOut, RefreshCw, ShieldAlert } from 'lucide-react';
 
 export const Header = ({ onChangeHardware }) => {
@@ -57,7 +58,10 @@ export const Header = ({ onChangeHardware }) => {
       </div>
 
       {/* User Session & System Profile Info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* UI/UX Theme & Font Selector */}
+        <ThemeSelector />
+
         {/* Active AI Profile Button */}
         <button 
           onClick={onChangeHardware}
