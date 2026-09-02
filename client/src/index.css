@@ -82,10 +82,13 @@
   --shadow-cyan: 0 0 25px rgba(0, 245, 212, 0.25);
 }
 
+body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, a, p, span {
+  font-family: var(--font-main);
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-main);
-  font-family: var(--font-main);
   overflow-x: hidden;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

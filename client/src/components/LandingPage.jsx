@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemeSelector } from './ThemeSelector';
 import { 
   ShieldCheck, Cpu, Database, Network, Lock, Zap, 
   Bot, FileText, BarChart3, ChevronRight, Layers, UserCheck, 
@@ -59,7 +60,8 @@ export const LandingPage = ({ onLaunchClick }) => {
           <a href="#hardware" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Hardware Layer</a>
         </div>
 
-        <div style={{ display: 'flex', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <ThemeSelector />
           <button className="btn-secondary" onClick={onLaunchClick}>
             Enterprise Login
           </button>
