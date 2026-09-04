@@ -1,12 +1,13 @@
 import React from 'react';
-import { ThemeSelector } from './ThemeSelector';
 import { 
   ShieldCheck, Cpu, Database, Network, Lock, Zap, 
   Bot, FileText, BarChart3, ChevronRight, Layers, UserCheck, 
   Terminal, ShieldAlert, Sparkles, CheckCircle2
 } from 'lucide-react';
 
-export const LandingPage = ({ onLaunchClick }) => {
+export const LandingPage = ({ onLaunchClick, onLoginClick }) => {
+  const handleLaunch = onLaunchClick || onLoginClick;
+  const handleLogin = onLoginClick || onLaunchClick;
   return (
     <div style={{ background: 'var(--bg-primary)', color: 'var(--text-main)', minHeight: '100vh' }}>
       {/* Top Banner */}
@@ -60,12 +61,11 @@ export const LandingPage = ({ onLaunchClick }) => {
           <a href="#hardware" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Hardware Layer</a>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <ThemeSelector />
-          <button className="btn-secondary" onClick={onLaunchClick}>
+        <div style={{ display: 'flex', gap: '14px' }}>
+          <button className="btn-secondary" onClick={handleLogin}>
             Enterprise Login
           </button>
-          <button className="btn-primary" onClick={onLaunchClick}>
+          <button className="btn-primary" onClick={handleLaunch}>
             Launch Workbench <ChevronRight size={18} />
           </button>
         </div>
@@ -107,10 +107,10 @@ export const LandingPage = ({ onLaunchClick }) => {
         </p>
 
         <div style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '60px' }}>
-          <button className="btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }} onClick={onLaunchClick}>
+          <button className="btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }} onClick={handleLaunch}>
             Enter Sovereign Workbench <ChevronRight size={20} />
           </button>
-          <button className="btn-secondary" style={{ padding: '14px 28px', fontSize: '1rem' }} onClick={onLaunchClick}>
+          <button className="btn-secondary" style={{ padding: '14px 28px', fontSize: '1rem' }} onClick={handleLogin}>
             View Demo Credentials
           </button>
         </div>

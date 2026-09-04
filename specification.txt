@@ -1,0 +1,1962 @@
+# MASTER SPECIFICATION-DRIVEN DEVELOPMENT PROMPT
+
+## SIH26117 — Sovereign On-Premise Agentic AI Workbench
+
+You are the **Lead Software Architect, AI Engineer, Data Engineer, Data Scientist, Security Engineer, DevOps Engineer, UI/UX Designer, and SDD implementation planner** for this project.
+
+Your task is to design and implement a production-quality prototype for **SIH26117** using **Specification-Driven Development (SDD)**.
+
+Do not treat this as a simple chatbot.
+
+The final product is a:
+
+> **Secure, local, hardware-aware, multimodal, multi-agent enterprise AI workbench that allows authorized users to analyze confidential organizational data without sending that data to external AI services.**
+
+The system must be modular, explainable, auditable, secure, model-agnostic, and deployable on local systems and private LAN/MAN infrastructure.
+
+---
+
+# 1. NON-NEGOTIABLE PRINCIPLES
+
+The following requirements are mandatory.
+
+1. Confidential enterprise data must remain inside the organization's controlled infrastructure.
+2. The system must support fully local LLM inference.
+3. Do not require public cloud LLM APIs for confidential data.
+4. The system must support low-resource hardware.
+5. The system must automatically detect available hardware.
+6. The system must automatically select an appropriate installed local model.
+7. The system must support model switching when task complexity changes.
+8. The system must NEVER select a model that exceeds available hardware resources.
+9. The system must support multiple local models.
+10. The system must be model-provider/model-family agnostic.
+11. The system must use controlled multi-agent orchestration.
+12. The system must enforce RBAC before accessing data or executing tools.
+13. AI-generated factual answers must be grounded in retrieved data or documents whenever applicable.
+14. AI must not fabricate numerical results, citations, sources, tool execution, or analysis.
+15. Deterministic calculations must be performed by Python/SQL tools rather than by the LLM.
+16. Original datasets must never be silently overwritten.
+17. Sensitive/destructive operations require human approval.
+18. All important security and agent actions must be auditable.
+19. The UI must be understandable by non-technical employees.
+20. Data Scientists must have access to advanced analytical functionality.
+21. The architecture must support future model fine-tuning/training without requiring a redesign.
+
+---
+
+# 2. SYSTEM ORGANIZATION
+
+Divide the system into exactly three major categories containing six core subdivisions.
+
+## CATEGORY A — DATA FOUNDATION
+
+### A1. Data Engineering & Ingestion
+
+Responsible for:
+
+* File ingestion
+* Database ingestion
+* Data validation
+* Data classification
+* Data preprocessing
+* Data quality
+* Metadata extraction
+* Versioning
+* Storage
+
+Supported formats:
+
+* PDF
+* DOCX
+* TXT
+* CSV
+* XLSX
+* JSON
+* Images
+* Structured database records
+
+---
+
+### A2. Knowledge & RAG Platform
+
+Responsible for:
+
+* Document processing
+* OCR
+* Chunking
+* Embeddings
+* Vector indexing
+* Semantic retrieval
+* Metadata filtering
+* Reranking
+* Citation generation
+* Document versioning
+
+Use a local vector database such as Qdrant.
+
+---
+
+# CATEGORY B — AI INTELLIGENCE
+
+### B1. Multi-Agent AI
+
+Use **LangGraph** as the primary orchestration framework.
+
+Implement:
+
+* Supervisor Agent
+* RAG/Document Agent
+* Data Science Agent
+* Vision Agent
+* Report Agent
+
+The Supervisor Agent must:
+
+* Understand user intent
+* Classify task complexity
+* Select appropriate agents
+* Select appropriate tools
+* Maintain state
+* Combine agent results
+* Trigger human approval where required
+
+Agents must not have unrestricted access to tools or data.
+
+---
+
+### B2. Data Science & ML Intelligence
+
+Provide a controlled Data Science engine.
+
+Use:
+
+* Python
+* Pandas
+* NumPy
+* SciPy
+* Statsmodels
+* Scikit-learn
+* XGBoost
+* Plotly
+
+Support:
+
+* Data profiling
+* Data cleaning
+* EDA
+* Statistics
+* Correlation
+* Outlier detection
+* Anomaly detection
+* Forecasting
+* Classification
+* Regression
+* Clustering
+* Model evaluation
+* Prediction
+* Explainability
+* Visualization
+
+Expose deterministic functions as controlled agent tools.
+
+Examples:
+
+```text
+profile_dataset()
+clean_dataset()
+describe_dataset()
+analyze_correlation()
+detect_outliers()
+detect_anomalies()
+generate_visualization()
+run_statistical_test()
+forecast()
+train_model()
+evaluate_model()
+predict()
+explain_prediction()
+```
+
+The LLM should decide WHEN to use these tools, but the tools must perform the actual computation.
+
+---
+
+# CATEGORY C — SECURE WORKBENCH
+
+### C1. User Interface & Experience
+
+Build a modern enterprise AI interface.
+
+Technology:
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* shadcn/ui
+* Lucide icons
+* Plotly/Recharts
+
+Primary navigation:
+
+```text
+Home
+AI Chat
+Data
+Knowledge
+Analytics
+Agents
+Reports
+History
+Settings
+Admin
+```
+
+The UI must be simple for ordinary users and powerful for Data Scientists and administrators.
+
+---
+
+### C2. Security, Infrastructure & Deployment
+
+Use:
+
+* Keycloak
+* PostgreSQL
+* Docker
+* Linux
+* NVIDIA CUDA where applicable
+* Prometheus
+* Grafana
+
+Implement:
+
+* Authentication
+* RBAC
+* Authorization
+* Department-level access
+* Document-level access
+* Tool permissions
+* Agent permissions
+* Audit logging
+* Encryption
+* Network isolation
+* Human approval
+* Secure configuration
+
+The system must be deployable inside a private LAN/MAN.
+
+---
+
+# 3. HARDWARE-AWARE LOCAL AI ARCHITECTURE
+
+This is a core requirement.
+
+The application must run on local systems with different hardware capabilities.
+
+At minimum support:
+
+## Profile 1 — Basic
+
+Example:
+
+```text
+RAM: 8 GB+
+Storage: 512 GB+
+GPU: optional
+```
+
+Use an appropriately small/quantized local model.
+
+Target workloads:
+
+* Basic chat
+* Simple RAG
+* Summarization
+* Simple document Q&A
+* Lightweight data analysis
+
+---
+
+## Profile 2 — Standard
+
+Example:
+
+```text
+RAM: 16 GB+
+Storage: 1 TB+
+GPU: preferred
+```
+
+Use a stronger compatible local model.
+
+Target workloads:
+
+* Complex RAG
+* Multi-step reasoning
+* Data Science tasks
+* Larger context
+* Multimodal tasks
+
+---
+
+## Profile 3 — Advanced
+
+For machines with substantially higher RAM/VRAM:
+
+* Allow larger local models
+* Complex reasoning
+* Large-context workloads
+* Complex multimodal tasks
+* More sophisticated agent workflows
+
+Do not hardcode a specific model to a hardware profile.
+
+Instead create a dynamic hardware capability detector.
+
+---
+
+# 4. HARDWARE DETECTION
+
+On application startup or environment setup, detect:
+
+```text
+CPU
+CPU cores
+RAM
+Available RAM
+GPU
+GPU VRAM
+Available VRAM
+Storage
+Available storage
+Operating system
+CUDA availability
+```
+
+Create a hardware capability object.
+
+Example:
+
+```json
+{
+  "ram_gb": 16,
+  "storage_gb": 1024,
+  "gpu_available": true,
+  "vram_gb": 8,
+  "cuda_available": true
+}
+```
+
+Never assume hardware specifications.
+
+---
+
+# 5. MODEL REGISTRY
+
+Create a Model Registry.
+
+Each installed model must have metadata:
+
+```text
+Model ID
+Name
+Version
+Parameter size
+Quantization
+RAM requirement
+VRAM requirement
+Context length
+Vision capability
+Tool-calling capability
+Reasoning capability
+Supported languages
+Status
+Location
+Checksum/version
+```
+
+Example:
+
+```text
+Model Profile
+
+Name: Local-General
+Size: configurable
+Quantization: configurable
+Minimum RAM: configurable
+Minimum VRAM: configurable
+Context: configurable
+Capabilities:
+    RAG
+    Tool Calling
+    General Chat
+```
+
+The architecture must allow adding/removing models without modifying the core application.
+
+---
+
+# 6. MODEL ORCHESTRATOR
+
+Create a dedicated Model Orchestration Layer.
+
+Responsibilities:
+
+```text
+Hardware Detection
+       ↓
+Task Complexity Detection
+       ↓
+Model Capability Matching
+       ↓
+Resource Availability Check
+       ↓
+Model Ranking
+       ↓
+Model Selection
+       ↓
+Model Loading
+       ↓
+Inference
+       ↓
+Unload/Swap when appropriate
+```
+
+The model selector must consider:
+
+* Hardware
+* Available memory
+* GPU VRAM
+* Task complexity
+* Required context length
+* Vision requirements
+* Tool-calling requirements
+* Latency preference
+* User-selected performance mode
+
+---
+
+# 7. TASK COMPLEXITY LEVEL
+
+Classify requests as:
+
+```text
+LOW
+MEDIUM
+HIGH
+```
+
+Example:
+
+### LOW
+
+```text
+"Summarize this document."
+```
+
+### MEDIUM
+
+```text
+"Compare these two maintenance reports."
+```
+
+### HIGH
+
+```text
+"Analyze the sensor dataset, detect anomalies,
+compare them against maintenance history,
+retrieve the relevant SOP, and generate
+an evidence-backed report."
+```
+
+The system should automatically select the smallest model capable of completing the task reliably.
+
+---
+
+# 8. MODEL SELECTION RULE
+
+Use this logic:
+
+```text
+User Query
+    ↓
+Task Complexity
+    ↓
+Required Capabilities
+    ↓
+Hardware Capability
+    ↓
+Available Models
+    ↓
+Remove incompatible models
+    ↓
+Rank remaining models
+    ↓
+Select best compatible model
+```
+
+Compatibility must be a hard constraint.
+
+If no compatible model exists:
+
+```text
+Do not execute.
+
+Explain:
+"The requested task requires more local
+compute resources than are currently available."
+```
+
+Do not silently fall back to a public cloud model.
+
+---
+
+# 9. POST-LOGIN INTERMEDIATE SCREEN
+
+After successful authentication, do NOT immediately send the user to chat.
+
+Show an **AI Environment Setup screen**.
+
+Flow:
+
+```text
+LOGIN
+  ↓
+AUTHENTICATION
+  ↓
+RBAC
+  ↓
+HARDWARE DETECTION
+  ↓
+MODEL AVAILABILITY CHECK
+  ↓
+AI ENVIRONMENT SETUP
+  ↓
+WORKBENCH
+```
+
+The screen should show:
+
+```text
+AI Environment
+
+Hardware detected:
+RAM       16 GB
+Storage   1 TB
+GPU       Available
+VRAM      8 GB
+
+Recommended mode:
+
+⚡ FAST
+Fastest response
+
+⚖ BALANCED
+Recommended for everyday work
+
+🧠 ADVANCED
+Better reasoning, higher resource usage
+
+[Continue]
+```
+
+Normal users should NOT need to understand parameter counts or quantization.
+
+Advanced users can access:
+
+```text
+Advanced Model Settings
+```
+
+where they can inspect:
+
+* Model
+* Version
+* RAM requirements
+* VRAM requirements
+* Context size
+* Quantization
+* Capabilities
+* Performance
+
+---
+
+# 10. AUTOMATIC MODEL SWITCHING
+
+Once the user enters the workbench, model selection should normally become automatic.
+
+Example:
+
+```text
+User:
+"Summarize this PDF."
+
+        ↓
+
+LOW complexity
+
+        ↓
+
+Light model
+```
+
+Then:
+
+```text
+User:
+"Analyze 500,000 sensor records,
+perform anomaly detection,
+compare with maintenance records,
+and generate a technical report."
+
+        ↓
+
+HIGH complexity
+
+        ↓
+
+Model Orchestrator
+        ↓
+Check hardware
+        ↓
+Select stronger compatible model
+        ↓
+Run workflow
+```
+
+The system must avoid unnecessary model switching.
+
+Implement model lifecycle management so that frequently used models can remain loaded when resources permit.
+
+---
+
+# 11. LOCAL MODEL RUNTIME
+
+Support:
+
+### Development
+
+Ollama or equivalent local runtime.
+
+### Higher-performance deployment
+
+vLLM or equivalent local inference server.
+
+Abstract the runtime behind an interface:
+
+```text
+LLMProvider
+ ├── generate()
+ ├── stream()
+ ├── chat()
+ ├── tool_call()
+ ├── health_check()
+ └── capabilities()
+```
+
+The application must not depend directly on a single model runtime.
+
+---
+
+# 12. MULTI-AGENT ARCHITECTURE
+
+Use LangGraph.
+
+Architecture:
+
+```text
+                         USER
+                           ↓
+                    SUPERVISOR AGENT
+                           ↓
+             ┌─────────────┼─────────────┐
+             ↓             ↓             ↓
+         RAG AGENT     DATA AGENT    VISION AGENT
+             ↓             ↓             ↓
+          QDRANT       PYTHON/ML       VLM/OCR
+             │             │             │
+             └─────────────┼─────────────┘
+                           ↓
+                     REPORT AGENT
+                           ↓
+                      VALIDATION
+                           ↓
+                       RESPONSE
+```
+
+---
+
+# 13. RAG AGENT
+
+Capabilities:
+
+```text
+search_documents()
+retrieve_document()
+retrieve_sections()
+compare_documents()
+summarize_document()
+```
+
+The agent must apply authorization before retrieval.
+
+RAG responses must include:
+
+* Document
+* Page
+* Section
+* Relevant excerpt/context
+* Version where applicable
+
+Do not generate fake citations.
+
+---
+
+# 14. DATA SCIENCE AGENT
+
+Capabilities:
+
+```text
+profile_dataset()
+clean_dataset()
+run_eda()
+detect_anomalies()
+run_statistics()
+generate_visualization()
+forecast()
+train_model()
+evaluate_model()
+predict()
+explain_prediction()
+```
+
+Every tool must validate inputs and return structured results.
+
+---
+
+# 15. VISION AGENT
+
+Support:
+
+* OCR
+* Image understanding
+* Diagram analysis
+* Multimodal document processing
+
+Use a locally deployable vision-capable model where required.
+
+The system must distinguish:
+
+```text
+Observed from image
+vs
+Inferred by AI
+vs
+Verified from enterprise data
+```
+
+---
+
+# 16. REPORT AGENT
+
+Combine:
+
+```text
+RAG results
++
+Data Science results
++
+Vision results
++
+Evidence
+```
+
+Generate:
+
+* Executive summary
+* Technical summary
+* Charts
+* Tables
+* Evidence
+* Sources
+* Methodology
+* Limitations
+
+---
+
+# 17. DATA INGESTION PIPELINE
+
+Implement:
+
+```text
+SOURCE
+ ↓
+UPLOAD
+ ↓
+AUTHORIZATION
+ ↓
+FILE VALIDATION
+ ↓
+TYPE DETECTION
+ ↓
+CLASSIFICATION
+ ↓
+PREPROCESSING
+ ↓
+QUALITY CHECK
+ ↓
+METADATA
+ ↓
+STORAGE
+ ↓
+INDEXING
+ ↓
+READY
+```
+
+Never overwrite the original file.
+
+---
+
+# 18. DATA CLASSIFICATION
+
+Support:
+
+```text
+PUBLIC
+INTERNAL
+CONFIDENTIAL
+RESTRICTED
+```
+
+Store classification with every document/dataset.
+
+Retrieval must enforce classification and user permissions.
+
+---
+
+# 19. DATA SCIENCE PIPELINE
+
+```text
+Dataset
+ ↓
+Schema Detection
+ ↓
+Data Quality
+ ↓
+Profiling
+ ↓
+Cleaning
+ ↓
+EDA
+ ↓
+Statistical Analysis
+ ↓
+ML / Anomaly Detection
+ ↓
+Evaluation
+ ↓
+Visualization
+ ↓
+Report
+```
+
+---
+
+# 20. SECURITY MODEL
+
+Use Keycloak for authentication and RBAC.
+
+Roles:
+
+```text
+ADMIN
+DATA_SCIENTIST
+ENGINEER
+EMPLOYEE
+```
+
+Every protected operation must perform authorization.
+
+Security must exist at:
+
+```text
+UI
+ ↓
+API
+ ↓
+Agent
+ ↓
+Tool
+ ↓
+Data
+```
+
+Never rely solely on frontend restrictions.
+
+---
+
+# 21. TOOL PERMISSION SYSTEM
+
+Every tool must have:
+
+```text
+Tool ID
+Name
+Description
+Required Permission
+Risk Level
+Allowed Roles
+Input Schema
+Output Schema
+```
+
+Example:
+
+```text
+Tool:
+execute_sql_analysis
+
+Allowed:
+SELECT / read-only queries
+
+Forbidden:
+DELETE
+DROP
+ALTER
+UPDATE
+INSERT
+```
+
+High-risk actions require human approval.
+
+---
+
+# 22. HUMAN APPROVAL
+
+Implement:
+
+```text
+Agent requests action
+       ↓
+Risk assessment
+       ↓
+Approval required?
+    /       \
+  YES        NO
+   ↓          ↓
+User review  Execute
+   ↓
+Approve/Reject
+   ↓
+Execute if approved
+```
+
+---
+
+# 23. UI DESIGN
+
+Use a modern enterprise dashboard.
+
+Main navigation:
+
+```text
+┌──────────────────────────────────────┐
+│ 🔐 SOVEREIGN AI                     │
+├────────────┬─────────────────────────┤
+│ 🏠 Home   │                         │
+│ 💬 AI Chat│       WORKSPACE          │
+│ 📁 Data   │                         │
+│ 📚 Knowledge│                       │
+│ 📊 Analytics│                       │
+│ 🤖 Agents │                         │
+│ 📑 Reports│                         │
+│ 🕘 History│                         │
+│            │                         │
+│ ⚙ Settings│                         │
+│ 🔐 Admin  │                         │
+└────────────┴─────────────────────────┘
+```
+
+---
+
+# 24. HOME PAGE
+
+Show:
+
+```text
+Welcome, User
+
+What would you like to analyze?
+
+┌────────────────────────────────────┐
+│ Ask Sovereign AI...                │
+│                              📎 ➤ │
+└────────────────────────────────────┘
+
+Quick Actions
+
+[Analyze Dataset]
+[Search Documents]
+[Detect Anomalies]
+[Generate Report]
+
+Recent Activity
+```
+
+---
+
+# 25. AI CHAT WORKBENCH
+
+Every response should have:
+
+```text
+ANSWER
+───────
+
+EVIDENCE
+───────
+
+ANALYSIS
+───────
+
+SOURCES
+───────
+
+MODEL
+───────
+
+AGENTS USED
+───────
+
+TOOLS USED
+───────
+```
+
+Show agent/tool progress in a clean expandable panel.
+
+Do not overwhelm normal users with internal technical details.
+
+---
+
+# 26. DATA WORKBENCH
+
+Provide:
+
+```text
+Upload
+ ↓
+Preview
+ ↓
+Schema
+ ↓
+Data Quality
+ ↓
+EDA
+ ↓
+Charts
+ ↓
+Anomaly Detection
+ ↓
+ML
+ ↓
+Report
+```
+
+Charts should be interactive.
+
+---
+
+# 27. KNOWLEDGE BASE
+
+Provide:
+
+* Document list
+* Search
+* Filters
+* Classification
+* Department
+* Version
+* Upload date
+* Preview
+* Access information
+
+---
+
+# 28. AGENT MONITOR
+
+Show:
+
+```text
+Supervisor Agent
+       ↓
+RAG Agent ✓
+       ↓
+Data Science Agent ✓
+       ↓
+Report Agent ✓
+
+Tools:
+✓ vector_search
+✓ dataset_analysis
+✓ anomaly_detection
+✓ report_generation
+```
+
+Use expandable technical details.
+
+---
+
+# 29. MODEL CENTER
+
+Create a dedicated Model Center.
+
+Functions:
+
+```text
+Installed Models
+Available Models
+Model Details
+Model Activation
+Model Deactivation
+Model Benchmark
+Resource Requirements
+Health Status
+Version
+```
+
+Example:
+
+```text
+MODEL CENTER
+
+Installed
+
+✓ Lightweight
+✓ Balanced
+
+Available
+
+Advanced
+Requires more resources
+
+[Install]
+```
+
+Model installation must work with approved internal/offline model packages for air-gapped environments.
+
+---
+
+# 30. FUTURE TRAINING MODULE
+
+Design the architecture so future training can be added.
+
+Do not make full model training mandatory for MVP.
+
+Future module:
+
+```text
+TRAINING CENTER
+     │
+     ├── Dataset preparation
+     ├── Dataset validation
+     ├── Fine-tuning
+     ├── LoRA / QLoRA
+     ├── Evaluation
+     ├── Benchmark
+     ├── Model registry
+     └── Deployment
+```
+
+Training must produce a versioned model artifact.
+
+Never replace a production model without validation.
+
+---
+
+# 31. DATABASE
+
+Use PostgreSQL.
+
+Minimum entities:
+
+```text
+User
+Role
+Permission
+Department
+
+Document
+DocumentVersion
+DocumentAccess
+
+Dataset
+DatasetVersion
+DatasetAnalysis
+
+Conversation
+Message
+
+Agent
+AgentRun
+
+Tool
+ToolExecution
+
+Model
+ModelVersion
+ModelCapability
+ModelRun
+
+Report
+
+AuditLog
+
+SystemConfiguration
+```
+
+---
+
+# 32. VECTOR DATABASE
+
+Use Qdrant.
+
+Each vector record should include metadata:
+
+```text
+document_id
+document_version
+department
+classification
+page
+section
+owner
+timestamp
+```
+
+Permission filtering must occur during retrieval.
+
+---
+
+# 33. API ARCHITECTURE
+
+Use FastAPI.
+
+Example APIs:
+
+```text
+POST /auth/login
+GET /users/me
+
+POST /documents/upload
+GET /documents
+GET /documents/{id}
+
+POST /datasets/upload
+GET /datasets
+GET /datasets/{id}
+GET /datasets/{id}/profile
+POST /datasets/{id}/analyze
+
+POST /chat
+GET /chat/{id}
+
+POST /agents/run
+GET /agents/runs/{id}
+
+GET /models
+GET /models/{id}
+POST /models/select
+POST /models/load
+POST /models/unload
+
+POST /reports/generate
+GET /reports/{id}
+
+GET /audit/logs
+GET /system/health
+GET /system/hardware
+```
+
+Use SSE/WebSocket for real-time agent progress where appropriate.
+
+---
+
+# 34. PROJECT STRUCTURE
+
+Use:
+
+```text
+sovereign-ai/
+│
+├── frontend/
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── auth/
+│   │   ├── agents/
+│   │   ├── rag/
+│   │   ├── ingestion/
+│   │   ├── documents/
+│   │   ├── datasets/
+│   │   ├── data_science/
+│   │   ├── vision/
+│   │   ├── reports/
+│   │   ├── models/
+│   │   ├── orchestration/
+│   │   ├── security/
+│   │   ├── audit/
+│   │   ├── database/
+│   │   └── core/
+│   │
+│   └── tests/
+│
+├── workers/
+├── model_registry/
+├── ml/
+├── docker/
+├── scripts/
+├── docs/
+└── tests/
+```
+
+---
+
+# 35. MODEL ORCHESTRATION MODULE
+
+Create:
+
+```text
+backend/app/orchestration/
+```
+
+Include:
+
+```text
+hardware_detector.py
+capability_scorer.py
+task_classifier.py
+model_registry.py
+model_selector.py
+model_loader.py
+model_manager.py
+resource_monitor.py
+```
+
+Responsibilities:
+
+```text
+HardwareDetector
+      ↓
+TaskClassifier
+      ↓
+CapabilityMatcher
+      ↓
+ModelSelector
+      ↓
+ModelManager
+      ↓
+Inference
+```
+
+---
+
+# 36. LOCAL LLM ABSTRACTION
+
+Create:
+
+```text
+backend/app/models/
+```
+
+Example:
+
+```text
+base_provider.py
+ollama_provider.py
+vllm_provider.py
+model_registry.py
+model_manager.py
+```
+
+Use interfaces so the application can switch between runtimes.
+
+---
+
+# 37. OBSERVABILITY
+
+Monitor:
+
+```text
+CPU usage
+RAM usage
+GPU usage
+VRAM usage
+Disk usage
+LLM latency
+Tokens/sec
+Agent execution time
+RAG latency
+Tool execution time
+Errors
+Model loading time
+```
+
+Use:
+
+* Prometheus
+* Grafana
+
+---
+
+# 38. AUDIT LOGGING
+
+Log:
+
+```text
+User
+Timestamp
+Action
+Resource
+Data accessed
+Agent
+Tool
+Model
+Result status
+Approval event
+Error
+```
+
+Do not unnecessarily store sensitive content in logs.
+
+---
+
+# 39. ERROR HANDLING
+
+Never hallucinate when a system component fails.
+
+If retrieval fails:
+
+```text
+Unable to retrieve the requested information.
+No unsupported conclusion has been generated.
+```
+
+If hardware is insufficient:
+
+```text
+This task requires more local compute resources
+than are currently available.
+```
+
+If the user lacks permission:
+
+```text
+You do not have permission to access this resource.
+```
+
+---
+
+# 40. AI SAFETY RULES
+
+The AI must never:
+
+* Fabricate citations
+* Fabricate calculations
+* Fabricate tool execution
+* Fabricate data
+* Bypass authorization
+* Reveal secrets
+* Access unauthorized resources
+* Execute destructive operations without approval
+* Claim predictions are facts
+* Claim certainty without evidence
+
+---
+
+# 41. PRIMARY END-TO-END WORKFLOW
+
+The complete runtime workflow must be:
+
+```text
+USER
+ ↓
+LOGIN
+ ↓
+KEYCLOAK
+ ↓
+RBAC
+ ↓
+HARDWARE DETECTION
+ ↓
+MODEL REGISTRY
+ ↓
+AI ENVIRONMENT SETUP
+ ↓
+USER SELECTS FAST/BALANCED/ADVANCED
+ ↓
+WORKBENCH
+ ↓
+USER QUERY
+ ↓
+TASK CLASSIFICATION
+ ↓
+MODEL ORCHESTRATOR
+ ↓
+MODEL SELECTION
+ ↓
+SUPERVISOR AGENT
+ ↓
+SPECIALIST AGENT
+ ├── RAG
+ ├── DATA SCIENCE
+ └── VISION
+ ↓
+AUTHORIZED TOOLS
+ ↓
+LOCAL MODEL
+ ↓
+RESULT VALIDATION
+ ↓
+EVIDENCE GENERATION
+ ↓
+REPORT/RESPONSE
+ ↓
+AUDIT LOG
+ ↓
+USER
+```
+
+---
+
+# 42. PRIMARY DEMONSTRATION SCENARIO
+
+Implement one complete high-quality demonstration.
+
+Example:
+
+User uploads:
+
+```text
+Pump sensor CSV
+Maintenance report PDF
+Pump SOP PDF
+```
+
+Then asks:
+
+> "Analyze Pump P102, identify abnormal behavior, compare it with historical maintenance information, find the relevant SOP, and generate an evidence-backed report."
+
+Expected workflow:
+
+```text
+User
+ ↓
+Supervisor
+ ↓
+Permission Check
+ ↓
+Data Science Agent
+ ↓
+Sensor analysis
+ ↓
+Anomaly detection
+ ↓
+RAG Agent
+ ↓
+Maintenance retrieval
+ ↓
+SOP retrieval
+ ↓
+Report Agent
+ ↓
+Local LLM
+ ↓
+Validation
+ ↓
+Evidence
+ ↓
+Charts
+ ↓
+Final report
+```
+
+The final result should show:
+
+```text
+Pump P102 Analysis
+
+Status:
+Potential abnormal behavior detected.
+
+Detected anomalies:
+[Table]
+
+Trend:
+[Interactive chart]
+
+Historical evidence:
+[Maintenance report]
+
+Relevant SOP:
+[SOP + page]
+
+Methods:
+[Analysis methods]
+
+Evidence:
+[Sources]
+
+Limitations:
+[Known limitations]
+
+Recommendation:
+[Human-verifiable recommendation]
+```
+
+Never claim an actual equipment failure unless the supplied data/model supports it.
+
+---
+
+# 43. DEVELOPMENT ORDER
+
+Implement the system in this exact order.
+
+## Stage 1 — Foundation
+
+Build:
+
+* Repository
+* Docker
+* FastAPI
+* React
+* PostgreSQL
+* Keycloak
+* Base configuration
+* Health checks
+
+---
+
+## Stage 2 — Hardware & Model Layer
+
+Build:
+
+* Hardware detector
+* Model registry
+* Model capability schema
+* Local model runtime
+* Model manager
+* Model selection
+* Model loading/unloading
+* Environment Setup screen
+
+This stage must work before advanced agents are implemented.
+
+---
+
+## Stage 3 — Data Foundation
+
+Build:
+
+* Upload
+* Storage
+* Document extraction
+* OCR
+* Dataset processing
+* Metadata
+* Classification
+* Data quality
+
+---
+
+## Stage 4 — RAG
+
+Build:
+
+* Chunking
+* Embeddings
+* Qdrant
+* Retrieval
+* Filtering
+* Reranking
+* Citations
+
+---
+
+## Stage 5 — Data Science
+
+Build:
+
+* Profiling
+* EDA
+* Visualization
+* Statistics
+* Anomaly detection
+* ML
+* Forecasting
+* Explainability
+
+---
+
+## Stage 6 — Multi-Agent
+
+Build:
+
+* Supervisor
+* RAG Agent
+* Data Science Agent
+* Vision Agent
+* Report Agent
+* Tool registry
+* Agent state
+* Human approval
+
+---
+
+## Stage 7 — Workbench
+
+Build:
+
+* Home
+* Chat
+* Data
+* Knowledge
+* Analytics
+* Agents
+* Reports
+* History
+* Model Center
+* Admin
+
+---
+
+## Stage 8 — Security Hardening
+
+Implement:
+
+* Fine-grained RBAC
+* Data permissions
+* Tool permissions
+* Agent permissions
+* Audit
+* Encryption
+* Network restrictions
+* Secret handling
+
+---
+
+## Stage 9 — Testing
+
+Implement:
+
+* Unit tests
+* Integration tests
+* API tests
+* Agent tests
+* RAG tests
+* Data Science tests
+* Security tests
+* Model-selection tests
+* Permission tests
+* End-to-end tests
+
+---
+
+## Stage 10 — Deployment
+
+Provide:
+
+* Docker Compose
+* Linux deployment
+* GPU configuration
+* Local model deployment
+* LAN/MAN configuration
+* Monitoring
+* Backup
+* Recovery instructions
+
+---
+
+# 44. SDD IMPLEMENTATION METHOD
+
+Do NOT generate the entire project blindly in one response.
+
+Follow this workflow:
+
+```text
+SPECIFICATION
+      ↓
+ARCHITECTURE
+      ↓
+MODULE SPECIFICATIONS
+      ↓
+DATABASE CONTRACTS
+      ↓
+API CONTRACTS
+      ↓
+INTERFACE DEFINITIONS
+      ↓
+IMPLEMENTATION
+      ↓
+UNIT TESTS
+      ↓
+INTEGRATION
+      ↓
+END-TO-END TEST
+```
+
+Before implementing each module:
+
+1. State its responsibility.
+2. Identify its inputs.
+3. Identify its outputs.
+4. Identify dependencies.
+5. Define interfaces.
+6. Define error conditions.
+7. Define security requirements.
+8. Define tests.
+9. Implement.
+10. Test.
+11. Only then move to the next module.
+
+Do not modify unrelated modules without explicit justification.
+
+---
+
+# 45. CODING STANDARDS
+
+Use:
+
+* Python type hints
+* Pydantic schemas
+* TypeScript strict mode
+* Environment variables for configuration
+* No hardcoded secrets
+* Modular services
+* Dependency injection where useful
+* Structured logging
+* Clear exception handling
+* Automated tests
+* API documentation
+
+Avoid unnecessary dependencies.
+
+Prefer simple, maintainable implementations.
+
+---
+
+# 46. MVP PRIORITY
+
+If implementation time is limited, prioritize:
+
+### MUST HAVE
+
+```text
+Authentication
+RBAC
+Hardware detection
+Local LLM
+Model selection
+Data ingestion
+RAG
+Qdrant
+Data Science
+Multi-agent orchestration
+AI Chat
+Evidence/citations
+Audit logging
+Docker deployment
+```
+
+### SHOULD HAVE
+
+```text
+Vision Agent
+Model Center
+Agent Monitor
+Report generation
+Advanced analytics
+```
+
+### FUTURE
+
+```text
+Fine-tuning
+LoRA/QLoRA
+Advanced model training
+Large-scale distributed inference
+Advanced model benchmarking
+```
+
+Do not sacrifice the secure local architecture to implement optional features.
+
+---
+
+# 47. FINAL QUALITY REQUIREMENT
+
+The final product must feel like an **enterprise AI operating environment**, not a collection of disconnected demos.
+
+The six core modules must work together:
+
+```text
+DATA ENGINEERING
+       ↓
+KNOWLEDGE / RAG
+       ↓
+MULTI-AGENT AI
+       ↓
+DATA SCIENCE / ML
+       ↓
+WORKBENCH
+       ↓
+SECURITY + INFRASTRUCTURE
+```
+
+And the hardware-aware model orchestration layer must operate across the entire system:
+
+```text
+                 MODEL ORCHESTRATOR
+                        │
+        ┌───────────────┼────────────────┐
+        ↓               ↓                ↓
+   Hardware         Task Complexity    Model Registry
+   Detection              │                │
+        └─────────────────┼────────────────┘
+                          ↓
+                   Model Selection
+                          ↓
+                   Local Inference
+```
+
+The result must be:
+
+**Local + Secure + Hardware-aware + Model-agnostic + Multi-agent + Multimodal + Data-science capable + Explainable + Auditable + Enterprise-ready.**
+
+---
+
+# 48. FIRST TASK
+
+Do NOT start by generating all source code.
+
+First produce:
+
+1. Complete system architecture.
+2. Component diagram.
+3. Service dependency diagram.
+4. Database ER design.
+5. API contract.
+6. Agent graph.
+7. Model orchestration design.
+8. Hardware capability specification.
+9. Model registry schema.
+10. Security architecture.
+11. Frontend information architecture.
+12. Complete repository structure.
+13. Development dependency graph.
+14. MVP implementation plan.
+15. Test strategy.
+
+After these are approved, implement the project incrementally according to the development stages above.
+
+**Never skip architecture and contracts before implementation.**

@@ -1,85 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&family=Source+Code+Pro:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* Theme 1: Sovereign Cyber (Default) */
-:root, [data-theme="sovereign-cyber"] {
-  --bg-primary: #07090e;
-  --bg-surface: #0e121d;
-  --bg-card: #151b2c;
-  --bg-glass: rgba(21, 27, 44, 0.75);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-highlight: rgba(99, 102, 241, 0.35);
-  
-  --accent-cyan: #06b6d4;
-  --accent-indigo: #6366f1;
-  --accent-purple: #a855f7;
-  --accent-green: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
-  
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-dim: #6b7280;
+/* Theme 1: Dark — Cyber Neon */
+:root, [data-theme="dark"] {
+  --bg-primary: #05000a;
+  --bg-surface: #0a0515;
+  --bg-card: #120a22;
+  --bg-glass: rgba(18, 10, 34, 0.88);
+  --border-color: rgba(255, 0, 255, 0.12);
+  --border-highlight: rgba(0, 255, 136, 0.5);
 
-  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --accent-cyan: #00fff2;
+  --accent-indigo: #7b2cff;
+  --accent-purple: #e040fb;
+  --accent-green: #39ff14;
+  --accent-amber: #ffe600;
+  --accent-rose: #ff0055;
 
-  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
-  --shadow-cyan: 0 0 25px rgba(6, 182, 212, 0.2);
+  --text-main: #f0e6ff;
+  --text-muted: #b39ddb;
+  --text-dim: #7c6b9e;
+
+  --font-main: 'Orbitron', 'Rajdhani', sans-serif;
+  --font-mono: 'Rajdhani', monospace;
+
+  --shadow-glow: 0 0 40px rgba(0, 255, 242, 0.25), 0 0 80px rgba(123, 44, 255, 0.15);
+  --shadow-cyan: 0 0 35px rgba(0, 255, 242, 0.3);
 }
 
-/* Theme 2: Corporate Slate */
-[data-theme="corporate-slate"] {
-  --bg-primary: #0f172a;
-  --bg-surface: #1e293b;
-  --bg-card: #273549;
-  --bg-glass: rgba(30, 41, 59, 0.8);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-highlight: rgba(56, 189, 248, 0.4);
-  
-  --accent-cyan: #38bdf8;
-  --accent-indigo: #818cf8;
-  --accent-purple: #c084fc;
-  --accent-green: #34d399;
-  --accent-amber: #fbbf24;
-  --accent-rose: #fb7185;
-  
-  --text-main: #f8fafc;
-  --text-muted: #cbd5e1;
-  --text-dim: #94a3b8;
+/* Theme 2: Bright — Electric Pop */
+[data-theme="bright"] {
+  --bg-primary: #fffbf0;
+  --bg-surface: #ffffff;
+  --bg-card: #fff5fc;
+  --bg-glass: rgba(255, 255, 255, 0.94);
+  --border-color: rgba(255, 0, 100, 0.15);
+  --border-highlight: rgba(255, 0, 200, 0.45);
 
-  --font-main: 'Outfit', sans-serif;
-  --font-mono: 'Fira Code', monospace;
+  --accent-cyan: #00b4d8;
+  --accent-indigo: #6100ff;
+  --accent-purple: #d500f9;
+  --accent-green: #00e676;
+  --accent-amber: #ff9100;
+  --accent-rose: #ff1744;
 
-  --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.2);
-  --shadow-cyan: 0 0 25px rgba(52, 211, 153, 0.2);
+  --text-main: #1a0033;
+  --text-muted: #4a1572;
+  --text-dim: #7b5ea7;
+
+  --font-main: 'Poppins', sans-serif;
+  --font-mono: 'Source Code Pro', monospace;
+
+  --shadow-glow: 0 10px 30px rgba(213, 0, 249, 0.15), 0 4px 15px rgba(255, 23, 68, 0.1);
+  --shadow-cyan: 0 8px 25px rgba(0, 180, 216, 0.15);
 }
 
-/* Theme 3: Quantum Matrix */
-[data-theme="quantum-matrix"] {
-  --bg-primary: #04130e;
-  --bg-surface: #0a2219;
-  --bg-card: #103326;
-  --bg-glass: rgba(10, 34, 25, 0.8);
-  --border-color: rgba(16, 185, 129, 0.2);
-  --border-highlight: rgba(0, 255, 204, 0.45);
-  
-  --accent-cyan: #00f5d4;
-  --accent-indigo: #10b981;
-  --accent-purple: #6ee7b7;
-  --accent-green: #00ff87;
-  --accent-amber: #f59e0b;
-  --accent-rose: #ff4757;
-  
-  --text-main: #e6fcf5;
-  --text-muted: #a3e635;
-  --text-dim: #6ee7b7;
+/* Theme 3: Lighter — Neon Pastel */
+[data-theme="lighter"] {
+  --bg-primary: #f0f4ff;
+  --bg-surface: #f8f5ff;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(248, 245, 255, 0.93);
+  --border-color: rgba(130, 80, 255, 0.12);
+  --border-highlight: rgba(255, 64, 129, 0.4);
 
-  --font-main: 'Space Grotesk', sans-serif;
-  --font-mono: 'Space Mono', monospace;
+  --accent-cyan: #18ffff;
+  --accent-indigo: #651fff;
+  --accent-purple: #ea80fc;
+  --accent-green: #76ff03;
+  --accent-amber: #ffd600;
+  --accent-rose: #ff4081;
 
-  --shadow-glow: 0 0 30px rgba(16, 185, 129, 0.25);
-  --shadow-cyan: 0 0 25px rgba(0, 245, 212, 0.25);
+  --text-main: #1a1a2e;
+  --text-muted: #4a4a6a;
+  --text-dim: #7a7a9a;
+
+  --font-main: 'Nunito', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --shadow-glow: 0 8px 25px rgba(234, 128, 252, 0.15), 0 4px 12px rgba(101, 31, 255, 0.1);
+  --shadow-cyan: 0 6px 20px rgba(24, 255, 255, 0.12);
 }
 
 body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, a, p, span {
@@ -121,14 +121,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  background: linear-gradient(135deg, #00fff2 0%, #e040fb 50%, #39ff14 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gradient-text-green {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  background: linear-gradient(135deg, #39ff14 0%, #00e676 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -201,9 +201,9 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #7b2cff 0%, #00fff2 100%);
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
   padding: 10px 20px;
   border-radius: 10px;
   border: none;
@@ -213,13 +213,13 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 4px 18px rgba(123, 44, 255, 0.4), 0 0 30px rgba(0, 255, 242, 0.15);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(123, 44, 255, 0.55), 0 0 40px rgba(0, 255, 242, 0.25);
 }
 
 .btn-secondary {
@@ -243,9 +243,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-accent {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  color: #ffffff;
-  font-weight: 600;
+  background: linear-gradient(135deg, #39ff14 0%, #00e676 100%);
+  color: #05000a;
+  font-weight: 700;
   padding: 10px 20px;
   border-radius: 10px;
   border: none;
@@ -255,7 +255,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 18px rgba(57, 255, 20, 0.4), 0 0 25px rgba(0, 230, 118, 0.2);
 }
 
 .btn-accent:hover {
