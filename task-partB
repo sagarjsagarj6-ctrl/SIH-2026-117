@@ -1,0 +1,17 @@
+# Category B — Remaining Implementation Tasks
+
+## Frontend Components (Missing)
+- `[x]` `client/src/components/models/FineTuneManager.jsx`
+- `[x]` `client/src/components/models/ModelComparisonView.jsx`
+- `[x]` `client/src/components/dashboards/IntelligenceDashboard.jsx`
+
+## Frontend Wiring (App.jsx + Sidebar.jsx)
+- `[x]` Add `intelligence-layer` tab to `Sidebar.jsx` (Category B nav item)
+- `[x]` Import `IntelligenceDashboard` and add `intelligence-layer` case to `App.jsx`
+
+## Backend Wiring
+- `[/]` Add `HardwareProfiler` bootstrap + `ModelHealthChecker` interval to `server/index.js`
+
+## Verification
+- `[ ]` Start backend server (smoke test)
+- `[ ]` Start frontend dev server

@@ -331,19 +331,4 @@ node --test server/services/inference/__tests__/OllamaBackend.test.js
 
 ---
 
-## Estimated Effort
 
-| Sub-component | Effort | Priority |
-|--------------|--------|----------|
-| Agent Orchestrator (B1.1) | 4-5 days | P0 |
-| Specialist Agents — RAG (B1.2) | 3-4 days | P0 |
-| Specialist Agents — Data Science (B1.2) | 3-4 days | P1 |
-| Specialist Agents — Vision (B1.2) | 2-3 days | P1 |
-| Specialist Agents — Reporting (B1.2) | 2-3 days | P1 |
-| Agent Communication (B1.3) | 1-2 days | P0 |
-| Explainability Engine (B1.4) | 2 days | P0 |
-| Inference Engine (B2.2) | 4-5 days | P0 |
-| Hardware-Aware Allocation (B2.3) | 2-3 days | P0 |
-| Fine-Tuning Pipeline (B2.4) | 4-5 days | P2 |
-| Frontend Components | 4-5 days | P1 |
-| **Total** | **~30-38 days** | — |
