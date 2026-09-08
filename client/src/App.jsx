@@ -10,6 +10,7 @@ import { ManagerDashboard } from './components/dashboards/ManagerDashboard';
 import { AdminDashboard } from './components/dashboards/AdminDashboard';
 import { ModelManagementCenter } from './components/dashboards/ModelManagementCenter';
 import { DataFoundationDashboard } from './components/dashboards/DataFoundationDashboard';
+import { IntelligenceDashboard } from './components/dashboards/IntelligenceDashboard';
 import { useAuth } from './context/AuthContext';
 import { useHardware } from './context/HardwareContext';
 
@@ -84,6 +85,8 @@ export default function App() {
         return <EmployeeWorkspace />;
       case 'data-foundation':
         return <DataFoundationDashboard />;
+      case 'intelligence-layer':
+        return <IntelligenceDashboard />;
       case 'manager-analytics':
         return (user.role === 'Manager' || user.role === 'Admin') ? <ManagerDashboard /> : <EmployeeWorkspace />;
       case 'admin-governance':

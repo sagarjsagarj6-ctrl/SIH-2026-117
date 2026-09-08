@@ -2,6 +2,7 @@ import express from 'express';
 import { state } from '../config/db.js';
 import Model from '../models/Model.js';
 import FineTuneJob from '../models/FineTuneJob.js';
+import { ModelHealthChecker } from '../services/models/ModelHealthChecker.js';
 import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -148,6 +149,16 @@ router.post('/fine-tune', authenticateToken, requireRole('Admin'), async (req, r
     res.status(201).json({ message: 'Fine-tuning job launched successfully', job: newJob });
   } catch (err) {
     res.status(500).json({ error: 'Failed to launch fine-tuning job.' });
+  }
+});
+
+// GET /api/models/health — Real-time ping & health check on all registered models
+router.get('/health', authenticateToken, async (req, res) => {
+  try {
+    const health = await ModelHealthChecker.checkAllModels();
+    res.json(health);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to execute model health checks' });
   }
 });
 

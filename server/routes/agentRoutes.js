@@ -2,6 +2,9 @@ import express from 'express';
 import { state } from '../config/db.js';
 import KnowledgeDoc from '../models/KnowledgeDoc.js';
 import { RetrievalService } from '../services/knowledge/RetrievalService.js';
+import { AgentOrchestrator } from '../agents/AgentOrchestrator.js';
+import { AgentRegistry } from '../agents/AgentRegistry.js';
+import { TaskDecomposer } from '../agents/TaskDecomposer.js';
 import { authenticateToken, createAuditEntry } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -155,6 +158,53 @@ router.post('/query', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Agent execution error:', err);
     res.status(500).json({ error: 'Agent execution failed.' });
+  }
+});
+
+// POST /api/agents/orchestrate — Advanced Multi-Agent Orchestrator
+router.post('/orchestrate', authenticateToken, async (req, res) => {
+  try {
+    const { query, mode, specificAgent, sessionId } = req.body;
+    const user = req.user;
+
+    if (!query) {
+      return res.status(400).json({ error: 'User query is required for orchestration.' });
+    }
+
+    const result = await AgentOrchestrator.orchestrate({
+      query,
+      user,
+      requestedMode: mode || 'AUTO',
+      specificAgent: specificAgent || null,
+      sessionId: sessionId || `session_${user._id || user.id}`
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('Orchestration failure:', err);
+    res.status(500).json({ error: `Multi-agent orchestration error: ${err.message}` });
+  }
+});
+
+// GET /api/agents/registry — List all specialist agents & capabilities
+router.get('/registry', authenticateToken, (req, res) => {
+  try {
+    const list = AgentRegistry.listAgents();
+    res.json({ agents: list });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve agent registry' });
+  }
+});
+
+// POST /api/agents/decompose — Preview query task decomposition
+router.post('/decompose', authenticateToken, (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query is required' });
+    const decomposition = TaskDecomposer.decompose(query, req.user.department);
+    res.json(decomposition);
+  } catch (err) {
+    res.status(500).json({ error: 'Decomposition failed' });
   }
 });
 

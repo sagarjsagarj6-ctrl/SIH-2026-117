@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Bot, BarChart3, Shield, Cpu, FileText, 
-  Settings, Database, Layers, Sparkles 
+  Bot, BarChart3, Shield, Cpu, FileText,
+  Settings, Database, Layers, Sparkles, Brain
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -23,6 +23,13 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: <Database size={18} />,
       roles: ['Employee', 'Manager', 'Admin'],
       badge: 'Category A'
+    },
+    {
+      id: 'intelligence-layer',
+      label: 'Intelligence Layer',
+      icon: <Brain size={18} />,
+      roles: ['Employee', 'Manager', 'Admin'],
+      badge: 'Category B'
     },
     {
       id: 'manager-analytics',

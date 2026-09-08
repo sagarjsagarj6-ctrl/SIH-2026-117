@@ -9,8 +9,13 @@ const modelSchema = new mongoose.Schema({
   vramRequiredGB: { type: Number, required: true },
   contextWindow: { type: Number, default: 8192 },
   status: { type: String, enum: ['Active', 'Inactive', 'Loading', 'Error'], default: 'Active' },
+  healthStatus: { type: String, enum: ['Healthy', 'Degraded', 'Offline'], default: 'Healthy' },
+  lastHealthCheck: { type: Date, default: Date.now },
+  loadedAt: { type: Date, default: Date.now },
   tpsBench: { type: Number, default: 45.2 }, // Tokens Per Second benchmark
-  latencyMs: { type: Number, default: 120 }
+  latencyMs: { type: Number, default: 120 },
+  avgLatency: { type: Number, default: 115 },
+  errorRate: { type: Number, default: 0.0 }
 }, { timestamps: true });
 
 export default mongoose.models.Model || mongoose.model('Model', modelSchema);

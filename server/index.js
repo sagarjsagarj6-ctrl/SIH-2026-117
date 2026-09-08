@@ -12,8 +12,12 @@ import auditRoutes from './routes/auditRoutes.js';
 import ingestRoutes from './routes/ingestRoutes.js';
 import knowledgeRoutes from './routes/knowledgeRoutes.js';
 import qualityRoutes from './routes/qualityRoutes.js';
+import inferenceRoutes from './routes/inferenceRoutes.js';
 import { seedInitialData } from './seed.js';
 import { VectorIndexManager } from './services/knowledge/VectorIndexManager.js';
+import { HardwareProfiler } from './services/hardware/HardwareProfiler.js';
+import { ModelHealthChecker } from './services/models/ModelHealthChecker.js';
+import { ModelRegistry } from './services/models/ModelRegistry.js';
 
 dotenv.config();
 
@@ -33,6 +37,22 @@ try {
   console.log('[VectorStore] Initial vector index bootstrap completed.');
 } catch (e) {
   console.warn('[VectorStore] Bootstrap warning:', e.message);
+}
+
+// Bootstrap Hardware Profiler
+try {
+  const hwProfile = await HardwareProfiler.detectHardware();
+  console.log(`[HardwareProfiler] Detected: ${hwProfile.cpuCores}-core CPU, ${hwProfile.ramTotalGB}GB RAM, GPU: ${hwProfile.gpu.name}`);
+} catch (e) {
+  console.warn('[HardwareProfiler] Bootstrap warning:', e.message);
+}
+
+// Bootstrap Model Health Checker
+try {
+  await ModelHealthChecker.checkAllModels();
+  console.log('[ModelHealthChecker] Initial health sweep completed.');
+} catch (e) {
+  console.warn('[ModelHealthChecker] Bootstrap warning:', e.message);
 }
 
 // Health Check
@@ -56,6 +76,7 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/ingest', ingestRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/quality', qualityRoutes);
+app.use('/api/inference', inferenceRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
