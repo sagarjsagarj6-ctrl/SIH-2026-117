@@ -111,7 +111,7 @@ export const LandingPage = ({ onLaunchClick, onLoginClick }) => {
             Enter Sovereign Workbench <ChevronRight size={20} />
           </button>
           <button className="btn-secondary" style={{ padding: '14px 28px', fontSize: '1rem' }} onClick={handleLogin}>
-            View Demo Credentials
+            Sign In or Create Account
           </button>
         </div>
 

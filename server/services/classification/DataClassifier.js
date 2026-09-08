@@ -43,22 +43,23 @@ export class DataClassifier {
     return 'Executive Memo';
   }
 
-  static classifyDocument({ text, filename, userDepartment, explicitSensitivity, explicitCategory }) {
+  static classifyDocument({ text, filename, userDepartment, explicitDepartment, explicitSensitivity, explicitCategory }) {
     const sensitivity = SensitivityLabeler.classify(text, explicitSensitivity);
     const departmentResult = DepartmentTagger.tag(text, userDepartment);
     const category = explicitCategory || this.inferCategory(text, filename);
+    const department = explicitDepartment || departmentResult.department;
 
     return {
       category,
-      department: departmentResult.department,
+      department,
       sensitivity: sensitivity.level,
       classificationConfidence: {
         sensitivity: sensitivity.confidence,
-        department: departmentResult.confidence
+        department: explicitDepartment ? 1 : departmentResult.confidence
       },
       tags: [
         category.toLowerCase().replace(/\s+/g, '-'),
-        departmentResult.department.toLowerCase(),
+        department.toLowerCase(),
         sensitivity.level.toLowerCase().replace(/\s+/g, '-')
       ]
     };

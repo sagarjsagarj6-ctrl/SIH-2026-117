@@ -10,6 +10,7 @@ export const AdminDashboard = () => {
   const [telemetry, setTelemetry] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cleaningDemoData, setCleaningDemoData] = useState(false);
 
   const [editingUser, setEditingUser] = useState(null);
 
@@ -59,6 +60,26 @@ export const AdminDashboard = () => {
     }
   };
 
+  const handleRemoveDemoData = async () => {
+    if (!window.confirm('Remove seeded demo users, documents, models, jobs, departments, audit entries, and vectors? Your current admin account will be retained.')) return;
+
+    try {
+      setCleaningDemoData(true);
+      const res = await fetch(`${API_URL}/analytics/demo-data`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Demo data cleanup failed.');
+      window.alert(data.message);
+      fetchAdminData();
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setCleaningDemoData(false);
+    }
+  };
+
   if (loading || !telemetry) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-main)' }}>
@@ -78,9 +99,14 @@ export const AdminDashboard = () => {
           <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Admin Platform Control Center</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Air-gapped server telemetry, user governance matrix, and security audit trail</p>
         </div>
-        <button className="btn-secondary" onClick={fetchAdminData} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-          <RefreshCw size={16} /> Sync Telemetry
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-secondary" onClick={fetchAdminData} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+            <RefreshCw size={16} /> Sync Telemetry
+          </button>
+          <button className="btn-secondary" onClick={handleRemoveDemoData} disabled={cleaningDemoData} style={{ padding: '8px 16px', fontSize: '0.85rem', color: 'var(--accent-rose)' }}>
+            <AlertOctagon size={16} /> {cleaningDemoData ? 'Removing Demo Data...' : 'Remove Demo Data'}
+          </button>
+        </div>
       </div>
 
       {/* Overview Metric Widgets */}

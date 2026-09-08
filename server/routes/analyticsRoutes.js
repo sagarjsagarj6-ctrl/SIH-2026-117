@@ -3,7 +3,11 @@ import { state } from '../config/db.js';
 import User from '../models/User.js';
 import AuditLog from '../models/AuditLog.js';
 import Model from '../models/Model.js';
-import { authenticateToken, requireRole } from '../middleware/auth.js';
+import Department from '../models/Department.js';
+import KnowledgeDoc from '../models/KnowledgeDoc.js';
+import FineTuneJob from '../models/FineTuneJob.js';
+import { VectorStore } from '../services/knowledge/VectorStore.js';
+import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -160,6 +164,98 @@ router.put('/users/:id', authenticateToken, requireRole('Admin'), async (req, re
     res.json({ message: 'User role and permissions updated successfully.' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update user.' });
+  }
+});
+
+// DELETE /api/analytics/demo-data — Remove seeded demo records while retaining the current admin.
+router.delete('/demo-data', authenticateToken, requireRole('Admin'), async (req, res) => {
+  try {
+    const demoEmails = [
+      'admin@sovereign.local',
+      'manager.finance@sovereign.local',
+      'employee.rd@sovereign.local',
+      'employee.hr@sovereign.local',
+      'manager.legal@sovereign.local'
+    ];
+    const demoDocumentTitles = [
+      'Q3 Enterprise Financial Risk Audit',
+      'Corporate Intellectual Property & Patent Filings 2026',
+      'Air-Gapped Sovereign AI System Architecture Specs',
+      'Enterprise Employee Compensation & Benefit Guidelines',
+      'Sovereign AI Security Governance Charter'
+    ];
+    const demoJobNames = ['Finance_Domain_QLoRA_v2', 'Legal_Contract_Analysis_LoRA'];
+    const demoDepartments = [
+      'Finance & Accounting',
+      'Legal & Compliance',
+      'R&D / Engineering',
+      'Human Resources',
+      'Executive & Strategy'
+    ];
+
+    let removed = { users: 0, departments: 0, models: 0, documents: 0, jobs: 0, auditLogs: 0, vectors: 0 };
+
+    if (state.isMongooseConnected) {
+      const currentUserId = req.user._id || req.user.id;
+      const userResult = await User.deleteMany({ email: { $in: demoEmails }, _id: { $ne: currentUserId } });
+      const departmentResult = await Department.deleteMany({ name: { $in: demoDepartments } });
+      const documentResult = await KnowledgeDoc.deleteMany({ title: { $in: demoDocumentTitles } });
+      const jobResult = await FineTuneJob.deleteMany({ jobName: { $in: demoJobNames } });
+      const auditResult = await AuditLog.deleteMany({
+        $or: [
+          { action: 'SYSTEM_BOOTSTRAP' },
+          { userName: { $in: ['Elena Vance (Finance Mgr)', 'Sarah Connor (HR Specialist)'] } }
+        ]
+      });
+      removed = {
+        users: userResult.deletedCount,
+        departments: departmentResult.deletedCount,
+        models: 0,
+        documents: documentResult.deletedCount,
+        jobs: jobResult.deletedCount,
+        auditLogs: auditResult.deletedCount,
+        vectors: (await VectorStore.removeByDocumentTitles(demoDocumentTitles)).deletedCount
+      };
+    } else {
+      const removeMatching = (items, predicate) => {
+        const kept = items.filter(item => !predicate(item));
+        const deletedCount = items.length - kept.length;
+        return { kept, deletedCount };
+      };
+      let result = removeMatching(state.memoryDb.users, item => demoEmails.includes(item.email) && item.email !== req.user.email);
+      state.memoryDb.users = result.kept;
+      removed.users = result.deletedCount;
+      result = removeMatching(state.memoryDb.departments, item => demoDepartments.includes(item.name));
+      state.memoryDb.departments = result.kept;
+      removed.departments = result.deletedCount;
+      removed.models = 0;
+      result = removeMatching(state.memoryDb.knowledgeDocs, item => demoDocumentTitles.includes(item.title));
+      state.memoryDb.knowledgeDocs = result.kept;
+      removed.documents = result.deletedCount;
+      result = removeMatching(state.memoryDb.fineTuneJobs, item => demoJobNames.includes(item.jobName));
+      state.memoryDb.fineTuneJobs = result.kept;
+      removed.jobs = result.deletedCount;
+      result = removeMatching(state.memoryDb.auditLogs, item => item.action === 'SYSTEM_BOOTSTRAP' || ['Elena Vance (Finance Mgr)', 'Sarah Connor (HR Specialist)'].includes(item.userName));
+      state.memoryDb.auditLogs = result.kept;
+      removed.auditLogs = result.deletedCount;
+      removed.vectors = (await VectorStore.removeByDocumentTitles(demoDocumentTitles)).deletedCount;
+    }
+
+    await createAuditEntry({
+      userId: req.user._id || req.user.id,
+      userName: req.user.name,
+      role: req.user.role,
+      department: req.user.department,
+      action: 'DEMO_DATA_REMOVED',
+      resource: '/api/analytics/demo-data',
+      status: 'SUCCESS',
+      details: `Removed seeded demo records: ${JSON.stringify(removed)}`
+    });
+
+    res.json({ message: 'Seeded demo data removed. The current admin account was retained.', removed });
+  } catch (err) {
+    console.error('Demo data cleanup error:', err);
+    res.status(500).json({ error: 'Failed to remove demo data.' });
   }
 });
 

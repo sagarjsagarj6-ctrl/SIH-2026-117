@@ -60,6 +60,8 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       <div className="glass-panel" style={{
         width: '100%',
         maxWidth: '520px',
+        maxHeight: 'calc(100vh - 40px)',
+        overflowY: 'auto',
         padding: '36px',
         position: 'relative',
         boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
@@ -204,6 +206,16 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
           </button>
         </form>
 
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <button 
+            type="button" 
+            onClick={() => { setIsRegister(!isRegister); setAuthError(''); }}
+            style={{ background: 'none', border: 'none', color: 'var(--accent-indigo)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}
+          >
+            {isRegister ? 'Already have an account? Sign In' : 'Need an account? Create one'}
+          </button>
+        </div>
+
         {!isRegister && (
           <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -281,15 +293,6 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <button 
-            type="button" 
-            onClick={() => { setIsRegister(!isRegister); setAuthError(''); }}
-            style={{ background: 'none', border: 'none', color: 'var(--accent-indigo)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}
-          >
-            {isRegister ? 'Already have an account? Sign In' : 'New enterprise employee? Register Account'}
-          </button>
-        </div>
       </div>
     </div>
   );

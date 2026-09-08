@@ -317,6 +317,12 @@ export const seedInitialData = async () => {
         await AuditLog.insertMany(seedAuditLogs);
         console.log('[Seed] MongoDB successfully populated with enterprise seed datasets!');
       } else {
+        const existingModelNames = new Set((await Model.find().select('name')).map(model => model.name));
+        const missingModels = seedModels.filter(model => !existingModelNames.has(model.name));
+        if (missingModels.length > 0) {
+          await Model.insertMany(missingModels);
+          console.log(`[Seed] Restored ${missingModels.length} missing local model registry entries.`);
+        }
         console.log('[Seed] MongoDB already contains user records. Skipping overwrite.');
       }
     } else {

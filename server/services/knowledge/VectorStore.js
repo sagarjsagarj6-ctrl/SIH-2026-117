@@ -75,6 +75,15 @@ export class VectorStore {
     return { deletedCount: initialLen - this.chunks.length };
   }
 
+  static async removeByDocumentTitles(titles) {
+    await this.initialize();
+    const titleSet = new Set(titles);
+    const initialLen = this.chunks.length;
+    this.chunks = this.chunks.filter(chunk => !titleSet.has(chunk.documentTitle));
+    await this.persist();
+    return { deletedCount: initialLen - this.chunks.length };
+  }
+
   /**
    * Performs vector ANN search with cosine similarity and metadata filtering.
    */
