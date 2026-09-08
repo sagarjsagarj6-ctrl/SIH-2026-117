@@ -9,6 +9,7 @@ import { EmployeeWorkspace } from './components/dashboards/EmployeeWorkspace';
 import { ManagerDashboard } from './components/dashboards/ManagerDashboard';
 import { AdminDashboard } from './components/dashboards/AdminDashboard';
 import { ModelManagementCenter } from './components/dashboards/ModelManagementCenter';
+import { DataFoundationDashboard } from './components/dashboards/DataFoundationDashboard';
 import { useAuth } from './context/AuthContext';
 import { useHardware } from './context/HardwareContext';
 
@@ -21,7 +22,9 @@ export default function App() {
   useEffect(() => {
     if (user) {
       if (user.role === 'Employee') {
-        setActiveTab('workspace');
+        if (activeTab !== 'workspace' && activeTab !== 'data-foundation') {
+          setActiveTab('workspace');
+        }
       } else if (user.role === 'Manager' && (activeTab === 'admin-governance' || activeTab === 'model-center')) {
         setActiveTab('workspace');
       }
@@ -79,6 +82,8 @@ export default function App() {
     switch (activeTab) {
       case 'workspace':
         return <EmployeeWorkspace />;
+      case 'data-foundation':
+        return <DataFoundationDashboard />;
       case 'manager-analytics':
         return (user.role === 'Manager' || user.role === 'Admin') ? <ManagerDashboard /> : <EmployeeWorkspace />;
       case 'admin-governance':

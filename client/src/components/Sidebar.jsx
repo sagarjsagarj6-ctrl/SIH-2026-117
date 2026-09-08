@@ -18,6 +18,13 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       badge: 'Multi-Agent AI'
     },
     {
+      id: 'data-foundation',
+      label: 'Data Foundation & Vector Hub',
+      icon: <Database size={18} />,
+      roles: ['Employee', 'Manager', 'Admin'],
+      badge: 'Category A'
+    },
+    {
       id: 'manager-analytics',
       label: 'Manager Audit & Analytics',
       icon: <BarChart3 size={18} />,

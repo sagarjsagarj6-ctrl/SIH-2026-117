@@ -223,17 +223,3 @@ node --test server/services/knowledge/__tests__/VectorStore.test.js
 5. Check audit logs → verify every ingestion action is logged
 
 ---
-
-## Estimated Effort
-
-| Sub-component | Effort | Priority |
-|--------------|--------|----------|
-| File Ingestion Pipeline (A1.1) | 3-4 days | P0 |
-| Database Connector (A1.2) | 2-3 days | P1 |
-| Data Validation & Quality (A1.3) | 2 days | P0 |
-| Classification & Labeling (A1.4) | 2 days | P1 |
-| Chunking Engine (A2.1) | 1-2 days | P0 |
-| Vector Embedding & Indexing (A2.2) | 3-4 days | P0 |
-| Knowledge Retrieval API (A2.3) | 2-3 days | P0 |
-| Frontend Components | 3-4 days | P1 |
-| **Total** | **~18-22 days** | — |

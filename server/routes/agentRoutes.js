@@ -1,6 +1,7 @@
 import express from 'express';
 import { state } from '../config/db.js';
 import KnowledgeDoc from '../models/KnowledgeDoc.js';
+import { RetrievalService } from '../services/knowledge/RetrievalService.js';
 import { authenticateToken, createAuditEntry } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -22,39 +23,34 @@ router.post('/query', authenticateToken, async (req, res) => {
 
     switch (agentType) {
       case 'RAG': {
-        // Fetch department documents
-        let docs = [];
-        if (state.isMongooseConnected) {
-          docs = await KnowledgeDoc.find({
-            $or: [{ department: user.department }, { department: 'All' }]
-          });
+        // Query sovereign local vector store & hybrid search engine
+        const searchOutcome = await RetrievalService.search({
+          query: prompt,
+          user,
+          department: user.department,
+          topK: 4
+        });
+
+        let answerExcerpt = '';
+        if (searchOutcome.results.length > 0) {
+          answerExcerpt = searchOutcome.results.map((r, i) => `[Source ${i+1}: ${r.documentTitle} - ${r.sectionTitle}]\n${r.text}`).join('\n\n---\n\n');
         } else {
-          docs = state.memoryDb.knowledgeDocs.filter(d => d.department === user.department || d.department === 'All');
+          answerExcerpt = `No matching indexed documents found with high confidence in ${user.department} repository for the query.`;
         }
-
-        const relevantDocs = docs.filter(d => 
-          d.title.toLowerCase().includes(prompt.toLowerCase()) || 
-          d.snippet.toLowerCase().includes(prompt.toLowerCase()) ||
-          d.category.toLowerCase().includes(prompt.toLowerCase())
-        ).slice(0, 3);
-
-        const citationDocs = relevantDocs.length > 0 ? relevantDocs : docs.slice(0, 2);
 
         responseData = {
           agent: 'RAG Search & Retrieval Agent',
           profileUsed: aiProfile,
           departmentScope: user.department,
           query: prompt,
-          answer: `[SOVEREIGN RAG AGENT ANSWER - ${user.department.toUpperCase()} DEPT]\n\nBased on your confidential local document repository (${user.department} partition), here is the verified evidence-backed answer:\n\n` +
-            `1. Key Findings: Analysis confirms all protocols match enterprise security standards for ${user.department}.\n` +
-            `2. Specific References: Verified against latest vector index chunks [Index ID: VEC-${user.department.substring(0,3).toUpperCase()}-2026].\n` +
-            `3. Air-Gap Guarantee: No external network calls were made. 100% processing executed locally using your active model profile (${aiProfile}).`,
-          citations: citationDocs.map(d => ({
-            title: d.title,
-            category: d.category,
-            department: d.department,
-            sensitivity: d.sensitivity,
-            similarityScore: (0.91 + Math.random() * 0.08).toFixed(3)
+          answer: `[SOVEREIGN RAG AGENT SYNTHESIS - ${user.department.toUpperCase()} DEPT]\n\nBased on your confidential local document repository (${user.department} partition), here is the verified evidence-backed analysis:\n\n${answerExcerpt}\n\n✓ Air-Gap Guarantee: 100% processed locally on-premise without cloud transmission.`,
+          citations: searchOutcome.citations.map(c => ({
+            title: c.documentTitle,
+            category: c.sectionTitle,
+            department: c.department,
+            sensitivity: c.sensitivity,
+            similarityScore: c.score,
+            excerpt: c.excerpt
           })),
           executionTimeMs: Date.now() - startTime
         };
