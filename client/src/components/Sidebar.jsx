@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   Bot, BarChart3, Shield, Cpu, FileText,
-  Settings, Database, Layers, Sparkles, Brain
+  Settings, Database, Layers, Sparkles, Brain, ClipboardCheck
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -37,6 +37,13 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: <BarChart3 size={18} />,
       roles: ['Manager', 'Admin'],
       badge: 'Compliance'
+    },
+    {
+      id: 'auditor-dashboard',
+      label: 'Auditor Evidence Center',
+      icon: <ClipboardCheck size={18} />,
+      roles: ['Auditor'],
+      badge: 'Read Only'
     },
     {
       id: 'admin-governance',

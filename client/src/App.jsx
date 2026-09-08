@@ -11,6 +11,7 @@ import { AdminDashboard } from './components/dashboards/AdminDashboard';
 import { ModelManagementCenter } from './components/dashboards/ModelManagementCenter';
 import { DataFoundationDashboard } from './components/dashboards/DataFoundationDashboard';
 import { IntelligenceDashboard } from './components/dashboards/IntelligenceDashboard';
+import { AuditorDashboard } from './components/dashboards/AuditorDashboard';
 import { useAuth } from './context/AuthContext';
 import { useHardware } from './context/HardwareContext';
 
@@ -28,6 +29,8 @@ export default function App() {
         }
       } else if (user.role === 'Manager' && (activeTab === 'admin-governance' || activeTab === 'model-center')) {
         setActiveTab('workspace');
+      } else if (user.role === 'Auditor' && activeTab !== 'auditor-dashboard') {
+        setActiveTab('auditor-dashboard');
       }
     } else {
       setIsHardwareConfirmed(false);
@@ -93,6 +96,8 @@ export default function App() {
         return user.role === 'Admin' ? <AdminDashboard /> : <EmployeeWorkspace />;
       case 'model-center':
         return user.role === 'Admin' ? <ModelManagementCenter /> : <EmployeeWorkspace />;
+      case 'auditor-dashboard':
+        return user.role === 'Auditor' ? <AuditorDashboard /> : <EmployeeWorkspace />;
       default:
         return <EmployeeWorkspace />;
     }

@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['Admin', 'Manager', 'Employee'], default: 'Employee' },
+  role: { type: String, enum: ['Admin', 'Manager', 'Employee', 'Auditor', 'Guest'], default: 'Employee' },
   department: { type: String, required: true },
   assignedAIProfile: { type: String, enum: ['Fast', 'Balanced', 'Advanced'], default: 'Balanced' },
   status: { type: String, enum: ['Active', 'Inactive', 'Suspended'], default: 'Active' },
