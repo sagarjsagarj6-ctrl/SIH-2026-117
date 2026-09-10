@@ -98,6 +98,7 @@ export const FileUploader = ({ onUploadSuccess }) => {
         setProgress(100);
         setUploadResults(data);
         setFiles([]);
+        window.dispatchEvent(new CustomEvent('document-indexed', { detail: data }));
         if (onUploadSuccess) onUploadSuccess(data);
       } else {
         setErrorMessage(data.error || 'Upload failed');
@@ -246,11 +247,13 @@ export const FileUploader = ({ onUploadSuccess }) => {
           }}
         >
           <input
+            id="file-upload-input"
             ref={fileInputRef}
             type="file"
             multiple
             accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.md,.json,.png,.jpg,.jpeg,.tiff"
             onChange={handleFileSelect}
+            onClick={(e) => { e.target.value = null; }}
             style={{ display: 'none' }}
           />
 

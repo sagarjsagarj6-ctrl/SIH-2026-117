@@ -3,7 +3,9 @@
  */
 
 export class LlamaCppBackend {
-  static endpoint = process.env.LLAMACPP_HOST || 'http://127.0.0.1:8080';
+  static get endpoint() {
+    return process.env.LLAMACPP_HOST || 'http://127.0.0.1:8080';
+  }
 
   static async isAvailable() {
     try {

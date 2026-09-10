@@ -14,6 +14,12 @@ import { DatabaseConnectorUI } from '../data/DatabaseConnectorUI';
 export const DataFoundationDashboard = () => {
   const { user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState('ingest'); // 'ingest', 'pipeline', 'explorer', 'quality', 'database'
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleUploadSuccess = (data) => {
+    setRefreshKey(prev => prev + 1);
+    setActiveSubTab('pipeline');
+  };
 
   const subTabs = [
     { id: 'ingest', label: 'File Ingestion & Parsers', icon: <UploadCloud size={16} /> },
@@ -88,10 +94,10 @@ export const DataFoundationDashboard = () => {
 
       {/* Render Active View */}
       <div>
-        {activeSubTab === 'ingest' && <FileUploader onUploadSuccess={() => setActiveSubTab('pipeline')} />}
-        {activeSubTab === 'pipeline' && <IngestionDashboard />}
-        {activeSubTab === 'explorer' && <KnowledgeExplorer />}
-        {activeSubTab === 'quality' && <DataQualityView />}
+        {activeSubTab === 'ingest' && <FileUploader onUploadSuccess={handleUploadSuccess} />}
+        {activeSubTab === 'pipeline' && <IngestionDashboard refreshKey={refreshKey} />}
+        {activeSubTab === 'explorer' && <KnowledgeExplorer refreshKey={refreshKey} />}
+        {activeSubTab === 'quality' && <DataQualityView refreshKey={refreshKey} />}
         {activeSubTab === 'database' && <DatabaseConnectorUI />}
       </div>
     </div>

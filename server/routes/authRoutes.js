@@ -6,7 +6,7 @@ import User from '../models/User.js';
 import { authenticateToken, createAuditEntry } from '../middleware/auth.js';
 
 const router = express.Router();
-const secret = process.env.JWT_SECRET || 'sovereign_enterprise_airgap_secret_key_2026_x992';
+const getSecret = () => process.env.JWT_SECRET || 'sovereign_enterprise_airgap_secret_key_2026_x992';
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -62,7 +62,7 @@ router.post('/register', async (req, res) => {
 
     const token = jwt.sign(
       { id: newUser._id.toString(), email: newUser.email, role: newUser.role, department: newUser.department },
-      secret,
+      getSecret(),
       { expiresIn: '24h' }
     );
 
@@ -145,7 +145,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role, department: user.department },
-      secret,
+      getSecret(),
       { expiresIn: '24h' }
     );
 

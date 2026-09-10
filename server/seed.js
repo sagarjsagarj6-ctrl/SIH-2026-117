@@ -6,6 +6,7 @@ import Model from './models/Model.js';
 import KnowledgeDoc from './models/KnowledgeDoc.js';
 import FineTuneJob from './models/FineTuneJob.js';
 import AuditLog from './models/AuditLog.js';
+import DataQualityReport from './models/DataQualityReport.js';
 
 export const seedInitialData = async () => {
   try {
@@ -306,6 +307,54 @@ export const seedInitialData = async () => {
       }
     ];
 
+    const seedQualityReports = [
+      {
+        docId: 'doc_seed_1',
+        fileName: 'Sovereign_Financial_Audit_Q3.pdf',
+        fileType: 'PDF',
+        fileSize: 428000,
+        checksum: 'a8b3f5c9e2d1a4b7e8f0123456789abcdef0123456789abcdef0123456789abcd',
+        department: 'Finance & Accounting',
+        overallScore: 98,
+        metrics: {
+          completeness: 100,
+          consistency: 96,
+          encodingValidity: 100,
+          accuracyScore: 97
+        },
+        piiDetected: true,
+        piiDetails: [
+          { type: 'EMAIL', count: 2, redacted: true },
+          { type: 'PHONE', count: 1, redacted: true }
+        ],
+        malwareStatus: 'CLEAN',
+        status: 'PASSED',
+        flags: ['PII_REDACTED_AUTOMATICALLY'],
+        uploadedBy: 'Elena Vance (Finance Mgr)'
+      },
+      {
+        docId: 'doc_seed_2',
+        fileName: 'Engineering_Cluster_Architecture_Whitepaper.docx',
+        fileType: 'DOCX',
+        fileSize: 1024000,
+        checksum: 'f4e3d2c1b0a9876543210fedcba9876543210fedcba9876543210fedcba98765',
+        department: 'R&D / Engineering',
+        overallScore: 94,
+        metrics: {
+          completeness: 95,
+          consistency: 92,
+          encodingValidity: 100,
+          accuracyScore: 90
+        },
+        piiDetected: false,
+        piiDetails: [],
+        malwareStatus: 'CLEAN',
+        status: 'PASSED',
+        flags: [],
+        uploadedBy: 'Dr. Marcus Vance (R&D Lead)'
+      }
+    ];
+
     if (state.isMongooseConnected) {
       const userCount = await User.countDocuments();
       if (userCount === 0) {
@@ -315,6 +364,7 @@ export const seedInitialData = async () => {
         await KnowledgeDoc.insertMany(seedDocs);
         await FineTuneJob.insertMany(seedJobs);
         await AuditLog.insertMany(seedAuditLogs);
+        await DataQualityReport.insertMany(seedQualityReports);
         console.log('[Seed] MongoDB successfully populated with enterprise seed datasets!');
       } else {
         const existingModelNames = new Set((await Model.find().select('name')).map(model => model.name));
@@ -322,6 +372,10 @@ export const seedInitialData = async () => {
         if (missingModels.length > 0) {
           await Model.insertMany(missingModels);
           console.log(`[Seed] Restored ${missingModels.length} missing local model registry entries.`);
+        }
+        const qualityReportCount = await DataQualityReport.countDocuments();
+        if (qualityReportCount === 0) {
+          await DataQualityReport.insertMany(seedQualityReports);
         }
         console.log('[Seed] MongoDB already contains user records. Skipping overwrite.');
       }
@@ -334,6 +388,7 @@ export const seedInitialData = async () => {
         state.memoryDb.knowledgeDocs = seedDocs.map((doc, i) => ({ _id: `doc_seed_${i+1}`, createdAt: new Date(), ...doc }));
         state.memoryDb.fineTuneJobs = seedJobs.map((j, i) => ({ _id: `job_seed_${i+1}`, createdAt: new Date(), ...j }));
         state.memoryDb.auditLogs = seedAuditLogs.map((a, i) => ({ _id: `audit_seed_${i+1}`, timestamp: new Date(), ...a }));
+        state.memoryDb.dataQualityReports = seedQualityReports.map((q, i) => ({ _id: `quality_seed_${i+1}`, createdAt: new Date(), ...q }));
         console.log('[Seed] In-Memory DB populated with enterprise demo accounts and data!');
       }
     }

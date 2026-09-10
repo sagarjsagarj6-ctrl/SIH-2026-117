@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import hardwareRoutes from './routes/hardwareRoutes.js';
@@ -18,8 +18,7 @@ import { VectorIndexManager } from './services/knowledge/VectorIndexManager.js';
 import { HardwareProfiler } from './services/hardware/HardwareProfiler.js';
 import { ModelHealthChecker } from './services/models/ModelHealthChecker.js';
 import { ModelRegistry } from './services/models/ModelRegistry.js';
-
-dotenv.config();
+import { EnvChecker } from './services/config/EnvChecker.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -55,7 +54,7 @@ try {
   console.warn('[ModelHealthChecker] Bootstrap warning:', e.message);
 }
 
-// Health Check
+// Health Check & Real-Time Environment Diagnostic
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ONLINE',
@@ -63,6 +62,15 @@ app.get('/api/health', (req, res) => {
     deploymentMode: 'Air-Gapped Private LAN',
     timestamp: new Date().toISOString()
   });
+});
+
+app.get('/api/health/env-check', async (req, res) => {
+  try {
+    const report = await EnvChecker.getDiagnosticReport();
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: 'Environment diagnostic failed', details: err.message });
+  }
 });
 
 // API Routes

@@ -8,7 +8,8 @@ export const state = {
     models: [],
     auditLogs: [],
     knowledgeDocs: [],
-    fineTuneJobs: []
+    fineTuneJobs: [],
+    dataQualityReports: []
   }
 };
 

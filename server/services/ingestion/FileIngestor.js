@@ -9,6 +9,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 
 import { DataValidator } from '../validation/DataValidator.js';
 import { DataCleaner } from '../validation/DataCleaner.js';
@@ -62,6 +63,7 @@ export class FileIngestor {
     originalFilename,
     fileSize,
     user,
+    explicitTitle = null,
     explicitDepartment = null,
     explicitSensitivity = null,
     explicitCategory = null,
@@ -69,6 +71,7 @@ export class FileIngestor {
   }) {
     const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const stages = [];
+    let docId = null;
 
     const recordStage = (name, status, details = '') => {
       stages.push({ stage: name, status, details, timestamp: new Date().toISOString() });
@@ -122,7 +125,8 @@ export class FileIngestor {
 
       // Stage 6: Chunking
       recordStage('CHUNKING', 'RUNNING', 'Segmenting into semantic chunks with header preservation');
-      const docId = 'doc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      const docObjectId = new mongoose.Types.ObjectId();
+      docId = docObjectId.toString();
       const chunks = ChunkingEngine.chunkDocument({
         docId,
         title: originalFilename,
@@ -145,8 +149,8 @@ export class FileIngestor {
       // Stage 8: Document Entity & Quality Report Persistence
       recordStage('PERSISTENCE', 'RUNNING', 'Writing document metadata and quality audit record');
       const docRecord = {
-        _id: docId,
-        title: originalFilename,
+        _id: docObjectId,          // Use ObjectId object, not string — prevents BSSONError
+        title: explicitTitle || originalFilename,
         category: classification.category,
         department: classification.department,
         fileType: validation.extension.replace('.', '').toUpperCase(),
@@ -154,7 +158,8 @@ export class FileIngestor {
         snippet: cleanedText.slice(0, 400) + (cleanedText.length > 400 ? '...' : ''),
         tokenCount: chunks.reduce((acc, c) => acc + (c.tokenCount || 0), 0),
         vectorIndexed: true,
-        uploadedBy: user.name || 'User'
+        uploadedBy: user.name || 'User',
+        createdAt: new Date()
       };
 
       if (state.isMongooseConnected) {
@@ -218,6 +223,13 @@ export class FileIngestor {
       return finalJob;
 
     } catch (err) {
+      if (docId) {
+        try {
+          await VectorStore.deleteByDocId(docId);
+        } catch {
+          // ignore rollback error
+        }
+      }
       recordStage('PIPELINE_ERROR', 'FAILED', err.message);
       const failedJob = {
         jobId,
@@ -244,5 +256,9 @@ export class FileIngestor {
 
   static listRecentJobs(limit = 15) {
     return Array.from(this.activeJobs.values()).slice(-limit).reverse();
+  }
+
+  static clearJobs() {
+    this.activeJobs.clear();
   }
 }

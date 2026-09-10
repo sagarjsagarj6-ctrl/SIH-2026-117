@@ -45,7 +45,7 @@ router.post('/upload', authenticateToken, upload.array('files', 10), async (req,
   try {
     const files = req.files;
     const user = req.user;
-    const { department, sensitivity, category, autoRedactPII } = req.body;
+    const { department, sensitivity, category, title, autoRedactPII } = req.body;
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'No files provided for ingestion.' });
@@ -61,6 +61,7 @@ router.post('/upload', authenticateToken, upload.array('files', 10), async (req,
           originalFilename: file.originalname,
           fileSize: file.size,
           user,
+          explicitTitle: title || null,
           explicitDepartment: department || null,
           explicitSensitivity: sensitivity || null,
           explicitCategory: category || null,
@@ -93,6 +94,16 @@ router.get('/jobs', authenticateToken, (req, res) => {
     res.json({ jobs, total: jobs.length });
   } catch (err) {
     res.status(500).json({ error: 'Failed to retrieve ingestion jobs' });
+  }
+});
+
+// DELETE /api/ingest/jobs — Clear recent job stream
+router.delete('/jobs', authenticateToken, (req, res) => {
+  try {
+    FileIngestor.clearJobs();
+    res.json({ message: 'Ingestion job stream cleared', jobs: [] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear jobs' });
   }
 });
 

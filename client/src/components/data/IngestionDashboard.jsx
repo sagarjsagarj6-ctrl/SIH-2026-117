@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Activity, CheckCircle2, AlertTriangle, Clock, RefreshCw, 
-  Layers, Database, FileText, ChevronDown, ChevronUp, ShieldCheck 
+  Layers, Database, FileText, ChevronDown, ChevronUp, ShieldCheck, Trash2 
 } from 'lucide-react';
 
-export const IngestionDashboard = () => {
+export const IngestionDashboard = ({ refreshKey = 0 }) => {
   const { token, API_URL } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,11 +28,37 @@ export const IngestionDashboard = () => {
     }
   };
 
+  const clearJobs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/ingest/jobs`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setJobs([]);
+      }
+    } catch (err) {
+      console.error('Failed to clear ingestion jobs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
+
+    const handleDocIndexed = () => {
+      fetchJobs();
+    };
+
+    window.addEventListener('document-indexed', handleDocIndexed);
     const interval = setInterval(fetchJobs, 12000); // 12s auto-refresh
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      window.removeEventListener('document-indexed', handleDocIndexed);
+      clearInterval(interval);
+    };
+  }, [refreshKey]);
 
   const totalProcessed = jobs.length;
   const successfulCount = jobs.filter(j => j.status === 'COMPLETED').length;
@@ -98,23 +124,45 @@ export const IngestionDashboard = () => {
             <Activity size={20} style={{ color: 'var(--accent-cyan)' }} />
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Real-Time Ingestion Pipeline Monitor</h3>
           </div>
-          <button
-            onClick={fetchJobs}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              color: 'var(--text-main)',
-              fontSize: '0.78rem',
-              cursor: 'pointer'
-            }}
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh Stream
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {jobs.length > 0 && (
+              <button
+                onClick={clearJobs}
+                title="Clear job stream history"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  borderRadius: '8px',
+                  color: '#f87171',
+                  fontSize: '0.78rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <Trash2 size={14} /> Clear Stream
+              </button>
+            )}
+            <button
+              onClick={fetchJobs}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                color: 'var(--text-main)',
+                fontSize: '0.78rem',
+                cursor: 'pointer'
+              }}
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh Stream
+            </button>
+          </div>
         </div>
 
         {jobs.length === 0 ? (

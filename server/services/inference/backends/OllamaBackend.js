@@ -3,7 +3,9 @@
  */
 
 export class OllamaBackend {
-  static endpoint = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+  static get endpoint() {
+    return process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+  }
 
   static async isAvailable() {
     try {

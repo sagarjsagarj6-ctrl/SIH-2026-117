@@ -3,7 +3,9 @@
  */
 
 export class VLLMBackend {
-  static endpoint = process.env.VLLM_HOST || 'http://127.0.0.1:8000';
+  static get endpoint() {
+    return process.env.VLLM_HOST || 'http://127.0.0.1:8000';
+  }
 
   static async isAvailable() {
     try {

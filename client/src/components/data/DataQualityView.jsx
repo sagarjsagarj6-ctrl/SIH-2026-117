@@ -5,7 +5,7 @@ import {
   Search, ShieldAlert, Cpu, Sparkles, RefreshCw, Hash 
 } from 'lucide-react';
 
-export const DataQualityView = () => {
+export const DataQualityView = ({ refreshKey = 0 }) => {
   const { token, API_URL } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,14 @@ export const DataQualityView = () => {
   useEffect(() => {
     fetchReports();
     handleScanSandbox();
-  }, []);
+
+    const handleDocIndexed = () => {
+      fetchReports();
+    };
+
+    window.addEventListener('document-indexed', handleDocIndexed);
+    return () => window.removeEventListener('document-indexed', handleDocIndexed);
+  }, [refreshKey]);
 
   const handleScanSandbox = async () => {
     if (!sandboxText) return;

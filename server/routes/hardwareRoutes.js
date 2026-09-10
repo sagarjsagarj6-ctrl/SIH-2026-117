@@ -1,6 +1,7 @@
 import express from 'express';
 import os from 'os';
 import { authenticateToken } from '../middleware/auth.js';
+import { EnvChecker } from '../services/config/EnvChecker.js';
 
 const router = express.Router();
 
@@ -80,6 +81,16 @@ router.get('/detect', authenticateToken, (req, res) => {
     res.json(hardwareInfo);
   } catch (err) {
     res.status(500).json({ error: 'Hardware detection failed.' });
+  }
+});
+
+// GET /api/hardware/env-check — Real-time environment variable audit and capability diagnostics
+router.get('/env-check', async (req, res) => {
+  try {
+    const report = await EnvChecker.getDiagnosticReport();
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: 'Environment capability check failed.', details: err.message });
   }
 });
 
