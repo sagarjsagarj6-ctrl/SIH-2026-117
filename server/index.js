@@ -13,6 +13,7 @@ import ingestRoutes from './routes/ingestRoutes.js';
 import knowledgeRoutes from './routes/knowledgeRoutes.js';
 import qualityRoutes from './routes/qualityRoutes.js';
 import inferenceRoutes from './routes/inferenceRoutes.js';
+import networkRoutes from './routes/networkRoutes.js';
 import { seedInitialData } from './seed.js';
 import { VectorIndexManager } from './services/knowledge/VectorIndexManager.js';
 import { HardwareProfiler } from './services/hardware/HardwareProfiler.js';
@@ -107,6 +108,7 @@ app.use('/api/ingest', ingestRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/quality', qualityRoutes);
 app.use('/api/inference', inferenceRoutes);
+app.use('/api/networks', networkRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

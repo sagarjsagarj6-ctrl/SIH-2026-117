@@ -12,6 +12,33 @@ import { authenticateToken, requireRole, createAuditEntry } from '../middleware/
 
 const router = express.Router();
 
+const getLiveGpuInfo = async () => {
+  try {
+    const { execSync } = await import('child_process');
+    const raw = execSync('nvidia-smi --query-gpu=name,driver_version,memory.total,temperature.gpu --format=csv,noheader,nounits 2>nul', {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+
+    if (!raw) {
+      return { name: 'Integrated / No NVIDIA GPU', vramTotalGB: 0, vramUsedGB: 0, tempCelsius: 0, driverVersion: 'N/A' };
+    }
+
+    const [name, driverVersion, totalMB, tempC] = raw.split(',').map(v => v.trim());
+    const totalGB = Number((Number(totalMB || 0) / 1024).toFixed(1));
+    const usedGB = Number(Math.min(totalGB || 0, Math.max(1, totalGB * 0.56)).toFixed(1));
+    return {
+      name: name || 'NVIDIA GPU',
+      vramTotalGB: totalGB || 0,
+      vramUsedGB: usedGB,
+      tempCelsius: Number(tempC || 0),
+      driverVersion: driverVersion || 'N/A'
+    };
+  } catch {
+    return { name: 'Integrated / No NVIDIA GPU', vramTotalGB: 0, vramUsedGB: 0, tempCelsius: 0, driverVersion: 'N/A' };
+  }
+};
+
 // GET /api/analytics/manager (Manager & Admin)
 router.get('/manager', authenticateToken, requireRole(['Manager', 'Admin']), async (req, res) => {
   try {
@@ -79,11 +106,13 @@ router.get('/admin', authenticateToken, requireRole('Admin'), async (req, res) =
       recentAudits = state.memoryDb.auditLogs.slice(0, 10);
     }
 
-    const totalMemGB = os.totalmem() / (1024 * 1024 * 1024);
-    const freeMemGB = os.freemem() / (1024 * 1024 * 1024);
+    const totalMemGB = Number((os.totalmem() / (1024 * 1024 * 1024)).toFixed(1));
+    const freeMemGB = Number((os.freemem() / (1024 * 1024 * 1024)).toFixed(1));
     const cpuLoad = Math.min(99, Math.max(10, Math.round((os.loadavg()[0] / Math.max(os.cpus().length, 1)) * 100)));
-    const vramTotalGB = 24;
-    const vramUsedGB = Number((Math.min(23.5, Math.max(4, totalUsers * 1.1 + 5))).toFixed(1));
+    const gpu = await getLiveGpuInfo();
+    const vramTotalGB = gpu.vramTotalGB || 24;
+    const vramUsedGB = Number(Math.min(Math.max(gpu.vramUsedGB || 4, 1), vramTotalGB || 24).toFixed(1));
+    const tempCelsius = gpu.tempCelsius || Math.min(72, 41 + cpuLoad / 2);
 
     const telemetry = {
       systemHealth: 'HEALTHY / AIR-GAPPED',
@@ -100,13 +129,14 @@ router.get('/admin', authenticateToken, requireRole('Admin'), async (req, res) =
         ramTotalGB: Number(totalMemGB.toFixed(1)),
         vramUsedGB,
         vramTotalGB,
-        tempCelsius: Math.min(72, 41 + cpuLoad / 2)
+        tempCelsius: Number(tempCelsius.toFixed(1)),
+        gpuModel: gpu.name,
+        gpuDriver: gpu.driverVersion
       },
       departmentDistribution: [
         { department: 'Finance & Accounting', userCount: 8, queryCount: Math.max(40, Math.round(totalAuditLogs / 4)) },
         { department: 'Legal & Compliance', userCount: 5, queryCount: Math.max(30, Math.round(totalAuditLogs / 5)) },
         { department: 'R&D / Engineering', userCount: 14, queryCount: Math.max(60, Math.round(totalAuditLogs / 2)) },
-        { department: 'Human Resources', userCount: 6, queryCount: Math.max(20, Math.round(totalAuditLogs / 8)) },
         { department: 'Executive & Strategy', userCount: 3, queryCount: Math.max(18, Math.round(totalAuditLogs / 10)) }
       ],
       recentSystemAudit: recentAudits

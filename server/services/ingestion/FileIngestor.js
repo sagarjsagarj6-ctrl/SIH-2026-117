@@ -151,10 +151,10 @@ export class FileIngestor {
       const docRecord = {
         _id: docObjectId,          // Use ObjectId object, not string — prevents BSSONError
         title: explicitTitle || originalFilename,
-        category: classification.category,
-        department: classification.department,
+        category: explicitCategory || classification.category,
+        department: explicitDepartment || user.department || classification.department,
         fileType: validation.extension.replace('.', '').toUpperCase(),
-        sensitivity: classification.sensitivity,
+        sensitivity: explicitSensitivity || classification.sensitivity,
         snippet: cleanedText.slice(0, 400) + (cleanedText.length > 400 ? '...' : ''),
         tokenCount: chunks.reduce((acc, c) => acc + (c.tokenCount || 0), 0),
         vectorIndexed: true,

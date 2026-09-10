@@ -47,15 +47,6 @@ export const seedInitialData = async () => {
         status: 'Active'
       },
       {
-        name: 'Sarah Connor (HR Specialist)',
-        email: 'employee.hr@sovereign.local',
-        password: empPass,
-        role: 'Employee',
-        department: 'Human Resources',
-        assignedAIProfile: 'Fast',
-        status: 'Active'
-      },
-      {
         name: 'David Sterling (Legal Director)',
         email: 'manager.legal@sovereign.local',
         password: managerPass,
@@ -91,14 +82,6 @@ export const seedInitialData = async () => {
         securityLevel: 'Confidential',
         allowedAgents: ['RAG', 'DATA_SCIENCE', 'VISION', 'REPORTING'],
         memberCount: 14
-      },
-      {
-        name: 'Human Resources',
-        code: 'HR',
-        description: 'Employee records, talent acquisition, performance reviews, and compensation plans.',
-        securityLevel: 'Restricted',
-        allowedAgents: ['RAG', 'REPORTING'],
-        memberCount: 6
       },
       {
         name: 'Executive & Strategy',

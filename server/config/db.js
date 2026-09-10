@@ -9,7 +9,8 @@ export const state = {
     auditLogs: [],
     knowledgeDocs: [],
     fineTuneJobs: [],
-    dataQualityReports: []
+    dataQualityReports: [],
+    networks: []
   }
 };
 

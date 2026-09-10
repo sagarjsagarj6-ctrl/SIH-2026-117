@@ -4,14 +4,27 @@ const fineTuneJobSchema = new mongoose.Schema({
   jobName: { type: String, required: true },
   baseModel: { type: String, required: true },
   department: { type: String, required: true },
-  datasetName: { type: String, required: true },
+  datasetName: { type: String, default: '' },
   method: { type: String, enum: ['LoRA', 'QLoRA', 'Full Parameter'], default: 'QLoRA' },
   epochs: { type: Number, default: 3 },
   learningRate: { type: String, default: '2e-4' },
   status: { type: String, enum: ['Queued', 'Training', 'Completed', 'Failed'], default: 'Queued' },
   progressPercent: { type: Number, default: 0 },
   currentLoss: { type: Number, default: 1.84 },
-  startedAt: { type: Date, default: Date.now }
+  startedAt: { type: Date, default: Date.now },
+  createdBy: { type: String, default: 'System' },
+  ownerRole: { type: String, default: 'Employee' },
+  ownerId: { type: String, default: '' },
+  trainDataFile: { type: String, default: '' },
+  testDataFile: { type: String, default: '' },
+  networkId: { type: String, default: '' },
+  networkName: { type: String, default: '' },
+  networkKey: { type: String, default: '' },
+  isDeployed: { type: Boolean, default: false },
+  isGlobal: { type: Boolean, default: false },
+  accessRoles: [{ type: String }],
+  deploymentKey: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 export default mongoose.models.FineTuneJob || mongoose.model('FineTuneJob', fineTuneJobSchema);
