@@ -4,7 +4,7 @@ import {
   ChevronRight, Star, TrendingUp, AlertCircle
 } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const PRESET_PROMPTS = [
   'Summarize the key financial risks identified in Q3 operational reports.',

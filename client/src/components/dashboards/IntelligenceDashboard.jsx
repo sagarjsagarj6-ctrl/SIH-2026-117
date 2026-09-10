@@ -8,6 +8,7 @@ import { AgentTraceViewer } from '../agents/AgentTraceViewer';
 import { InferenceMonitor } from '../models/InferenceMonitor';
 import { FineTuneManager } from '../models/FineTuneManager';
 import { ModelComparisonView } from '../models/ModelComparisonView';
+import { AgentCommunicationWorkflow } from '../agents/AgentCommunicationWorkflow';
 
 const TABS = [
   {
@@ -57,7 +58,7 @@ export const IntelligenceDashboard = () => {
   const currentTab = TABS.find(t => t.id === activeTab);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%', minHeight: 0, overflow: 'hidden' }}>
 
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -151,19 +152,20 @@ export const IntelligenceDashboard = () => {
       )}
 
       {/* Tab Content */}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {activeTab === 'agent-studio' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <AgentWorkspace />
           </div>
         )}
+        {activeTab === 'agent-communication' && <AgentCommunicationWorkflow />}
         {activeTab === 'inference-monitor' && <InferenceMonitor />}
         {activeTab === 'finetune' && <FineTuneManager />}
         {activeTab === 'model-compare' && <ModelComparisonView />}
       </div>
 
       {/* Architecture Footer */}
-      <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, flexShrink: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Database size={12} color="#6366f1" /> Vector-RAG Hybrid</span>
           <ChevronRight size={10} color="var(--text-dim)" />

@@ -152,7 +152,6 @@ export const FileUploader = ({ onUploadSuccess }) => {
               <option value="R&D / Engineering">R&D / Engineering</option>
               <option value="Legal & Compliance">Legal & Compliance</option>
               <option value="Operations & Logistics">Operations & Logistics</option>
-              <option value="Human Resources">Human Resources</option>
               <option value="Executive & Strategy">Executive & Strategy</option>
               <option value="All">All Departments (Global)</option>
             </select>

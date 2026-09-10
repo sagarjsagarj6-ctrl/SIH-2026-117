@@ -4,8 +4,9 @@ import {
   TrendingDown, CheckCircle, AlertCircle, Clock, Cpu,
   BarChart2, FileText, Settings, RefreshCw, Download
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const STAGE_LABELS = {
   idle: 'Idle',
@@ -33,6 +34,7 @@ function generateMockLoss(epoch, totalEpochs) {
 }
 
 export const FineTuneManager = () => {
+  const { user } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
   const [config, setConfig] = useState({
@@ -44,6 +46,8 @@ export const FineTuneManager = () => {
     loraRank: 16,
     loraAlpha: 32,
     warmupSteps: 100,
+    trainDataFileName: '',
+    testDataFileName: '',
   });
   const [form, setForm] = useState({ showForm: false });
   const [lossData, setLossData] = useState([]);
@@ -71,7 +75,17 @@ export const FineTuneManager = () => {
     setLossData([]);
     setValidationScore(null);
     const jobId = `ft-${Date.now()}`;
-    const newJob = { id: jobId, ...config, stage: 'preparing', startedAt: new Date().toISOString(), lossHistory: [] };
+    const newJob = {
+      id: jobId,
+      ...config,
+      stage: 'preparing',
+      startedAt: new Date().toISOString(),
+      lossHistory: [],
+      trainDataFileName: config.trainDataFileName || 'No training file selected',
+      testDataFileName: config.testDataFileName || 'No test file selected',
+      hosted: false,
+      createdBy: user?.role || 'Employee'
+    };
     setJobs(prev => [newJob, ...prev]);
     setActiveJob(newJob);
     addLog(`[${jobId}] Preparing dataset for ${config.department} dept. (${config.epochs} epochs)…`, 'info');
@@ -113,6 +127,24 @@ export const FineTuneManager = () => {
     clearInterval(intervalRef.current);
     setStage('idle');
     addLog('Training stopped by user.', 'error');
+  };
+
+  const handleDatasetUpload = (key, event) => {
+    const file = event.target.files?.[0];
+    const fileName = file ? file.name : '';
+    setConfig(prev => ({ ...prev, [key]: fileName }));
+    addLog(`${fileName ? fileName : 'No file selected'} assigned to ${key === 'trainDataFileName' ? 'training dataset' : 'test dataset'}.`, fileName ? 'success' : 'error');
+  };
+
+  const handleHostToLan = (job) => {
+    setJobs(prev => prev.map(item => item.id === job.id ? { ...item, hosted: true } : item));
+    addLog(`[${job.id}] Agent hosted to private LAN and broadcast to approved users.`, 'success');
+  };
+
+  const handleRemoveJob = (jobId) => {
+    setJobs(prev => prev.filter(item => item.id !== jobId));
+    if (activeJob?.id === jobId) setActiveJob(null);
+    addLog(`[${jobId}] Agent removed from the local training registry.`, 'error');
   };
 
   const LossCurve = ({ data }) => {
@@ -215,6 +247,30 @@ export const FineTuneManager = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Train Data Upload</label>
+              <input
+                type="file"
+                accept=".csv,.json,.jsonl,.txt,.xlsx,.parquet"
+                onChange={(e) => handleDatasetUpload('trainDataFileName', e)}
+                style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', padding: '10px 12px' }}
+              />
+              <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-dim)' }}>{config.trainDataFileName || 'No file selected'}</div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Test Data Upload</label>
+              <input
+                type="file"
+                accept=".csv,.json,.jsonl,.txt,.xlsx,.parquet"
+                onChange={(e) => handleDatasetUpload('testDataFileName', e)}
+                style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', padding: '10px 12px' }}
+              />
+              <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-dim)' }}>{config.testDataFileName || 'No file selected'}</div>
+            </div>
           </div>
         </div>
       )}
@@ -349,13 +405,38 @@ export const FineTuneManager = () => {
           <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 16 }}>JOB HISTORY</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {jobs.map(j => (
-              <div key={j.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--bg-primary)', borderRadius: 8, borderLeft: `3px solid ${STAGE_COLORS[j.stage]}` }}>
-                <div>
+              <div key={j.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 16px', background: 'var(--bg-primary)', borderRadius: 8, borderLeft: `3px solid ${STAGE_COLORS[j.stage]}` }}>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{j.id}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{j.modelBase} · {j.department} · {j.epochs} epochs</div>
+                  <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: 4 }}>
+                    Train: {j.trainDataFileName || 'Not uploaded'} | Test: {j.testDataFileName || 'Not uploaded'}
+                  </div>
                 </div>
-                <div style={{ padding: '4px 10px', borderRadius: 20, background: `${STAGE_COLORS[j.stage]}22`, color: STAGE_COLORS[j.stage], fontSize: '0.72rem', fontWeight: 700 }}>
-                  {STAGE_LABELS[j.stage]}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  {user?.role === 'Admin' && (
+                    <button
+                      onClick={() => handleHostToLan(j)}
+                      style={{ padding: '6px 10px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#86efac', borderRadius: 8, fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {j.hosted ? 'Hosted' : 'Host to LAN'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setActiveJob(j)}
+                    style={{ padding: '6px 10px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc', borderRadius: 8, fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Fine Tune
+                  </button>
+                  <button
+                    onClick={() => handleRemoveJob(j.id)}
+                    style={{ padding: '6px 10px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', borderRadius: 8, fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Remove
+                  </button>
+                  <div style={{ padding: '4px 10px', borderRadius: 20, background: `${STAGE_COLORS[j.stage]}22`, color: STAGE_COLORS[j.stage], fontSize: '0.72rem', fontWeight: 700 }}>
+                    {STAGE_LABELS[j.stage]}
+                  </div>
                 </div>
               </div>
             ))}

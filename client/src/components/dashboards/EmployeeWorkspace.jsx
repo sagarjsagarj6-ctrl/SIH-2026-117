@@ -14,6 +14,7 @@ export const EmployeeWorkspace = () => {
   const { activeProfile } = useHardware();
 
   const [activeAgent, setActiveAgent] = useState('RAG'); // 'RAG', 'DATA_SCIENCE', 'VISION', 'REPORTING'
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState('workspace');
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [queryResult, setQueryResult] = useState(null);
@@ -301,7 +302,7 @@ export const EmployeeWorkspace = () => {
   };
 
   return (
-    <div style={{ padding: '32px', color: 'var(--text-main)', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ width: '100%', minWidth: 0, padding: '4px 8px', color: 'var(--text-main)', maxWidth: '1400px', margin: '0 auto', height: 'calc(100vh - 84px)', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {/* Upload Success Toast Banner */}
       {uploadSuccessToast && (
         <div style={{
@@ -330,349 +331,291 @@ export const EmployeeWorkspace = () => {
         </div>
       )}
 
-      {/* Workspace Banner Header */}
-      <div className="glass-panel" style={{ padding: '24px 32px', marginBottom: '32px', borderLeft: '4px solid var(--accent-cyan)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>{user.department} Workspace</h1>
-              <span className="badge badge-cyan">{user.role} ACCESS</span>
+      {/* Main Layout: response above; bottom control rows fixed and compact */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      {activeWorkspaceTab === 'workspace' ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', height: '100%', minHeight: 0 }}>
+        {loading && (
+          <div className="glass-card" style={{ padding: '28px', textAlign: 'center', flexShrink: 0, order: 3 }}>
+            <div className="pulse-live" style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px'
+            }}>
+              <Bot size={22} color="#fff" />
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Air-Gapped Multi-Agent Intelligence Hub. Queries are scoped strictly to <strong>{user.department}</strong> vector indexes.
+            <h3 style={{ fontSize: '1rem' }}>Executing {activeAgent} Agent Logic...</h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+              Performing vector similarity search & localized tensor inference on {activeProfile} model endpoint.
             </p>
           </div>
+        )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              <div>Active Execution Profile</div>
-              <div style={{ fontWeight: 700, color: 'var(--accent-indigo)' }}>{activeProfile} Mode</div>
+        {queryResult && (
+          <div className="glass-panel" style={{ padding: '12px 14px', border: '1px solid var(--border-highlight)', flex: '1 1 0', minHeight: 0, maxHeight: 'none', overflowY: 'auto', minWidth: 0, scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch', order: 3 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="badge badge-cyan">{queryResult.agent}</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Latency: {queryResult.executionTimeMs} ms</span>
+              </div>
+              <span className="badge badge-green">LOCAL AIR-GAP</span>
             </div>
-            <button className="btn-secondary" onClick={() => setShowUploadModal(true)} style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
-              <Upload size={16} /> Upload & Vector Index Doc
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Main Grid: Multi-Agent Query Sandbox + Knowledge Repository */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1.3fr', gap: '28px' }}>
-        {/* Left Column: Multi-Agent Suite */}
-        <div>
-          {/* Agent Selector Tabs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
-            {[
-              { id: 'RAG', name: 'RAG Search Agent', icon: <FileText size={18} />, color: 'var(--accent-cyan)' },
-              { id: 'DATA_SCIENCE', name: 'Data Science Agent', icon: <BarChart3 size={18} />, color: 'var(--accent-indigo)' },
-              { id: 'VISION', name: 'Vision OCR Agent', icon: <Zap size={18} />, color: 'var(--accent-purple)' },
-              { id: 'REPORTING', name: 'Reporting Agent', icon: <Terminal size={18} />, color: 'var(--accent-green)' }
-            ].map(agent => {
-              const isSelected = activeAgent === agent.id;
-              return (
-                <button
-                  key={agent.id}
-                  onClick={() => updateDefaultPrompt(agent.id)}
-                  className="glass-card"
-                  style={{
-                    padding: '16px',
-                    cursor: 'pointer',
-                    background: isSelected ? 'rgba(21, 27, 44, 0.95)' : 'var(--bg-card)',
-                    border: isSelected ? `2px solid ${agent.color}` : '1px solid var(--border-color)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    gap: '8px',
-                    textAlign: 'left'
-                  }}
-                >
-                  <span style={{ color: agent.color }}>{agent.icon}</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: isSelected ? 700 : 600, color: isSelected ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                    {agent.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Prompt Input Form */}
-          <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
-            <form onSubmit={handleAgentQuery}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Bot size={16} /> SOVEREIGN {activeAgent} AGENT PROMPT:
-                </label>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Air-Gap Encrypted Session</span>
+            {queryResult.answer && (
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5, fontSize: '0.86rem', marginBottom: '12px' }}>
+                {queryResult.answer}
               </div>
+            )}
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  rows={3}
-                  className="form-input"
-                  style={{ resize: 'vertical', fontFamily: 'var(--font-main)' }}
-                  placeholder="Enter your confidential inquiry or dataset analysis prompt..."
-                  required
-                />
+            {queryResult.citations && (
+              <div>
+                <h4 style={{ fontSize: '0.82rem', color: 'var(--accent-cyan)', marginBottom: '8px' }}>
+                  Vector Retrieval Citations & Evidence Passages:
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
+                  {queryResult.citations.map((c, i) => (
+                    <div key={i} className="glass-card" style={{ padding: '8px 10px', fontSize: '0.76rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <strong style={{ color: '#818cf8' }}>{c.title}</strong>
+                        <span className="badge badge-amber">{c.sensitivity}</span>
+                      </div>
+                      <div style={{ color: 'var(--text-muted)' }}>Category: {c.category} | Match Score: {c.similarityScore}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px' }}>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  Scoped to: <strong style={{ color: 'var(--accent-indigo)' }}>{user.department}</strong>
+            {queryResult.metrics && (
+              <div>
+                <h4 style={{ fontSize: '0.82rem', color: 'var(--accent-indigo)', marginBottom: '8px' }}>
+                  {queryResult.summary}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                  <div className="glass-card" style={{ padding: '9px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Records</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{queryResult.metrics.totalRecordsAnalyzed}</div>
+                  </div>
+                  <div className="glass-card" style={{ padding: '9px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Anomaly</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-green)' }}>{queryResult.metrics.anomalyRatePct}%</div>
+                  </div>
+                  <div className="glass-card" style={{ padding: '9px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Confidence</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>{queryResult.metrics.confidenceScore}</div>
+                  </div>
                 </div>
 
-                <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '10px 24px' }}>
-                  {loading ? 'Agent Reasoning...' : 'Execute Local AI Agent'} <ArrowRight size={18} />
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Agent Output Canvas */}
-          {loading && (
-            <div className="glass-card" style={{ padding: '40px', textAlign: 'center' }}>
-              <div className="pulse-live" style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px'
-              }}>
-                <Bot size={24} color="#fff" />
-              </div>
-              <h3 style={{ fontSize: '1.1rem' }}>Executing {activeAgent} Agent Logic...</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-                Performing vector similarity search & localized tensor inference on {activeProfile} model endpoint.
-              </p>
-            </div>
-          )}
-
-          {queryResult && (
-            <div className="glass-panel" style={{ padding: '28px', border: '1px solid var(--border-highlight)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '14px', borderBottom: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span className="badge badge-cyan">{queryResult.agent}</span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Latency: {queryResult.executionTimeMs} ms</span>
-                </div>
-                <span className="badge badge-green">100% LOCAL AIR-GAP CONFIRMED</span>
-              </div>
-
-              {/* Text Response / Report */}
-              {queryResult.answer && (
-                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, fontSize: '0.95rem', marginBottom: '24px' }}>
-                  {queryResult.answer}
-                </div>
-              )}
-
-              {/* Citations section if RAG */}
-              {queryResult.citations && (
-                <div>
-                  <h4 style={{ fontSize: '0.88rem', color: 'var(--accent-cyan)', marginBottom: '12px' }}>
-                    Vector Retrieval Citations & Evidence Passages:
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
-                    {queryResult.citations.map((c, i) => (
-                      <div key={i} className="glass-card" style={{ padding: '12px 16px', fontSize: '0.82rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <strong style={{ color: '#818cf8' }}>{c.title}</strong>
-                          <span className="badge badge-amber">{c.sensitivity}</span>
-                        </div>
-                        <div style={{ color: 'var(--text-muted)' }}>Category: {c.category} | Match Score: {c.similarityScore}</div>
+                <div className="glass-card" style={{ padding: '10px' }}>
+                  <div style={{ fontSize: '0.76rem', fontWeight: 700, marginBottom: '8px' }}>{queryResult.chartData.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', height: '96px', padding: '8px 10px', borderBottom: '1px solid var(--border-color)' }}>
+                    {[40, 65, 85, 110].map((h, i) => (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <div style={{
+                          width: '100%',
+                          height: `${h}px`,
+                          background: 'linear-gradient(180deg, var(--accent-indigo), var(--accent-cyan))',
+                          borderRadius: '6px 6px 0 0'
+                        }} />
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{queryResult.chartData.labels[i]}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Data Science Metrics & Interactive Chart */}
-              {queryResult.metrics && (
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-indigo)', marginBottom: '14px' }}>
-                    {queryResult.summary}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-                    <div className="glass-card" style={{ padding: '14px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Records Processed</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{queryResult.metrics.totalRecordsAnalyzed}</div>
-                    </div>
-                    <div className="glass-card" style={{ padding: '14px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Anomaly Rate</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--accent-green)' }}>{queryResult.metrics.anomalyRatePct}%</div>
-                    </div>
-                    <div className="glass-card" style={{ padding: '14px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Confidence Score</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>{queryResult.metrics.confidenceScore}</div>
-                    </div>
-                  </div>
-
-                  {/* SVG Chart Visualization */}
-                  <div className="glass-card" style={{ padding: '20px' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '16px' }}>{queryResult.chartData.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '24px', height: '140px', padding: '10px 20px', borderBottom: '1px solid var(--border-color)' }}>
-                      {[40, 65, 85, 110].map((h, i) => (
-                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                          <div style={{
-                            width: '100%',
-                            height: `${h}px`,
-                            background: 'linear-gradient(180deg, var(--accent-indigo), var(--accent-cyan))',
-                            borderRadius: '6px 6px 0 0'
-                          }} />
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{queryResult.chartData.labels[i]}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            {queryResult.ocrResult && (
+              <div className="glass-card" style={{ padding: '10px', marginTop: '10px' }}>
+                <div className="badge badge-purple" style={{ marginBottom: '8px' }}>
+                  OCR Scan Complete ({queryResult.ocrResult.confidence})
                 </div>
-              )}
-
-              {/* Vision OCR Results */}
-              {queryResult.ocrResult && (
-                <div className="glass-card" style={{ padding: '20px' }}>
-                  <div className="badge badge-purple" style={{ marginBottom: '10px' }}>
-                    OCR Scan Complete ({queryResult.ocrResult.confidence})
-                  </div>
-                  <pre className="mono" style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--accent-cyan)', marginBottom: '16px' }}>
-                    {queryResult.ocrResult.textExtracted}
-                  </pre>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    Extracted Entities:
-                    {queryResult.ocrResult.detectedEntities.map((ent, i) => (
-                      <span key={i} style={{ marginLeft: '8px', color: 'var(--text-main)' }}>
-                        <strong>{ent.label}:</strong> {ent.value} |
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Executive Report Sections */}
-              {queryResult.sections && (
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '16px', color: 'var(--accent-green)' }}>
-                    {queryResult.reportTitle}
-                  </h3>
-                  {queryResult.sections.map((sec, i) => (
-                    <div key={i} style={{ marginBottom: '16px' }}>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '6px' }}>{sec.heading}</h4>
-                      <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{sec.content}</p>
-                    </div>
+                <pre className="mono" style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px', fontSize: '0.74rem', color: 'var(--accent-cyan)', marginBottom: '10px' }}>
+                  {queryResult.ocrResult.textExtracted}
+                </pre>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  Extracted Entities:
+                  {queryResult.ocrResult.detectedEntities.map((ent, i) => (
+                    <span key={i} style={{ marginLeft: '8px', color: 'var(--text-main)' }}>
+                      <strong>{ent.label}:</strong> {ent.value} |
+                    </span>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Department Knowledge Repository */}
-        <div>
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Indexed Department Docs</h3>
-                <button
-                  onClick={() => fetchDocuments()}
-                  title="Refresh Document Index"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: fetchingDocs ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '4px'
-                  }}
-                >
-                  <RefreshCw size={14} className={fetchingDocs ? 'spin-animation' : ''} />
-                </button>
               </div>
-              <span className="badge badge-indigo">{documents.length} Files</span>
-            </div>
+            )}
 
-            {documents.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                No indexed documents found for {user.department}. Click "Upload & Vector Index Doc" to add your first document.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '550px', overflowY: 'auto' }}>
-                {documents.map((doc, idx) => (
-                  <div key={doc._id || idx} style={{
-                    padding: '12px',
-                    borderRadius: '8px',
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid var(--border-color)',
-                    transition: 'all 0.2s ease'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }} title={doc.title}>
-                        {doc.title}
-                      </span>
-                      <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>{doc.fileType || 'DOC'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                      <span>Category: <strong style={{ color: 'var(--accent-cyan)' }}>{doc.category || 'Policy'}</strong></span>
-                      <span>Sensitivity: <strong style={{ color: '#fb7185' }}>{doc.sensitivity || 'Confidential'}</strong></span>
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
-                      <CheckCircle2 size={12} /> Vector Index Active ({doc.tokenCount || 1200} Tokens)
-                    </div>
-
-                    {/* File Card Actions: View Content & Remove File */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <button
-                        type="button"
-                        onClick={() => setViewingDoc(doc)}
-                        style={{
-                          background: 'rgba(0, 255, 242, 0.08)',
-                          border: '1px solid rgba(0, 255, 242, 0.25)',
-                          borderRadius: '6px',
-                          color: 'var(--accent-cyan)',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          padding: '4px 10px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          transition: 'all 0.15s ease'
-                        }}
-                        title="View extracted content and indexing details"
-                      >
-                        <Eye size={12} /> View File
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setDeletingDoc(doc)}
-                        style={{
-                          background: 'rgba(239, 68, 68, 0.08)',
-                          border: '1px solid rgba(239, 68, 68, 0.25)',
-                          borderRadius: '6px',
-                          color: '#f87171',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          padding: '4px 10px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          transition: 'all 0.15s ease'
-                        }}
-                        title="Remove file from vector store"
-                      >
-                        <Trash2 size={12} /> Remove
-                      </button>
-                    </div>
+            {queryResult.sections && (
+              <div style={{ marginTop: '10px' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '8px', color: 'var(--accent-green)' }}>
+                  {queryResult.reportTitle}
+                </h3>
+                {queryResult.sections.map((sec, i) => (
+                  <div key={i} style={{ marginBottom: '8px' }}>
+                    <h4 style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '4px' }}>{sec.heading}</h4>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>{sec.content}</p>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        )}
+
+        {/* Agent cards stay directly above the prompt/banner panels */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '6px', flexShrink: 0, order: 1 }}>
+          {[
+            { id: 'RAG', name: 'RAG Search', icon: <FileText size={16} />, color: 'var(--accent-cyan)' },
+            { id: 'DATA_SCIENCE', name: 'Data Science', icon: <BarChart3 size={16} />, color: 'var(--accent-indigo)' },
+            { id: 'VISION', name: 'Vision OCR', icon: <Zap size={16} />, color: 'var(--accent-purple)' },
+            { id: 'REPORTING', name: 'Reporting', icon: <Terminal size={16} />, color: 'var(--accent-green)' }
+          ].map(agent => {
+            const isSelected = activeAgent === agent.id;
+            return (
+              <button
+                key={agent.id}
+                onClick={() => updateDefaultPrompt(agent.id)}
+                className="glass-card"
+                style={{
+                  padding: '6px 8px',
+                  cursor: 'pointer',
+                  background: isSelected ? 'rgba(21, 27, 44, 0.95)' : 'var(--bg-card)',
+                  border: isSelected ? `2px solid ${agent.color}` : '1px solid var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '3px',
+                  textAlign: 'left',
+                  minHeight: '48px'
+                }}
+              >
+                <span style={{ color: agent.color }}>{agent.icon}</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: isSelected ? 700 : 600, color: isSelected ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                  {agent.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)', gap: '6px', flexShrink: 0, alignItems: 'stretch', order: 2 }}>
+          <div className="glass-card" style={{ padding: '8px' }}>
+            <form onSubmit={handleAgentQuery}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', gap: '6px' }}>
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Bot size={14} /> SOVEREIGN {activeAgent} AGENT PROMPT
+                </label>
+                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Air-Gap Session</span>
+              </div>
+
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={2}
+                className="form-input"
+                style={{ resize: 'vertical', fontFamily: 'var(--font-main)', width: '100%', boxSizing: 'border-box', minHeight: '48px' }}
+                placeholder="Enter your confidential inquiry..."
+                required
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px' }}>
+                <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)' }}>
+                  Scope: <strong style={{ color: 'var(--accent-indigo)' }}>{user.department}</strong>
+                </div>
+
+                <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '6px 12px', fontSize: '0.7rem' }}>
+                  {loading ? 'Reasoning...' : 'Execute'} <ArrowRight size={16} />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '8px', borderLeft: '4px solid var(--accent-cyan)', height: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center' }}>
+            <div style={{ width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>{user.department} Workspace</h1>
+                <span className="badge badge-cyan">{user.role} ACCESS</span>
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.64rem', lineHeight: 1.25, margin: '3px 0 6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Air-Gapped Multi-Agent Intelligence Hub. Queries are scoped strictly to <strong>{user.department}</strong> vector indexes.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginRight: '2px' }}>
+                  Active Profile: <strong style={{ color: 'var(--accent-indigo)' }}>{activeProfile} Mode</strong>
+                </div>
+                <button className="btn-secondary" onClick={() => setShowUploadModal(true)} style={{ padding: '5px 8px', fontSize: '0.62rem' }}>
+                  <Upload size={13} /> Upload Files
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setActiveWorkspaceTab('workspace')}
+                  style={{ padding: '5px 8px', fontSize: '0.62rem', borderColor: activeWorkspaceTab === 'workspace' ? 'var(--accent-cyan)' : undefined }}
+                >
+                  <Bot size={13} /> Workspace
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setActiveWorkspaceTab('docs')}
+                  style={{ padding: '5px 8px', fontSize: '0.62rem', borderColor: activeWorkspaceTab === 'docs' ? 'var(--accent-cyan)' : undefined }}
+                >
+                  <FileText size={13} /> Docs
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      ) : (
+        <div className="glass-card" style={{ padding: '20px', height: '100%', boxSizing: 'border-box', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} style={{ color: 'var(--accent-cyan)' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>Workspace Docs</h3>
+              <button
+                onClick={() => fetchDocuments()}
+                title="Refresh Document Index"
+                style={{ background: 'transparent', border: 'none', color: fetchingDocs ? 'var(--accent-cyan)' : 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex' }}
+              >
+                <RefreshCw size={14} className={fetchingDocs ? 'spin-animation' : ''} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="badge badge-indigo">{documents.length} Files</span>
+              <button className="btn-secondary" onClick={() => setShowUploadModal(true)} style={{ padding: '8px 14px', fontSize: '0.8rem' }}>
+                <Upload size={15} /> Upload Doc
+              </button>
+            </div>
+          </div>
+          {documents.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              No indexed documents found for {user.department}. Click "Upload Doc" to add your first document.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+              {documents.map((doc, idx) => (
+                <div key={doc._id || idx} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }} title={doc.title}>{doc.title}</span>
+                    <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>{doc.fileType || 'DOC'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                    <span>Category: <strong style={{ color: 'var(--accent-cyan)' }}>{doc.category || 'Policy'}</strong></span>
+                    <span>Sensitivity: <strong style={{ color: '#fb7185' }}>{doc.sensitivity || 'Confidential'}</strong></span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}><CheckCircle2 size={12} /> Vector Index Active ({doc.tokenCount || 1200} Tokens)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <button type="button" onClick={() => setViewingDoc(doc)} style={{ background: 'rgba(0, 255, 242, 0.08)', border: '1px solid rgba(0, 255, 242, 0.25)', borderRadius: '6px', color: 'var(--accent-cyan)', fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Eye size={12} /> View File</button>
+                    <button type="button" onClick={() => setDeletingDoc(doc)} style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '6px', color: '#f87171', fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Trash2 size={12} /> Remove</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       </div>
 
       {/* Upload Document Modal with Native Local File Manager Integration */}

@@ -244,7 +244,6 @@ export const KnowledgeExplorer = ({ refreshKey = 0 }) => {
               <option value="Finance & Accounting">Finance</option>
               <option value="R&D / Engineering">R&D</option>
               <option value="Legal & Compliance">Legal</option>
-              <option value="Human Resources">HR</option>
             </select>
           )}
 

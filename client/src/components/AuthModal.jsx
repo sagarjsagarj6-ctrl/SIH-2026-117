@@ -194,7 +194,6 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                   <option value="Finance & Accounting">Finance & Accounting</option>
                   <option value="Legal & Compliance">Legal & Compliance</option>
                   <option value="R&D / Engineering">R&D / Engineering</option>
-                  <option value="Human Resources">Human Resources</option>
                   <option value="Executive & Strategy">Executive & Strategy</option>
                 </select>
               </div>
@@ -273,22 +272,6 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 R&D Engineer (Emp)
               </button>
 
-              <button 
-                type="button" 
-                onClick={() => quickLogin('employee.hr@sovereign.local', 'Emp@123')}
-                style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  color: '#34d399',
-                  padding: '8px',
-                  borderRadius: '6px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                HR Specialist (Emp)
-              </button>
             </div>
           </div>
         )}

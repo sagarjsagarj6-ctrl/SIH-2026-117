@@ -12,6 +12,7 @@ import { ModelManagementCenter } from './components/dashboards/ModelManagementCe
 import { DataFoundationDashboard } from './components/dashboards/DataFoundationDashboard';
 import { IntelligenceDashboard } from './components/dashboards/IntelligenceDashboard';
 import { AuditorDashboard } from './components/dashboards/AuditorDashboard';
+import { AgentCommunicationWorkflow } from './components/agents/AgentCommunicationWorkflow';
 import { useAuth } from './context/AuthContext';
 import { useHardware } from './context/HardwareContext';
 
@@ -90,12 +91,14 @@ export default function App() {
         return <DataFoundationDashboard />;
       case 'intelligence-layer':
         return <IntelligenceDashboard />;
+      case 'agent-communication':
+        return <AgentCommunicationWorkflow />;
       case 'manager-analytics':
         return (user.role === 'Manager' || user.role === 'Admin') ? <ManagerDashboard /> : <EmployeeWorkspace />;
       case 'admin-governance':
         return user.role === 'Admin' ? <AdminDashboard /> : <EmployeeWorkspace />;
       case 'model-center':
-        return user.role === 'Admin' ? <ModelManagementCenter /> : <EmployeeWorkspace />;
+        return <ModelManagementCenter />;
       case 'auditor-dashboard':
         return user.role === 'Auditor' ? <AuditorDashboard /> : <EmployeeWorkspace />;
       default:
@@ -106,9 +109,9 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
       <Header onChangeHardware={() => setIsHardwareConfirmed(false)} />
-      <div style={{ display: 'flex', flex: 1, minHeight: 'calc(100vh - 68px)' }}>
+      <div style={{ display: 'flex', flex: 1, height: 'calc(100vh - 56px)', minHeight: 0, overflow: 'hidden' }}>
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main style={{ flex: 1, padding: '24px 32px', overflowY: 'auto', maxHeight: 'calc(100vh - 68px)', background: 'var(--bg-primary)' }}>
+        <main style={{ flex: 1, minWidth: 0, minHeight: 0, boxSizing: 'border-box', padding: '12px 16px', overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-primary)' }}>
           {renderDashboard()}
         </main>
       </div>

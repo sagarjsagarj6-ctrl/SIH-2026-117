@@ -243,7 +243,6 @@ export const AdminDashboard = () => {
                           <option value="Finance & Accounting">Finance & Accounting</option>
                           <option value="Legal & Compliance">Legal & Compliance</option>
                           <option value="R&D / Engineering">R&D / Engineering</option>
-                          <option value="Human Resources">Human Resources</option>
                           <option value="Executive & Strategy">Executive & Strategy</option>
                         </select>
                       ) : (
