@@ -91,7 +91,9 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
     }
 
     let newDoc;
+    const docId = new mongoose.Types.ObjectId();
     const docData = {
+      _id: docId,
       title,
       category,
       department: user.department,
@@ -107,7 +109,7 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
     if (state.isMongooseConnected) {
       newDoc = await KnowledgeDoc.create(docData);
     } else {
-      newDoc = { _id: 'doc_' + Date.now(), ...docData, createdAt: new Date() };
+      newDoc = { ...docData, createdAt: new Date() };
       state.memoryDb.knowledgeDocs.unshift(newDoc);
     }
 

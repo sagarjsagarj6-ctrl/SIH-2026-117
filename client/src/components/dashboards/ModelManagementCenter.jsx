@@ -14,18 +14,6 @@ export const ModelManagementCenter = () => {
   const [benchmarkResult, setBenchmarkResult] = useState(null);
   const [benchmarking, setBenchmarking] = useState(false);
 
-  // New Fine Tune Job State
-  const [showJobModal, setShowJobModal] = useState(false);
-  const [newJob, setNewJob] = useState({
-    jobName: '',
-    baseModel: 'Mistral-7B-v0.3-Enterprise',
-    department: 'Finance & Accounting',
-    datasetName: 'Financial_Ledger_Corpus.jsonl',
-    method: 'QLoRA',
-    epochs: 3,
-    learningRate: '2e-4'
-  });
-
   useEffect(() => {
     fetchModelCenterData();
   }, []);
@@ -89,35 +77,6 @@ export const ModelManagementCenter = () => {
     }
   };
 
-  const handleCreateFineTuneJob = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_URL}/models/fine-tune`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(newJob)
-      });
-      if (res.ok) {
-        setShowJobModal(false);
-        setNewJob({
-          jobName: '',
-          baseModel: 'Mistral-7B-v0.3-Enterprise',
-          department: 'Finance & Accounting',
-          datasetName: 'Financial_Ledger_Corpus.jsonl',
-          method: 'QLoRA',
-          epochs: 3,
-          learningRate: '2e-4'
-        });
-        fetchModelCenterData();
-      }
-    } catch (err) {
-      console.error('Create fine-tune job failed', err);
-    }
-  };
-
   if (loading) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-main)' }}>
@@ -140,9 +99,6 @@ export const ModelManagementCenter = () => {
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="btn-secondary" onClick={() => handleRunBenchmark()} disabled={benchmarking} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
             <Gauge size={16} /> {benchmarking ? 'Benchmarking CUDA...' : 'Benchmark All Models'}
-          </button>
-          <button className="btn-primary" onClick={() => setShowJobModal(true)} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-            <Play size={16} /> Launch Fine-Tuning Job
           </button>
         </div>
       </div>
@@ -222,16 +178,11 @@ export const ModelManagementCenter = () => {
 
       {/* Section 2: Fine-Tuning Studio Workflow */}
       <div className="glass-panel" style={{ padding: '28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <div>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>LoRA / QLoRA Fine-Tuning Workflow Studio</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Train local foundational models on confidential departmental datasets for enhanced domain reasoning
-            </p>
-          </div>
-          <button className="btn-accent" onClick={() => setShowJobModal(true)} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-            + Create New Training Job
-          </button>
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>LoRA / QLoRA Fine-Tuning Workflow Studio</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Train local foundational models on confidential departmental datasets for enhanced domain reasoning
+          </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -274,96 +225,6 @@ export const ModelManagementCenter = () => {
         </div>
       </div>
 
-      {/* Modal for Creating Fine-Tune Job */}
-      {showJobModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(7,9,14,0.85)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '520px', padding: '36px' }}>
-            <h2 style={{ fontSize: '1.4rem', marginBottom: '16px' }}>Launch Local Fine-Tuning Job</h2>
-            <form onSubmit={handleCreateFineTuneJob} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Job Name</label>
-                <input 
-                  type="text" 
-                  value={newJob.jobName} 
-                  onChange={(e) => setNewJob({ ...newJob, jobName: e.target.value })} 
-                  className="form-input" 
-                  placeholder="e.g. Legal_NDA_QLoRA_v3"
-                  required 
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Base Model</label>
-                <select 
-                  value={newJob.baseModel} 
-                  onChange={(e) => setNewJob({ ...newJob, baseModel: e.target.value })} 
-                  className="form-select"
-                >
-                  {models.map(m => (
-                    <option key={m._id || m.id} value={m.name}>{m.name} ({m.parameters})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Target Department Dataset</label>
-                <select 
-                  value={newJob.department} 
-                  onChange={(e) => setNewJob({ ...newJob, department: e.target.value })} 
-                  className="form-select"
-                >
-                  <option value="Finance & Accounting">Finance & Accounting</option>
-                  <option value="Legal & Compliance">Legal & Compliance</option>
-                  <option value="R&D / Engineering">R&D / Engineering</option>
-                  <option value="Human Resources">Human Resources</option>
-                  <option value="Executive & Strategy">Executive & Strategy</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Method</label>
-                  <select 
-                    value={newJob.method} 
-                    onChange={(e) => setNewJob({ ...newJob, method: e.target.value })} 
-                    className="form-select"
-                  >
-                    <option value="QLoRA">QLoRA (4-bit Quantized)</option>
-                    <option value="LoRA">LoRA (Low-Rank Adapt)</option>
-                    <option value="Full Parameter">Full Parameter</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Epochs</label>
-                  <input 
-                    type="number" 
-                    value={newJob.epochs} 
-                    onChange={(e) => setNewJob({ ...newJob, epochs: e.target.value })} 
-                    className="form-input" 
-                    min={1} 
-                    max={10} 
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowJobModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Start Fine-Tuning</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

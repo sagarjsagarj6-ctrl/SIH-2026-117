@@ -21,7 +21,29 @@ import { ModelRegistry } from './services/models/ModelRegistry.js';
 import { EnvChecker } from './services/config/EnvChecker.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT || 5000);
+
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`=======================================================`);
+    console.log(` SOVEREIGN AI ENTERPRISE WORKBENCH BACKEND SERVER `);
+    console.log(` Listening on: http://localhost:${port}`);
+    console.log(` Deployment: Isolated Enterprise LAN / Air-Gapped`);
+    console.log(`=======================================================`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      const nextPort = port + 1;
+      console.warn(`[Server] Port ${port} is busy. Retrying on ${nextPort}...`);
+      startServer(nextPort);
+      return;
+    }
+
+    console.error('[Server] Failed to start backend:', err);
+    process.exit(1);
+  });
+};
 
 // Security & Middleware
 app.use(cors({ origin: true, credentials: true }));
@@ -92,10 +114,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'An unexpected internal server error occurred.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(` SOVEREIGN AI ENTERPRISE WORKBENCH BACKEND SERVER `);
-  console.log(` Listening on: http://localhost:${PORT}`);
-  console.log(` Deployment: Isolated Enterprise LAN / Air-Gapped`);
-  console.log(`=======================================================`);
-});
+startServer(PORT);

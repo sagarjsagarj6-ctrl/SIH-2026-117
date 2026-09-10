@@ -10,6 +10,7 @@ export const Header = ({ onChangeHardware }) => {
   if (!user) return null;
 
   const roleColorClass = user.role === 'Admin' ? 'badge-rose' : user.role === 'Manager' ? 'badge-indigo' : 'badge-cyan';
+  const departmentAgent = user.department === 'Finance & Accounting' ? 'alex-finance' : user.department === 'Legal & Compliance' ? 'alex-legal' : user.department === 'R&D / Engineering' ? 'alex-engineering' : user.department === 'Human Resources' ? 'alex-hr' : 'alex-strategy';
 
   return (
     <header style={{
@@ -101,6 +102,23 @@ export const Header = ({ onChangeHardware }) => {
         <span className={`badge ${roleColorClass}`}>
           {user.role}
         </span>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '5px 10px',
+          borderRadius: '999px',
+          border: '1px solid rgba(99,102,241,0.25)',
+          background: 'rgba(99,102,241,0.08)',
+          color: '#a5b4fc',
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          letterSpacing: '0.03em',
+          textTransform: 'lowercase'
+        }}>
+          {departmentAgent}
+        </div>
 
         {/* User Avatar & Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '8px' }}>

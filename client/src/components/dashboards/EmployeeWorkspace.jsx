@@ -268,7 +268,16 @@ export const EmployeeWorkspace = () => {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
+
+      let data = { error: 'Failed to remove document' };
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        data = { error: `Server error (${res.status}): ${text.substring(0, 180)}` };
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Failed to remove document');
       }
