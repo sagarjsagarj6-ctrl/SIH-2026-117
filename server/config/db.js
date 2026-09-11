@@ -11,7 +11,9 @@ export const state = {
     fineTuneJobs: [],
     dataQualityReports: [],
     networks: [],
-    notifications: []
+    notifications: [],
+    workflowRequests: [],
+    aiHandoffEvents: []
   }
 };
 

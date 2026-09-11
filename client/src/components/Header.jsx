@@ -1,7 +1,7 @@
-import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useHardware } from '../context/HardwareContext';
-import { ShieldCheck, User, Building2, Cpu, LogOut, RefreshCw, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, Building2, Cpu, LogOut, RefreshCw } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 
 export const Header = ({ onChangeHardware }) => {
   const { user, logout } = useAuth();
@@ -21,7 +21,7 @@ export const Header = ({ onChangeHardware }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      overflow: 'hidden',
+      overflow: 'visible',
       position: 'sticky',
       top: 0,
       zIndex: 100
@@ -120,6 +120,8 @@ export const Header = ({ onChangeHardware }) => {
         }}>
           {departmentAgent}
         </div>
+
+        <NotificationBell />
 
         {/* User Avatar & Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '4px' }}>

@@ -55,7 +55,7 @@ export const LanConnectionPanel = () => {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not connect to the LAN.');
-      setNotice(data.message);
+      setNotice(`${data.message}${data.aiHandoffsDelivered ? ` ${data.aiHandoffsDelivered} queued AI handoff(s) delivered.` : ''}`);
       setTokenInput('');
       setNetworkIdInput('');
       await fetchConnectionData();

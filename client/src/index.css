@@ -71,7 +71,7 @@
   --accent-amber: #ffd600;
   --accent-rose: #ff4081;
 
-  --text-main: #1a1a2e;
+  --text-main: #383877;
   --text-muted: #4a4a6a;
   --text-dim: #7a7a9a;
 
@@ -237,7 +237,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary:hover {
   filter: brightness(1.2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(123, 44, 255, 0.55), 0 0 40px rgba(0, 255, 242, 0.25);
+  box-shadow: 0 6px 25px rgba(79, 48, 131, 0.55), 0 0 40px rgba(0, 255, 242, 0.25);
 }
 
 .btn-secondary {
@@ -284,7 +284,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Input controls */
 .form-input, .form-select {
   width: 100%;
-  background: rgba(14, 18, 29, 0.8);
+  background: rgba(236, 239, 239, 0.8);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 11px;

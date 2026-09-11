@@ -15,6 +15,7 @@ import qualityRoutes from './routes/qualityRoutes.js';
 import inferenceRoutes from './routes/inferenceRoutes.js';
 import networkRoutes from './routes/networkRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import workflowRoutes from './routes/workflowRoutes.js';
 import { seedInitialData } from './seed.js';
 import { VectorIndexManager } from './services/knowledge/VectorIndexManager.js';
 import { HardwareProfiler } from './services/hardware/HardwareProfiler.js';
@@ -111,6 +112,7 @@ app.use('/api/quality', qualityRoutes);
 app.use('/api/inference', inferenceRoutes);
 app.use('/api/networks', networkRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/workflows', workflowRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

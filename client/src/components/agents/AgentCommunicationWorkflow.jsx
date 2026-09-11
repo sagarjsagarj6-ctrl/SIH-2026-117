@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Bot, UploadCloud, FileText, ShieldCheck, BriefcaseBusiness,
@@ -82,6 +82,7 @@ const statusTone = {
   'sent to manager-ai': '#06b6d4',
   'manager-ai validation': '#14b8a6',
   'awaiting manager approval': '#84cc16',
+  'manager feedback': '#f59e0b',
   'task completed': '#22c55e',
   'task rejected': '#ef4444'
 };
@@ -137,14 +138,52 @@ const pickActionFromText = (agentId, text, modelName) => {
   };
 };
 
+const readWorkflowResponse = async (response) => {
+  const body = await response.text();
+  if (!body.trim()) return {};
+
+  try {
+    return JSON.parse(body);
+  } catch {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html') || body.trim().startsWith('<!DOCTYPE') || body.trim().startsWith('<html')) {
+      throw new Error('Workflow service returned the app HTML instead of JSON. Start the backend on port 5000 and use the Vite /api proxy.');
+    }
+    throw new Error('Workflow service returned an invalid response. Refresh and try again.');
+  }
+};
+
 export const AgentCommunicationWorkflow = () => {
-  const { user } = useAuth();
+  const { user, token, API_URL } = useAuth();
   const [selectedAgentId, setSelectedAgentId] = useState('employee-agent');
   const [selectedFile, setSelectedFile] = useState(null);
   const [report, setReport] = useState(null);
   const [requests, setRequests] = useState(initialRequests);
+  const [workflowError, setWorkflowError] = useState('');
+  const [workflowLoading, setWorkflowLoading] = useState(false);
   const [employeeModelId, setEmployeeModelId] = useState('finance-expert');
   const [managerModelId, setManagerModelId] = useState('risk-review');
+
+  const fetchWorkflows = useCallback(async () => {
+    if (!token) return;
+    try {
+      setWorkflowLoading(true);
+      const response = await fetch(`${API_URL}/workflows`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await readWorkflowResponse(response);
+      if (!response.ok) throw new Error(data.error || 'Could not synchronize the workflow queue.');
+      setRequests(data.workflows || []);
+      setWorkflowError('');
+    } catch (err) {
+      setWorkflowError(err.message);
+    } finally {
+      setWorkflowLoading(false);
+    }
+  }, [API_URL, token]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => fetchWorkflows(), 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchWorkflows]);
 
   const selectedAgent = useMemo(
     () => BUSINESS_AGENTS.find(agent => agent.id === selectedAgentId) || BUSINESS_AGENTS[0],
@@ -185,42 +224,68 @@ export const AgentCommunicationWorkflow = () => {
     setReport(decision);
   };
 
-  const submitRequest = () => {
+  const submitRequest = async () => {
     if (!selectedFile || !report) return;
 
-    const newRequest = {
-      id: `req-${Date.now()}`,
-      employeeAgent: 'Employee AI Agent',
-      managerAgent: 'Manager AI Agent',
-      employeeModel: selectedEmployeeModel.name,
-      managerModel: selectedManagerModel.name,
-      employeeName: user?.name || 'Current Employee',
-      managerName: user?.role === 'Manager' ? user.name : 'Assigned Manager',
-      status: 'awaiting employee approval',
-      summary: report.recommendedAction,
-      createdAt: new Date().toISOString(),
-      transitions: [
-        { label: 'requested', at: new Date().toISOString() },
-        { label: 'employee-ai draft', at: new Date().toISOString() },
-        { label: 'awaiting employee approval', at: new Date().toISOString() }
-      ]
-    };
-
-    setRequests(prev => [newRequest, ...prev]);
-    setSelectedFile(null);
-    setReport(null);
+    try {
+      setWorkflowLoading(true);
+      const response = await fetch(`${API_URL}/workflows`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          summary: report.recommendedAction,
+          keyTakeaways: report.keyTakeaways,
+          proposedSolutions: report.proposedSolutions,
+          employeeModel: selectedEmployeeModel.name,
+          managerModel: selectedManagerModel.name
+        })
+      });
+      const data = await readWorkflowResponse(response);
+      if (!response.ok) throw new Error(data.error || 'Could not route the employee proposal.');
+      setRequests(prev => [data.workflow, ...prev.filter(request => request._id !== data.workflow._id)]);
+      setSelectedFile(null);
+      setReport(null);
+      setWorkflowError('');
+    } catch (err) {
+      setWorkflowError(err.message);
+    } finally {
+      setWorkflowLoading(false);
+    }
   };
 
-  const updateRequestState = (requestId, newStatus) => {
-    setRequests(prev => prev.map(req => {
-      if (req.id !== requestId) return req;
-      return {
-        ...req,
-        status: newStatus,
-        transitions: [...(req.transitions || []), { label: newStatus, at: new Date().toISOString() }],
-        summary: req.summary || newStatus
-      };
-    }));
+  const updateRequestState = async (requestId, newStatus) => {
+    const requestBeingUpdated = requests.find(request => (request._id || request.id) === requestId);
+    const actionByStatus = {
+      'sent to manager-ai': requestBeingUpdated?.status === 'manager feedback' ? 'employee_resubmit' : 'employee_approve',
+      'awaiting manager approval': 'manager_validate',
+      'task completed': 'manager_approve',
+      'task rejected': 'manager_reject',
+      'manager feedback': 'manager_feedback'
+    };
+    const action = actionByStatus[newStatus];
+    if (!action) return;
+    let feedback = '';
+    if (action === 'manager_feedback') {
+      feedback = window.prompt('Enter a concise 2–3 point manager feedback summary for the employee:') || '';
+      if (!feedback.trim()) return;
+    }
+
+    try {
+      setWorkflowLoading(true);
+      const response = await fetch(`${API_URL}/workflows/${requestId}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action, feedback })
+      });
+      const data = await readWorkflowResponse(response);
+      if (!response.ok) throw new Error(data.error || 'Could not update the workflow state.');
+      setRequests(prev => prev.map(request => request._id === data.workflow._id || request.id === data.workflow._id ? data.workflow : request));
+      setWorkflowError(data.workflow.consistency?.passed ? '' : 'Workflow updated, but the platform consistency check needs review.');
+    } catch (err) {
+      setWorkflowError(err.message);
+    } finally {
+      setWorkflowLoading(false);
+    }
   };
 
   const isAdmin = user?.role === 'Admin';
@@ -244,7 +309,9 @@ export const AgentCommunicationWorkflow = () => {
           <div className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>ADMIN-TRAINED MODELS · PRIVATE LAN</div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '18px' }}>
+        {(workflowError || workflowLoading) && <div style={{ padding: '9px 11px', borderRadius: '8px', marginBottom: '14px', background: workflowError ? 'rgba(244,63,94,0.11)' : 'rgba(6,182,212,0.08)', border: `1px solid ${workflowError ? 'rgba(244,63,94,0.3)' : 'rgba(6,182,212,0.25)'}`, color: workflowError ? '#fb7185' : 'var(--accent-cyan)', fontSize: '0.7rem' }}>{workflowError || 'Synchronizing workflow state across Admin, Manager, Employee, and AI handoff channels...'}</div>}
+
+        {!isAdmin && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '18px' }}>
           {BUSINESS_AGENTS.map(agent => (
             <button
               key={agent.id}
@@ -268,7 +335,7 @@ export const AgentCommunicationWorkflow = () => {
               <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: '8px' }}>{agent.summary}</div>
             </button>
           ))}
-        </div>
+        </div>}
 
         {!isAdmin ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: '18px' }}>
@@ -376,7 +443,7 @@ export const AgentCommunicationWorkflow = () => {
                       opacity: selectedFile && report ? 1 : 0.6
                     }}
                   >
-                    Send summary for employee approval
+                    {workflowLoading ? 'Routing proposal...' : 'Send summary for employee approval'}
                   </button>
                 </div>
               ) : (
@@ -398,7 +465,7 @@ export const AgentCommunicationWorkflow = () => {
               <div>Trace</div>
             </div>
             {requests.map(req => (
-              <div key={`admin-${req.id}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', padding: '10px 0', borderTop: '1px solid var(--border-color)', alignItems: 'center' }}>
+              <div key={`admin-${req._id || req.id}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', padding: '10px 0', borderTop: '1px solid var(--border-color)', alignItems: 'center' }}>
                 <div style={{ fontWeight: 700 }}>{req.employeeModel || 'Employee AI Model'}</div>
                 <div>{req.managerModel || 'Manager AI Model'}</div>
                 <div style={{ color: statusTone[req.status] || '#fff', fontWeight: 700 }}>{req.status}</div>
@@ -417,7 +484,7 @@ export const AgentCommunicationWorkflow = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {managerQueue.map(req => (
-              <div key={req.id} style={{ padding: '14px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
+              <div key={req._id || req.id} style={{ padding: '14px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <div style={{ fontWeight: 800 }}>{req.employeeModel}</div>
                   <span
@@ -442,21 +509,29 @@ export const AgentCommunicationWorkflow = () => {
 
                 <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {req.status === 'awaiting employee approval' && isEmployee && (
-                    <button type="button" onClick={() => updateRequestState(req.id, 'sent to manager-ai')} style={{ ...buttonStyle, background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)' }}>
+                    <button type="button" onClick={() => updateRequestState(req._id || req.id, 'sent to manager-ai')} style={{ ...buttonStyle, background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)' }}>
                       <Send size={12} style={{ marginRight: 6 }} /> Employee approves & send to manager AI
                     </button>
                   )}
+                  {req.status === 'manager feedback' && isEmployee && (
+                    <button type="button" onClick={() => updateRequestState(req._id || req.id, 'sent to manager-ai')} style={{ ...buttonStyle, background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)' }}>
+                      <Send size={12} style={{ marginRight: 6 }} /> Address feedback & resend to manager AI
+                    </button>
+                  )}
                   {req.status === 'sent to manager-ai' && isManagerActionAllowed && (
-                    <button type="button" onClick={() => updateRequestState(req.id, 'awaiting manager approval')} style={{ ...buttonStyle, background: 'rgba(20,184,166,0.12)', color: '#5eead4', border: '1px solid rgba(20,184,166,0.35)' }}>
+                    <button type="button" onClick={() => updateRequestState(req._id || req.id, 'awaiting manager approval')} style={{ ...buttonStyle, background: 'rgba(20,184,166,0.12)', color: '#5eead4', border: '1px solid rgba(20,184,166,0.35)' }}>
                       Manager AI validates response
                     </button>
                   )}
                   {req.status === 'awaiting manager approval' && isManagerActionAllowed && (
                     <>
-                      <button type="button" onClick={() => updateRequestState(req.id, 'task completed')} style={{ ...buttonStyle, background: 'rgba(34,197,94,0.12)', color: '#86efac', border: '1px solid rgba(34,197,94,0.35)' }}>
+                      <button type="button" onClick={() => updateRequestState(req._id || req.id, 'manager feedback')} style={{ ...buttonStyle, background: 'rgba(245,158,11,0.12)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.35)' }}>
+                        Manager feedback
+                      </button>
+                      <button type="button" onClick={() => updateRequestState(req._id || req.id, 'task completed')} style={{ ...buttonStyle, background: 'rgba(34,197,94,0.12)', color: '#86efac', border: '1px solid rgba(34,197,94,0.35)' }}>
                         <CheckCircle2 size={12} style={{ marginRight: 6 }} /> Manager approves
                       </button>
-                      <button type="button" onClick={() => updateRequestState(req.id, 'task rejected')} style={{ ...buttonStyle, background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.35)' }}>
+                      <button type="button" onClick={() => updateRequestState(req._id || req.id, 'task rejected')} style={{ ...buttonStyle, background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.35)' }}>
                         <XCircle size={12} style={{ marginRight: 6 }} /> Reject final action
                       </button>
                     </>
@@ -474,10 +549,10 @@ export const AgentCommunicationWorkflow = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {requests.map(req => (
-              <div key={req.id} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)' }}>
+              <div key={req._id || req.id} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <div style={{ fontWeight: 700 }}>{req.employeeName}</div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{req.id}</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{req._id || req.id}</span>
                 </div>
                 {!isAdmin && (
                   <div style={{ marginTop: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -491,7 +566,7 @@ export const AgentCommunicationWorkflow = () => {
                 )}
                 <div style={{ marginTop: '8px', color: 'var(--text-muted)', fontSize: '0.74rem' }}>
                   {req.transitions.map((t, index) => (
-                    <div key={`${req.id}-${index}`} style={{ marginBottom: '3px' }}>
+                    <div key={`${req._id || req.id}-${index}`} style={{ marginBottom: '3px' }}>
                       <ArrowRight size={10} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                       {t.label} · {new Date(t.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>

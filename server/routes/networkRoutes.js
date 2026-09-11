@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { state } from '../config/db.js';
 import User from '../models/User.js';
 import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
+import { deliverQueuedAIHandoffs, pushNotifications } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -14,6 +15,14 @@ const defaultSetupRequirements = [
   'Enable encrypted device-to-device traffic and local firewall rules',
   'Share the generated access token only with approved managers and employees'
 ];
+
+const lanCopyMessage = (network, accessToken) => [
+  'SOVEREIGN AI PRIVATE LAN CONNECTION',
+  `Network: ${network.name}`,
+  `Token: ${accessToken}`,
+  `Network ID: ${network.networkId}`,
+  'Open Connect to LAN and paste this token to join the air-gapped workspace.'
+].join('\n');
 
 const isPrivateIpv4 = (value) => {
   const octets = String(value || '').split('.').map(Number);
@@ -140,29 +149,29 @@ router.post('/', authenticateToken, requireRole('Admin'), async (req, res) => {
 
     let recipients = [];
     if (state.isMongooseConnected) {
-      recipients = await User.find({ role: { $in: ['Manager', 'Employee'] }, status: { $ne: 'Inactive' } })
+      recipients = await User.find({ role: { $in: ['Manager', 'Employee', 'Admin'] }, status: { $ne: 'Inactive' } })
         .select('_id name email role department')
         .lean();
     } else {
-      recipients = state.memoryDb.users.filter(user => ['Manager', 'Employee'].includes(user.role) && user.status !== 'Inactive');
+      recipients = state.memoryDb.users.filter(user => ['Manager', 'Employee', 'Admin'].includes(user.role) && user.status !== 'Inactive');
     }
 
-    const now = new Date().toISOString();
-    const notifications = recipients.map((recipient, index) => ({
-      _id: `notification_${Date.now()}_${index}`,
-      userId: String(recipient._id || recipient.id || ''),
+    const memberRecipients = recipients.filter(recipient => ['Manager', 'Employee'].includes(recipient.role));
+    const adminRecipients = recipients.filter(recipient => recipient.role === 'Admin');
+    const notifications = pushNotifications({
+      recipientUserIds: [...memberRecipients, ...adminRecipients].map(recipient => String(recipient._id || recipient.id || '')),
       type: 'LAN_INVITATION',
-      title: `Private LAN invitation: ${network.name}`,
-      message: `${req.user.name} created a secure private LAN. Use access token ${generatedKey} to connect from the Connect to LAN panel.`,
+      title: `Private LAN connection ready: ${network.name}`,
+      message: `${req.user.name} created a secure private LAN. Copy the token message and use Connect to LAN to join.`,
+      summary: `Private LAN ${network.name} is active. Token ${generatedKey} is ready to copy into Connect to LAN.`,
+      copyMessage: lanCopyMessage(network, generatedKey),
       networkId: network.networkId,
       networkName: network.name,
       networkKey: generatedKey,
-      createdAt: now,
-      read: false
-    }));
-    state.memoryDb.notifications.unshift(...notifications);
-    network.inviteCount = notifications.length;
-    network.lastInviteAt = now;
+      metadata: { audience: 'Managers, Employees, and Admins', accessToken: generatedKey }
+    });
+    network.inviteCount = memberRecipients.length;
+    network.lastInviteAt = new Date().toISOString();
 
     createAuditEntry({
       userId: req.user._id || req.user.id,
@@ -171,13 +180,13 @@ router.post('/', authenticateToken, requireRole('Admin'), async (req, res) => {
       department: req.user.department,
       action: 'LAN_NETWORK_CREATED',
       resource: '/api/networks',
-      details: `Admin created private LAN network ${network.name} with key ${generatedKey}; invited ${notifications.length} managers and employees`
+      details: `Admin created private LAN network ${network.name}; invited ${memberRecipients.length} managers and employees and notified ${adminRecipients.length} admins`
     });
 
     res.status(201).json({
       message: 'LAN network created and invitations dispatched to existing managers and employees.',
       network: { ...serializeNetwork(network, req.user), accessToken: generatedKey, networkKey: generatedKey },
-      notificationSummary: { delivered: notifications.length, audience: 'Managers and Employees' }
+      notificationSummary: { delivered: memberRecipients.length, adminNotified: adminRecipients.length, audience: 'Managers and Employees' }
     });
   } catch (err) {
     console.error('[LAN create error]', err.message);
@@ -231,7 +240,8 @@ router.post('/join', authenticateToken, async (req, res) => {
       details: `User joined LAN network ${network.name}`
     });
 
-    res.json({ message: alreadyJoined ? 'You are already connected to this LAN.' : 'You have joined the LAN network successfully.', network: serializeNetwork(network, req.user) });
+    const aiHandoffsDelivered = deliverQueuedAIHandoffs(String(req.user._id || req.user.id || ''));
+    res.json({ message: alreadyJoined ? 'You are already connected to this LAN.' : 'You have joined the LAN network successfully.', network: serializeNetwork(network, req.user), aiHandoffsDelivered });
   } catch (err) {
     res.status(500).json({ error: 'Failed to join LAN network.' });
   }
@@ -244,31 +254,32 @@ router.post('/:networkId/notify', authenticateToken, requireRole('Admin'), async
 
     let recipients = [];
     if (state.isMongooseConnected) {
-      recipients = await User.find({ role: { $in: ['Manager', 'Employee'] }, status: { $ne: 'Inactive' } })
+      recipients = await User.find({ role: { $in: ['Manager', 'Employee', 'Admin'] }, status: { $ne: 'Inactive' } })
         .select('_id name email role department')
         .lean();
     } else {
-      recipients = state.memoryDb.users.filter(user => ['Manager', 'Employee'].includes(user.role) && user.status !== 'Inactive');
+      recipients = state.memoryDb.users.filter(user => ['Manager', 'Employee', 'Admin'].includes(user.role) && user.status !== 'Inactive');
     }
 
-    const now = new Date().toISOString();
-    const notifications = recipients.map((recipient, index) => ({
-      _id: `notification_${Date.now()}_${index}`,
-      userId: String(recipient._id || recipient.id || ''),
+    const accessToken = network.accessToken || network.networkKey;
+    const memberRecipients = recipients.filter(recipient => ['Manager', 'Employee'].includes(recipient.role));
+    const adminRecipients = recipients.filter(recipient => recipient.role === 'Admin');
+    pushNotifications({
+      recipientUserIds: [...memberRecipients, ...adminRecipients].map(recipient => String(recipient._id || recipient.id || '')),
       type: 'LAN_INVITATION',
-      title: `Private LAN invitation: ${network.name}`,
-      message: `${req.user.name} resent the secure LAN invitation. Use access token ${network.accessToken || network.networkKey} to connect.`,
+      title: `Private LAN connection ready: ${network.name}`,
+      message: `${req.user.name} resent the secure LAN invitation. Copy the token message and use Connect to LAN to join.`,
+      summary: `Private LAN ${network.name} is active. Token ${accessToken} is ready to copy into Connect to LAN.`,
+      copyMessage: lanCopyMessage(network, accessToken),
       networkId: network.networkId,
       networkName: network.name,
-      networkKey: network.accessToken || network.networkKey,
-      createdAt: now,
-      read: false
-    }));
-    state.memoryDb.notifications.unshift(...notifications);
-    network.inviteCount = notifications.length;
-    network.lastInviteAt = now;
+      networkKey: accessToken,
+      metadata: { audience: 'Managers, Employees, and Admins', accessToken }
+    });
+    network.inviteCount = memberRecipients.length;
+    network.lastInviteAt = new Date().toISOString();
 
-    res.json({ message: 'LAN invitations resent.', delivered: notifications.length });
+    res.json({ message: 'LAN invitations resent.', delivered: memberRecipients.length, adminNotified: adminRecipients.length });
   } catch (err) {
     res.status(500).json({ error: 'Failed to resend LAN invitations.' });
   }
