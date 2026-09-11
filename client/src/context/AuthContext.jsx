@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { apiRequest } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -8,7 +9,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:5000/api');
+  const configuredApiUrl = import.meta.env.VITE_API_URL;
+  const API_URL = (configuredApiUrl && configuredApiUrl !== '/api'
+    ? configuredApiUrl
+    : (import.meta.env.DEV ? '/api' : '/api')).replace(/\/$/, '');
 
   useEffect(() => {
     if (token) {
@@ -18,44 +22,38 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const fetchCurrentUser = async (jwtToken) => {
+  async function fetchCurrentUser(jwtToken) {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/auth/me`, {
+      const data = await apiRequest(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${jwtToken}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      } else {
-        logout();
-      }
+      setUser(data.user);
     } catch (err) {
-      console.error('Failed to verify token', err);
+      if (err.status === 401 || err.status === 403) {
+        logout();
+      } else {
+        setAuthError(err.message || 'Failed to verify local session.');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const login = async (email, password) => {
     setAuthError('');
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const data = await apiRequest(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setAuthError(data.error || 'Login failed');
-        return false;
-      }
       localStorage.setItem('sovereign_token', data.token);
       setToken(data.token);
       setUser(data.user);
       return true;
     } catch (err) {
-      setAuthError('Connection error to backend local server.');
+      setAuthError(err.message || 'Connection error to backend local server.');
       return false;
     }
   };
@@ -63,22 +61,17 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     setAuthError('');
     try {
-      const res = await fetch(`${API_URL}/auth/register`, {
+      const data = await apiRequest(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setAuthError(data.error || 'Registration failed');
-        return false;
-      }
       localStorage.setItem('sovereign_token', data.token);
       setToken(data.token);
       setUser(data.user);
       return true;
     } catch (err) {
-      setAuthError('Connection error to backend local server.');
+      setAuthError(err.message || 'Connection error to backend local server.');
       return false;
     }
   };
@@ -86,7 +79,7 @@ export const AuthProvider = ({ children }) => {
   const updateAIProfile = async (aiProfile) => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/auth/profile-select`, {
+      await apiRequest(`${API_URL}/auth/profile-select`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,11 +87,9 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ aiProfile })
       });
-      if (res.ok) {
-        setUser(prev => prev ? { ...prev, assignedAIProfile: aiProfile } : null);
-      }
+      setUser(prev => prev ? { ...prev, assignedAIProfile: aiProfile } : null);
     } catch (err) {
-      console.error('Failed to update AI profile', err);
+      setAuthError(err.message || 'Failed to update AI profile.');
     }
   };
 

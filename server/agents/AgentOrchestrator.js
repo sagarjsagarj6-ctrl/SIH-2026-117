@@ -136,6 +136,9 @@ export class AgentOrchestrator {
           const agentKeys = ['RAG', 'DATA_SCIENCE'];
           const promises = agentKeys.map(async (key, idx) => {
             const agent = AgentRegistry.getAgent(key);
+            if (!agent) {
+              throw new Error(`Agent [${key}] not found in registry during parallel execution`);
+            }
             agentsInvolved.push(agent.name);
             const start = Date.now();
             const message = await agent.run({ query, user, inputContext: [] });
@@ -220,11 +223,12 @@ export class AgentOrchestrator {
             result: draftMessage.payload.result,
             citations: draftMessage.payload.citations || [],
             supervisorVerdict: {
-              status: 'APPROVED_BY_SUPERVISOR',
+              status: confidencePass ? 'APPROVED_BY_SUPERVISOR' : 'REVIEW_REQUIRED',
               confidenceScore: draftMessage.payload.confidence,
-              airGapCompliant: true
+              airGapCompliant: true,
+              requiresHumanReview: !confidencePass
             },
-            confidence: 0.98,
+            confidence: draftMessage.payload.confidence,
             trace: ExplainabilityEngine.finalizeTrace(trace)
           };
           break;

@@ -1,0 +1,67 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "cpu": {
+      "model": "AMD Ryzen 5 5500U with Radeon Graphics         ",
+      "cores": 12,
+      "architecture": "x64",
+      "utilizationPct": 18
+    },
+    "ram": {
+      "totalGB": 7.3,
+      "availableGB": 0.4,
+      "usedGB": 6.9,
+      "type": "Dynamic local system memory"
+    },
+    "gpu": {
+      "name": "Integrated/No GPU detected",
+      "vramTotalGB": 0,
+      "vramUsedGB": 0,
+      "vramAvailableGB": 0,
+      "temperatureC": 0,
+      "driverVersion": "N/A",
+      "cudaCores": 0
+    },
+    "storage": {
+      "type": "Local NVMe / SSD Storage",
+      "readSpeedMBs": 780,
+      "freeGB": 20.3
+    },
+    "network": {
+      "status": "Isolated LAN / Air-Gapped",
+      "ip": "10.158.94.100",
+      "subnet": "255.255.255.0",
+      "bandwidthMbps": 1000
+    },
+    "recommendedProfiles": [
+      {
+        "id": "Fast",
+        "name": "Fast Mode (Low VRAM)",
+        "model": "Llama-3-8B-Instruct Q4 (4.5 GB VRAM)",
+        "tokensPerSec": "85-110 t/s",
+        "latency": "80 ms",
+        "recommendedFor": "Quick departmental Q&A, basic summaries, text cleanup",
+        "minRamRequired": 8
+      },
+      {
+        "id": "Balanced",
+        "name": "Balanced Mode (Recommended)",
+        "model": "Mistral-7B / DeepSeek-R1-14B (9.2 GB VRAM)",
+        "tokensPerSec": "55-75 t/s",
+        "latency": "150 ms",
+        "recommendedFor": "RAG Document Search, Data Science queries, Code generation",
+        "minRamRequired": 16
+      },
+      {
+        "id": "Advanced",
+        "name": "Advanced Mode (High Precision)",
+        "model": "DeepSeek-R1-32B / Llama-3.3-70B Q4 (18.5 GB VRAM)",
+        "tokensPerSec": "30-45 t/s",
+        "latency": "310 ms",
+        "recommendedFor": "Complex multi-step reasoning, Vision OCR analysis, Executive strategy reports",
+        "minRamRequired": 32
+      }
+    ]
+  }
+}

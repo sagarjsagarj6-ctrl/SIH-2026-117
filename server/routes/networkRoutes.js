@@ -4,6 +4,7 @@ import { state } from '../config/db.js';
 import User from '../models/User.js';
 import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
 import { deliverQueuedAIHandoffs, pushNotifications } from '../services/notificationService.js';
+import { RuntimeStateStore } from '../services/runtime/RuntimeStateStore.js';
 
 const router = express.Router();
 
@@ -146,6 +147,7 @@ router.post('/', authenticateToken, requireRole('Admin'), async (req, res) => {
     };
 
     state.memoryDb.networks.unshift(network);
+    await RuntimeStateStore.upsert('networks', network);
 
     let recipients = [];
     if (state.isMongooseConnected) {
@@ -228,6 +230,7 @@ router.post('/join', authenticateToken, async (req, res) => {
 
     if (!alreadyJoined) {
       network.members = [...(network.members || []), userEntry];
+      await RuntimeStateStore.upsert('networks', network);
     }
 
     createAuditEntry({
@@ -278,6 +281,7 @@ router.post('/:networkId/notify', authenticateToken, requireRole('Admin'), async
     });
     network.inviteCount = memberRecipients.length;
     network.lastInviteAt = new Date().toISOString();
+    await RuntimeStateStore.upsert('networks', network);
 
     res.json({ message: 'LAN invitations resent.', delivered: memberRecipients.length, adminNotified: adminRecipients.length });
   } catch (err) {

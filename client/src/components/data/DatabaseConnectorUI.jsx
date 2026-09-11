@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Database, Server, CheckCircle2, AlertTriangle, 
-  ShieldCheck, RefreshCw, Cpu, Table, ArrowRight, Sparkles 
+  Database, CheckCircle2, ShieldCheck, Table, Sparkles
 } from 'lucide-react';
 
 export const DatabaseConnectorUI = () => {
   const { token, API_URL } = useAuth();
   
   const [dataSources, setDataSources] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [selectedDs, setSelectedDs] = useState(null);
   
   const [schemaData, setSchemaData] = useState(null);
@@ -77,7 +76,7 @@ export const DatabaseConnectorUI = () => {
     }
   };
 
-  const handleIntrospect = async (dataSourceId) => {
+  async function handleIntrospect(dataSourceId) {
     setLoadingSchema(true);
     setSchemaData(null);
     try {
@@ -98,7 +97,7 @@ export const DatabaseConnectorUI = () => {
     } finally {
       setLoadingSchema(false);
     }
-  };
+  }
 
   const handleSyncTable = async (tableName) => {
     if (!selectedDs) return;
@@ -117,7 +116,7 @@ export const DatabaseConnectorUI = () => {
         })
       });
       if (res.ok) {
-        const data = await res.json();
+        await res.json();
         setSyncSuccess(`Table "${tableName}" synced and vectorized successfully into knowledge base!`);
       }
     } catch (err) {

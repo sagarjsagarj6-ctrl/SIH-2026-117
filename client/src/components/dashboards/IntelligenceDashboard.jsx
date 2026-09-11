@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Brain, Cpu, Zap, BarChart2, Scale, GitBranch, Bot,
+  Brain, Cpu, Zap, Scale, GitBranch, Bot,
   ChevronRight, Activity, Database, Layers, TrendingUp, Sparkles
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { AgentWorkspace } from '../agents/AgentWorkspace';
-import { AgentTraceViewer } from '../agents/AgentTraceViewer';
 import { InferenceMonitor } from '../models/InferenceMonitor';
 import { FineTuneManager } from '../models/FineTuneManager';
 import { ModelComparisonView } from '../models/ModelComparisonView';
-import { AgentCommunicationWorkflow } from '../agents/AgentCommunicationWorkflow';
 
 const TABS = [
   {
@@ -33,7 +32,7 @@ const TABS = [
     icon: <Zap size={16} />,
     badge: 'QLoRA',
     color: '#f59e0b',
-    description: 'Train LoRA / QLoRA adapters on enterprise knowledge bases with live loss curves.',
+    description: 'Launch LoRA / QLoRA jobs against the server fine-tune registry.',
   },
   {
     id: 'model-compare',
@@ -41,26 +40,75 @@ const TABS = [
     icon: <Scale size={16} />,
     badge: 'Compare',
     color: '#22c55e',
-    description: 'Side-by-side model benchmarking across throughput, latency & response quality.',
+    description: 'Side-by-side live InferenceRouter benchmarks across catalog models.',
   },
 ];
 
-const STAT_CARDS = [
-  { label: 'Active Agents', value: '4', sub: 'RAG · DS · Vision · Report', icon: <Bot size={20} />, color: '#818cf8' },
-  { label: 'Inference Engine', value: 'Ollama', sub: 'Local · Air-Gapped', icon: <Cpu size={20} />, color: '#06b6d4' },
-  { label: 'Loaded Model', value: 'LLaMA 3.2', sub: '3B · Q4_K_M quant', icon: <Layers size={20} />, color: '#f59e0b' },
-  { label: 'Orchestration', value: 'Auto', sub: 'Supervisor Loop', icon: <GitBranch size={20} />, color: '#22c55e' },
-];
-
 export const IntelligenceDashboard = () => {
+  const { token, API_URL } = useAuth();
   const [activeTab, setActiveTab] = useState('agent-studio');
+  const [liveStats, setLiveStats] = useState({
+    agentCount: 4,
+    inferenceLabel: 'Checking…',
+    inferenceOnline: false,
+    loadedModel: '—',
+    orchestration: 'Auto'
+  });
 
-  const currentTab = TABS.find(t => t.id === activeTab);
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      if (!token) return;
+      try {
+        const [regRes, backRes, allocRes] = await Promise.all([
+          fetch(`${API_URL}/agents/registry`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/inference/backends`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/inference/allocation`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        const reg = regRes.ok ? await regRes.json() : {};
+        const backends = backRes.ok ? await backRes.json() : {};
+        const alloc = allocRes.ok ? await allocRes.json() : {};
+        if (cancelled) return;
+
+        const statusMap = backends.backends || backends;
+        const ollamaOnline = statusMap.ollama === 'ONLINE';
+        const vllmOnline = statusMap.vllm === 'ONLINE';
+        const llamaOnline = statusMap.llamacpp === 'ONLINE';
+        const anyOnline = ollamaOnline || vllmOnline || llamaOnline;
+        const engine = ollamaOnline ? 'Ollama' : vllmOnline ? 'vLLM' : llamaOnline ? 'llama.cpp' : 'Fallback';
+
+        setLiveStats({
+          agentCount: Array.isArray(reg.agents) ? reg.agents.length : 4,
+          inferenceLabel: engine,
+          inferenceOnline: anyOnline,
+          loadedModel: alloc.recommendedModel || alloc.model || alloc.selectedModel || (anyOnline ? 'Local daemon' : 'Air-gap fallback'),
+          orchestration: 'Auto'
+        });
+      } catch {
+        if (!cancelled) {
+          setLiveStats((prev) => ({ ...prev, inferenceOnline: false, inferenceLabel: 'Unreachable' }));
+        }
+      }
+    };
+
+    refresh();
+    const id = setInterval(refresh, 12000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [token, API_URL]);
+
+  const currentTab = TABS.find((t) => t.id === activeTab);
+  const statCards = [
+    { label: 'Active Agents', value: String(liveStats.agentCount), sub: 'From agent registry', icon: <Bot size={20} />, color: '#818cf8' },
+    { label: 'Inference Engine', value: liveStats.inferenceLabel, sub: liveStats.inferenceOnline ? 'Daemon ONLINE' : 'AIR_GAP / Offline', icon: <Cpu size={20} />, color: '#06b6d4' },
+    { label: 'Loaded Model', value: String(liveStats.loadedModel).slice(0, 22), sub: 'Allocation probe', icon: <Layers size={20} />, color: '#f59e0b' },
+    { label: 'Orchestration', value: liveStats.orchestration, sub: 'Task decomposer', icon: <GitBranch size={20} />, color: '#22c55e' },
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%', minHeight: 0, overflow: 'hidden' }}>
-
-      {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
@@ -78,26 +126,28 @@ export const IntelligenceDashboard = () => {
           </div>
         </div>
 
-        {/* Live Status Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#22c55e' }}>INFERENCE ENGINE ONLINE</span>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10,
+          background: liveStats.inferenceOnline ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
+          border: liveStats.inferenceOnline ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(245,158,11,0.35)'
+        }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%', display: 'inline-block',
+            background: liveStats.inferenceOnline ? '#22c55e' : '#f59e0b',
+            boxShadow: liveStats.inferenceOnline ? '0 0 8px #22c55e' : '0 0 8px #f59e0b'
+          }} />
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: liveStats.inferenceOnline ? '#22c55e' : '#f59e0b' }}>
+            {liveStats.inferenceOnline ? 'INFERENCE ENGINE ONLINE' : 'INFERENCE FALLBACK / OFFLINE'}
+          </span>
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-        {STAT_CARDS.map(({ label, value, sub, icon, color }) => (
-          <div
-            key={label}
-            className="glass-card"
-            style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, borderLeft: `3px solid ${color}` }}
-          >
-            <div style={{ padding: 10, background: `${color}18`, borderRadius: 10, color, flexShrink: 0 }}>
-              {icon}
-            </div>
+        {statCards.map(({ label, value, sub, icon, color }) => (
+          <div key={label} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, borderLeft: `3px solid ${color}` }}>
+            <div style={{ padding: 10, background: `${color}18`, borderRadius: 10, color, flexShrink: 0 }}>{icon}</div>
             <div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--text-main)', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-main)', lineHeight: 1.2 }}>{value}</div>
               <div style={{ fontSize: '0.72rem', fontWeight: 600, color, marginTop: 4 }}>{label}</div>
               <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginTop: 2 }}>{sub}</div>
             </div>
@@ -105,13 +155,13 @@ export const IntelligenceDashboard = () => {
         ))}
       </div>
 
-      {/* Tab Navigation */}
       <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--border-color)', paddingBottom: 0, flexWrap: 'wrap' }}>
-        {TABS.map(tab => {
+        {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -123,7 +173,6 @@ export const IntelligenceDashboard = () => {
                 fontWeight: isActive ? 700 : 500,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
                 marginBottom: -1,
                 whiteSpace: 'nowrap',
               }}
@@ -143,7 +192,6 @@ export const IntelligenceDashboard = () => {
         })}
       </div>
 
-      {/* Tab Description Strip */}
       {currentTab && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: `${currentTab.color}0d`, border: `1px solid ${currentTab.color}28`, borderRadius: 10, fontSize: '0.8rem', color: currentTab.color }}>
           <Sparkles size={14} />
@@ -151,20 +199,17 @@ export const IntelligenceDashboard = () => {
         </div>
       )}
 
-      {/* Tab Content */}
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {activeTab === 'agent-studio' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <AgentWorkspace />
           </div>
         )}
-        {activeTab === 'agent-communication' && <AgentCommunicationWorkflow />}
         {activeTab === 'inference-monitor' && <InferenceMonitor />}
         {activeTab === 'finetune' && <FineTuneManager />}
         {activeTab === 'model-compare' && <ModelComparisonView />}
       </div>
 
-      {/* Architecture Footer */}
       <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, flexShrink: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Database size={12} color="#6366f1" /> Vector-RAG Hybrid</span>
@@ -175,7 +220,7 @@ export const IntelligenceDashboard = () => {
           <ChevronRight size={10} color="var(--text-dim)" />
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><TrendingUp size={12} color="#22c55e" /> QLoRA Fine-Tuning</span>
         </div>
-        <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', padding: '4px 12px', background: 'rgba(99,102,241,0.1)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', fontWeight: 600 }}>
+        <div style={{ fontSize: '0.7rem', padding: '4px 12px', background: 'rgba(99,102,241,0.1)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', fontWeight: 600 }}>
           SOVEREIGN ON-PREMISE · AIR-GAPPED
         </div>
       </div>

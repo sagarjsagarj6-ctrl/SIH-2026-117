@@ -1,0 +1,64 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "agent": "VisionAgent",
+    "profileUsed": "Fast",
+    "departmentScope": "Executive & Strategy",
+    "query": "Test unique VISION query 1789148690530",
+    "confidence": 0.78,
+    "modelUsed": "Qwen2-VL-7B-Instruct",
+    "executionTimeMs": 3,
+    "registryPath": true,
+    "ocrResult": {
+      "documentType": "Technical Schematic / Operational Form",
+      "confidence": "78%",
+      "textExtracted": "[SOVEREIGN VISION OCR EXTRACT - EXECUTIVE & STRATEGY]\nDocument Reference: REF-2026-69F260F7\nSource: query_description\nVerification Authority: Sovereign Air-Gap Visual Pipeline\nIntegrity Checksum: 2e119c0235712355\nDetected Entities:\n  - Classification Level: RESTRICTED INTERNAL\n  - Authorized Department: Executive & Strategy\n  - Content Preview: Test unique VISION query 1789148690530\nExtracted Signals:\n  - Token length: 38\n  - Query echo: Test unique VISION query 1789148690530",
+      "detectedEntities": [
+        {
+          "label": "Security Classification",
+          "value": "RESTRICTED INTERNAL"
+        },
+        {
+          "label": "Department Scoping",
+          "value": "Executive & Strategy"
+        },
+        {
+          "label": "Integrity Checksum",
+          "value": "2e119c0235712355"
+        },
+        {
+          "label": "Source Type",
+          "value": "query_description"
+        },
+        {
+          "label": "Table Formats Detected",
+          "value": "0 Matrix"
+        }
+      ],
+      "tableData": [
+        {
+          "Parameter": "Content Hash",
+          "Nominal": "2e119c02",
+          "Measured": "35712355",
+          "Status": "VERIFIED"
+        },
+        {
+          "Parameter": "Source",
+          "Nominal": "query_description",
+          "Measured": "38 chars",
+          "Status": "PASS"
+        },
+        {
+          "Parameter": "Department",
+          "Nominal": "Executive & Strategy",
+          "Measured": "Executive & Strategy",
+          "Status": "PASS"
+        }
+      ],
+      "referenceId": "REF-2026-69F260F7",
+      "ocrEngine": "deterministic-text-extraction",
+      "simulation": true
+    }
+  }
+}

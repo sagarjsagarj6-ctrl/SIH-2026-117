@@ -9,10 +9,12 @@
     "dev": "node --watch index.js",
     "seed": "node seed.js",
     "check:env": "node check-env.js",
-    "test": "node test/categoryA.test.js && node test/categoryB.test.js && node test/categoryC.test.js",
+    "test": "node test/categoryA.test.js && node test/categoryB.test.js && node test/categoryC.test.js && node test/categoryD.test.js && node test/categoryE.test.js",
     "test:a": "node test/categoryA.test.js",
     "test:b": "node test/categoryB.test.js",
-    "test:c": "node test/categoryC.test.js"
+    "test:c": "node test/categoryC.test.js",
+    "test:d": "node test/categoryD.test.js",
+    "test:e": "node test/categoryE.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

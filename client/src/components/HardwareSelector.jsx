@@ -1,7 +1,6 @@
-import React from 'react';
 import { useHardware } from '../context/HardwareContext';
 import { useAuth } from '../context/AuthContext';
-import { Cpu, HardDrive, Zap, Gauge, CheckCircle2, ShieldCheck, Activity, ChevronRight, Server } from 'lucide-react';
+import { Cpu, HardDrive, Zap, CheckCircle2, ShieldCheck, Activity, ChevronRight, Server } from 'lucide-react';
 
 export const HardwareSelector = ({ onComplete }) => {
   const { hardwareSpecs, activeProfile, setActiveProfile, setIsHardwareConfirmed, loadingSpecs } = useHardware();

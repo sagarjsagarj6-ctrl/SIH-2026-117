@@ -9,6 +9,82 @@ import { VECTOR_DB_CONFIG } from '../../config/vectordb.js';
 
 export class EmbeddingService {
   static DIMENSION = VECTOR_DB_CONFIG.dimension || 768;
+  static embeddingBackendAvailable = null;
+  static embeddingProbeUntil = 0;
+
+  static get configuredBackend() {
+    return String(process.env.EMBEDDING_BACKEND || 'auto').toLowerCase();
+  }
+
+  static get embeddingModel() {
+    return process.env.EMBEDDING_MODEL || 'nomic-embed-text';
+  }
+
+  static async generateEmbeddingAsync(text, { preferredSource = '' } = {}) {
+    if (preferredSource === 'deterministic-local-hash' || this.configuredBackend === 'hash') {
+      return { embedding: this.generateEmbedding(text), source: 'deterministic-local-hash', usedFallback: true };
+    }
+
+    const backend = this.configuredBackend;
+    if (backend === 'auto' || backend === 'ollama') {
+      if (this.embeddingBackendAvailable === false && Date.now() < this.embeddingProbeUntil) {
+        return { embedding: this.generateEmbedding(text), source: 'deterministic-local-hash', usedFallback: true };
+      }
+      const host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), Number(process.env.EMBEDDING_TIMEOUT_MS || 2500));
+      try {
+        let response = await fetch(`${host}/api/embeddings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: this.embeddingModel, prompt: String(text || '') }),
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          response = await fetch(`${host}/api/embed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: this.embeddingModel, input: String(text || '') }),
+            signal: controller.signal
+          });
+        }
+        const data = await response.json();
+        const embedding = data.embedding || data.embeddings?.[0] || data.data?.[0]?.embedding;
+        if (Array.isArray(embedding) && embedding.length > 0) {
+          this.embeddingBackendAvailable = true;
+          this.embeddingProbeUntil = Date.now() + 60_000;
+          clearTimeout(timeout);
+          return { embedding, source: `ollama:${this.embeddingModel}`, usedFallback: false };
+        }
+      } catch {
+        // Fall through to deterministic local embeddings in offline mode.
+        this.embeddingBackendAvailable = false;
+        this.embeddingProbeUntil = Date.now() + 30_000;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    return {
+      embedding: this.generateEmbedding(text),
+      source: 'deterministic-local-hash',
+      usedFallback: true
+    };
+  }
+
+  static async getRuntimeInfo() {
+    const configured = this.configuredBackend;
+    if (configured === 'hash') {
+      return { configuredBackend: configured, activeBackend: 'deterministic-local-hash', model: null, live: false };
+    }
+    const result = await this.generateEmbeddingAsync('embedding capability probe');
+    return {
+      configuredBackend: configured,
+      activeBackend: result.source,
+      model: result.source.startsWith('ollama:') ? this.embeddingModel : null,
+      live: !result.usedFallback
+    };
+  }
 
   // Semantic concept seeds for high-accuracy local semantic matching
   static CONCEPT_CLUSTERS = {

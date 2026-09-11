@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AgentSelector } from './AgentSelector';
 import { ResponseRenderer } from './ResponseRenderer';
 import { AgentTraceViewer } from './AgentTraceViewer';
 import { 
-  Bot, Sparkles, Send, RefreshCw, 
-  HelpCircle, ArrowRight, CornerDownRight, CheckCircle2 
+  Bot, Sparkles, RefreshCw
 } from 'lucide-react';
 
 export const AgentWorkspace = () => {

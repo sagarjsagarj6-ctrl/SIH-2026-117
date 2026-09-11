@@ -17,11 +17,12 @@ export class HardwareProfiler {
 
     let gpuInfo = {
       detected: false,
-      name: 'Simulated NVIDIA RTX 4090 (Air-Gapped Sovereign Node)',
-      vramTotalGB: 24,
-      vramUsedGB: 6.8,
-      driverVersion: '550.54.14',
-      cudaVersion: '12.4'
+      name: 'No NVIDIA GPU detected',
+      vramTotalGB: 0,
+      vramUsedGB: 0,
+      driverVersion: 'N/A',
+      cudaVersion: 'N/A',
+      telemetrySource: 'unavailable'
     };
 
     try {
@@ -35,7 +36,8 @@ export class HardwareProfiler {
           vramTotalGB: Number((parseFloat(total) / 1024).toFixed(1)),
           vramUsedGB: Number((parseFloat(used) / 1024).toFixed(1)),
           driverVersion: driver,
-          cudaVersion: '12.4'
+          cudaVersion: 'unknown',
+          telemetrySource: 'nvidia-smi'
         };
       }
     } catch {

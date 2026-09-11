@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Cpu, Power, Gauge, Layers, Play, CheckCircle2, 
-  AlertCircle, Sparkles, Terminal, Database, Sliders 
+  Power, Gauge
 } from 'lucide-react';
 
 export const ModelManagementCenter = () => {
@@ -18,7 +17,7 @@ export const ModelManagementCenter = () => {
     fetchModelCenterData();
   }, []);
 
-  const fetchModelCenterData = async () => {
+  async function fetchModelCenterData() {
     try {
       setLoading(true);
       const [modRes, jobRes] = await Promise.all([
@@ -39,7 +38,7 @@ export const ModelManagementCenter = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleToggleModel = async (modelId) => {
     try {

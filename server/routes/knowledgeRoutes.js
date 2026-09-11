@@ -62,6 +62,7 @@ router.get('/chunks/:docId', authenticateToken, async (req, res) => {
         tokenCount: c.tokenCount,
         text: c.text,
         metadata: c.metadata,
+        embeddingSource: c.embeddingSource || 'deterministic-local-hash',
         hasVectorEmbedding: !!(c.embedding && c.embedding.length > 0)
       }))
     });

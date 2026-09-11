@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "message": "Login successful",
+    "token": "[REDACTED]",
+    "user": {
+      "id": "6a983b679e8b63d8b566c473",
+      "name": "System Admin",
+      "email": "admin@sovereign.local",
+      "role": "Admin",
+      "department": "Executive & Strategy",
+      "assignedAIProfile": "Fast"
+    }
+  }
+}

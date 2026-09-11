@@ -1,0 +1,60 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "agents": [
+      {
+        "id": "RAG",
+        "name": "RAG Knowledge & Search Agent",
+        "category": "Knowledge Retrieval",
+        "defaultModel": "Mistral-7B-v0.3-Enterprise",
+        "capabilities": [
+          "Semantic search across local vector store",
+          "Hybrid BM25 + Vector Cosine retrieval",
+          "Inline source document citations",
+          "Department-isolated ABAC data filtering"
+        ],
+        "description": "Specializes in extracting verified facts and citations from local enterprise documents."
+      },
+      {
+        "id": "DATA_SCIENCE",
+        "name": "Data Science & Anomaly Agent",
+        "category": "Quantitative Analytics",
+        "defaultModel": "DeepSeek-R1-Distill-Qwen-14B",
+        "capabilities": [
+          "Descriptive statistics & variance analysis",
+          "IQR & Z-score statistical anomaly detection",
+          "Linear trend regression and forecasting",
+          "Chart.js compatible visualization data generation"
+        ],
+        "description": "Performs statistical computations, identifies data anomalies, and plots trend projections."
+      },
+      {
+        "id": "VISION",
+        "name": "Vision & Document OCR Agent",
+        "category": "Visual Intelligence",
+        "defaultModel": "Qwen2-VL-7B-Instruct",
+        "capabilities": [
+          "Air-gapped OCR text extraction from document scans",
+          "Structured tabular matrix parsing",
+          "Technical schematic entity recognition",
+          "Checksum verification and classification detection"
+        ],
+        "description": "Extracts text, tables, and entities from images, schematics, and scanned forms."
+      },
+      {
+        "id": "REPORTING",
+        "name": "Executive Reporting Agent",
+        "category": "Synthesis & Document Generation",
+        "defaultModel": "Llama-3-8B-Instruct",
+        "capabilities": [
+          "Multi-agent output compilation",
+          "Executive summary generation",
+          "Compliance audit memo assembly",
+          "Confidential watermark governance"
+        ],
+        "description": "Compiles multi-agent analytical outputs into structured, watermarked executive reports."
+      }
+    ]
+  }
+}

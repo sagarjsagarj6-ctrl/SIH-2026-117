@@ -1,4 +1,5 @@
 import { state } from '../config/db.js';
+import { RuntimeStateStore } from './runtime/RuntimeStateStore.js';
 
 const asString = (value) => String(value || '');
 
@@ -43,6 +44,7 @@ export const pushNotifications = ({
   }));
 
   state.memoryDb.notifications.unshift(...notifications);
+  notifications.forEach(notification => RuntimeStateStore.persist('notifications', notification));
   return notifications;
 };
 
@@ -80,6 +82,7 @@ export const createAIHandoff = ({
   };
 
   state.memoryDb.aiHandoffEvents.unshift(event);
+  RuntimeStateStore.persist('aiHandoffEvents', event);
   if (connected) {
     pushNotifications({
       recipientUserIds: [targetUserId],
@@ -104,6 +107,7 @@ export const deliverQueuedAIHandoffs = (userId) => {
   queued.forEach(event => {
     event.status = 'delivered';
     event.deliveredAt = new Date().toISOString();
+    RuntimeStateStore.persist('aiHandoffEvents', event);
     pushNotifications({
       recipientUserIds: [normalizedUserId],
       type: 'WORKFLOW_AI_HANDOFF',

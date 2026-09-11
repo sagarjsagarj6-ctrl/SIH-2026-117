@@ -1,0 +1,176 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "mode": "SINGLE",
+    "primaryAgent": "DataScienceAgent",
+    "result": {
+      "agent": "DataScienceAgent",
+      "query": "series 10 20 30 total",
+      "summary": "Series sourced from query_numbers (3 points). Statistical analysis of 3 data points for Executive & Strategy completed. Mean: 20, StdDev: 8.16. Identified 0 statistical anomaly (values: none). Estimated trajectory is UPWARD (R² = 1), with next period projection at 40.",
+      "dataSource": "query_numbers",
+      "inference": {
+        "used": true,
+        "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
+        "usedFallback": true,
+        "metrics": {
+          "inputTokens": 191,
+          "tokensGenerated": 95,
+          "totalTokens": 286,
+          "latencyMs": 12,
+          "tokensPerSecond": 7916.7
+        }
+      },
+      "modelNarrative": "",
+      "series": [
+        10,
+        20,
+        30
+      ],
+      "statistics": {
+        "count": 3,
+        "sum": 60,
+        "mean": 20,
+        "median": 20,
+        "min": 10,
+        "max": 30,
+        "variance": 66.67,
+        "stdDev": 8.16
+      },
+      "anomalies": {
+        "iqr": {
+          "outliers": [],
+          "lowerBound": 0,
+          "upperBound": 0,
+          "hasAnomalies": false
+        },
+        "zScore": {
+          "threshold": 1.8,
+          "outliers": [],
+          "hasAnomalies": false
+        }
+      },
+      "regression": {
+        "slope": 10,
+        "intercept": 0,
+        "r2": 1,
+        "trendDirection": "UPWARD",
+        "forecastNext": 40
+      },
+      "charts": {
+        "trendLine": {
+          "type": "line",
+          "title": "Executive & Strategy Operational Trajectory & Forecast",
+          "labels": [
+            "P1",
+            "P2",
+            "P3",
+            "Next (Est.)"
+          ],
+          "datasets": [
+            {
+              "label": "Executive & Strategy Metric Throughput",
+              "data": [
+                10,
+                20,
+                30,
+                40
+              ],
+              "borderColor": "#00fff2",
+              "backgroundColor": "rgba(0, 255, 242, 0.15)",
+              "fill": true
+            }
+          ]
+        },
+        "anomalyBar": {
+          "type": "bar",
+          "title": "Executive & Strategy Anomaly Detection Distribution",
+          "labels": [
+            "P1",
+            "P2",
+            "P3"
+          ],
+          "datasets": [
+            {
+              "label": "Dataset Values",
+              "data": [
+                10,
+                20,
+                30
+              ],
+              "backgroundColor": [
+                "#00fff2",
+                "#00fff2",
+                "#00fff2"
+              ],
+              "hasAnomalies": false,
+              "outlierCount": 0
+            }
+          ]
+        }
+      },
+      "metrics": {
+        "totalRecordsAnalyzed": 3,
+        "anomalyRatePct": 0,
+        "confidenceScore": 0.96,
+        "meanResponseTimeMs": null,
+        "mean": 20,
+        "stdDev": 8.16
+      },
+      "chartData": {
+        "title": "Executive & Strategy Operational Trajectory & Forecast",
+        "labels": [
+          "P1",
+          "P2",
+          "P3"
+        ],
+        "series": [
+          {
+            "name": "Observed",
+            "data": [
+              10,
+              20,
+              30
+            ]
+          }
+        ]
+      },
+      "insights": [
+        "Series sourced from query_numbers (3 points).",
+        "Mean=20, median=20, max=30.",
+        "No IQR outliers detected in the analyzed series."
+      ],
+      "tokensUsed": 172
+    },
+    "citations": [],
+    "confidence": 0.95,
+    "trace": {
+      "traceId": "trace_8097a2d4",
+      "queryId": "query_1789148691293",
+      "userQuery": "series 10 20 30 total",
+      "orchestrationMode": "SINGLE",
+      "agentChain": [
+        "DataScienceAgent"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "agent": "DataScienceAgent",
+          "action": "Executed specialized DataScienceAgent operation",
+          "reasoning": "Selected based on query intent classification (DATA_SCIENCE)",
+          "confidence": 0.95,
+          "sourcesUsed": [],
+          "latencyMs": 29,
+          "tokensUsed": 172,
+          "timestamp": "2026-09-11T17:44:51.322Z"
+        }
+      ],
+      "aggregateMetrics": {
+        "totalTokens": 172,
+        "totalLatencyMs": 29,
+        "averageConfidence": 0.95
+      },
+      "completedAt": "2026-09-11T17:44:51.322Z"
+    }
+  }
+}

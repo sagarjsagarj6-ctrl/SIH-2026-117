@@ -8,10 +8,12 @@ import DataQualityReport from '../models/DataQualityReport.js';
 import { authenticateToken, createAuditEntry } from '../middleware/auth.js';
 import { FileIngestor } from '../services/ingestion/FileIngestor.js';
 import { VectorStore } from '../services/knowledge/VectorStore.js';
+import { MAX_UPLOAD_BYTES, uploadFileFilter } from '../services/ingestion/uploadPolicy.js';
 
 const upload = multer({
   dest: os.tmpdir(),
-  limits: { fileSize: 50 * 1024 * 1024 }
+  fileFilter: uploadFileFilter,
+  limits: { fileSize: MAX_UPLOAD_BYTES }
 });
 
 const router = express.Router();
@@ -148,6 +150,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     if (!doc) {
       return res.status(404).json({ error: 'Document not found.' });
+    }
+
+    if (req.user.role !== 'Admin' && doc.department !== 'All' && doc.department !== req.user.department) {
+      return res.status(403).json({ error: 'Access denied: this document belongs to another department.' });
     }
 
     res.json({ document: doc });

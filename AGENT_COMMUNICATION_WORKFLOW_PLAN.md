@@ -41,3 +41,12 @@ Create an AI-first communication workflow where the employee AI agent analyzes c
 - Phase 6: Completed
 - Phase 7: Completed
 - Phase 8: Verified via production build
+
+## Runtime enhancements implemented
+
+- Workflow records now persist event timelines and human messages when MongoDB is available.
+- Employees and managers can add context to a workflow and request agent re-analysis with that feedback.
+- `GET /api/workflows/:workflowId/events` exposes the auditable timeline and messages.
+- `GET /api/workflows/:workflowId/stream` provides live server-sent workflow updates for connected private-LAN clients.
+- Every transition and AI re-analysis records actor, status, timestamp, message, and metadata.
+- Admin access remains read-only for human messages and approvals.

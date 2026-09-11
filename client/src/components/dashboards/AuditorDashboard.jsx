@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ClipboardCheck, Download, RefreshCw, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 

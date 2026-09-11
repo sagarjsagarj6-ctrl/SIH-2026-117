@@ -4,6 +4,7 @@
 
 import { BaseAgent } from '../BaseAgent.js';
 import { ReportTemplates } from './utils/ReportTemplates.js';
+import { InferenceRouter } from '../../services/inference/InferenceRouter.js';
 
 export class ReportingAgent extends BaseAgent {
   constructor() {
@@ -70,6 +71,26 @@ export class ReportingAgent extends BaseAgent {
       citations
     });
 
+    let inference = { used: false, usedFallback: true, backend: null };
+    let modelNarrative = '';
+    try {
+      const inferenceResult = await InferenceRouter.infer({
+        model: this.defaultModel,
+        role: 'REPORTING',
+        query: 'Write a concise executive narrative from the structured report below. Preserve uncertainty and do not invent metrics.',
+        context: reportData.markdown
+      });
+      inference = {
+        used: true,
+        backend: inferenceResult.backendUsed,
+        usedFallback: inferenceResult.usedFallback,
+        metrics: inferenceResult.metrics
+      };
+      if (!inferenceResult.usedFallback) modelNarrative = inferenceResult.response;
+    } catch (error) {
+      inference = { used: false, usedFallback: true, backend: null, error: error.message };
+    }
+
     return {
       agent: this.name,
       query,
@@ -77,6 +98,8 @@ export class ReportingAgent extends BaseAgent {
       watermark: reportData.watermark,
       sections: reportData.sections,
       markdown: reportData.markdown,
+      modelNarrative,
+      inference,
       generatedAt: reportData.generatedAt,
       tokensUsed: 380
     };

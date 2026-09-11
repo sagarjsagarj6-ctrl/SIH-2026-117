@@ -54,6 +54,10 @@ router.get('/reports/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Quality report not found' });
     }
 
+    if (req.user.role !== 'Admin' && report.department !== 'All' && report.department !== req.user.department) {
+      return res.status(403).json({ error: 'Access denied: this quality report belongs to another department.' });
+    }
+
     res.json({ report });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch quality report' });

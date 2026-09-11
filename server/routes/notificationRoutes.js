@@ -1,6 +1,7 @@
 import express from 'express';
 import { state } from '../config/db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { RuntimeStateStore } from '../services/runtime/RuntimeStateStore.js';
 
 const router = express.Router();
 
@@ -16,12 +17,13 @@ router.get('/', authenticateToken, (req, res) => {
   });
 });
 
-router.post('/:notificationId/read', authenticateToken, (req, res) => {
+router.post('/:notificationId/read', authenticateToken, async (req, res) => {
   const userId = String(req.user._id || req.user.id || '');
   const notification = (state.memoryDb.notifications || []).find(item => item._id === req.params.notificationId && item.userId === userId);
   if (!notification) return res.status(404).json({ error: 'Notification not found.' });
 
   notification.read = true;
+  await RuntimeStateStore.upsert('notifications', notification);
   res.json({ message: 'Notification marked as read.', notification });
 });
 

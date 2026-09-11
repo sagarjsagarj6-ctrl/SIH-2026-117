@@ -12,14 +12,17 @@ export class LoRATrainer {
     const currentLoss = Number((initialLoss * decayFactor + 0.25).toFixed(3));
 
     return {
+      executionMode: 'SIMULATED_PROGRESS',
+      simulation: true,
       epochs,
       currentEpoch,
       totalSteps,
       progressPercent,
       currentLoss,
       learningRate: '2e-4',
-      gpuVramPeakGB: '8.4 GB',
-      cudaUtilization: '94%'
+      gpuVramPeakGB: null,
+      cudaUtilization: null,
+      telemetrySource: 'unavailable-until-live-trainer'
     };
   }
 }

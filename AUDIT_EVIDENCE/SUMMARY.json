@@ -1,0 +1,46 @@
+{
+  "passed": [
+    "GET /health → 200",
+    "POST /auth/login",
+    "GET /auth/me",
+    "unauth registry → 401",
+    "GET /agents/registry",
+    "POST /agents/query RAG",
+    "POST /agents/query DATA_SCIENCE",
+    "POST /agents/query VISION",
+    "POST /agents/query REPORTING",
+    "empty prompt → 400",
+    "orchestrate AUTO → 200",
+    "orchestrate SINGLE RAG → 200",
+    "orchestrate SEQUENTIAL → 200",
+    "orchestrate PARALLEL → 200",
+    "decompose",
+    "knowledge search",
+    "knowledge stats",
+    "inference backends",
+    "inference generate → 200",
+    "models list",
+    "analytics admin",
+    "documents list",
+    "hardware detect"
+  ],
+  "failed": [],
+  "notes": [
+    {
+      "antiHardcodeRAG": {
+        "answersEqual": false,
+        "alphaCitations": 4,
+        "betaCitations": 4
+      }
+    },
+    {
+      "dsAntiHardcode": {
+        "mean1": 200,
+        "mean2": 20,
+        "sameMeans": false
+      },
+      "orchAutoMode": "SEQUENTIAL",
+      "inferenceBackend": "Ollama Engine (Air-Gapped Sovereign Fallback)"
+    }
+  ]
+}

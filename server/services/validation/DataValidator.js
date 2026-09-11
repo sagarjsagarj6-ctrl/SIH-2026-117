@@ -7,7 +7,7 @@ import fs from 'fs/promises';
 
 export class DataValidator {
   static MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-  static ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.csv', '.txt', '.md', '.json', '.png', '.jpg', '.jpeg', '.tiff', '.bmp'];
+  static ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.csv', '.txt', '.md', '.json', '.log', '.yaml', '.yml', '.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.webp'];
 
   static async computeSHA256(filePath) {
     const buffer = await fs.readFile(filePath);

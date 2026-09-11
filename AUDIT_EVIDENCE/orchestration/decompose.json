@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "mode": "SEQUENTIAL",
+    "tasks": [
+      {
+        "step": 1,
+        "agentKey": "RAG",
+        "goal": "Retrieve relevant contextual documents and policy guidelines from local vector index",
+        "prompt": "Analyze OCR document and report findings"
+      },
+      {
+        "step": 2,
+        "agentKey": "REPORTING",
+        "goal": "Compile previous agent findings into a structured, watermarked enterprise executive report",
+        "prompt": "Analyze OCR document and report findings"
+      }
+    ]
+  }
+}

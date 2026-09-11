@@ -1,12 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Play, Square, Upload, ChevronRight, Zap, BookOpen,
-  TrendingDown, CheckCircle, AlertCircle, Clock, Cpu,
-  BarChart2, FileText, Settings, RefreshCw, Download
+  Play, Square, CheckCircle, BarChart2, Settings
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const STAGE_LABELS = {
   idle: 'Idle',
@@ -14,6 +10,7 @@ const STAGE_LABELS = {
   training: 'Training',
   validating: 'Validating',
   done: 'Complete',
+  cancelled: 'Cancelled',
   error: 'Error',
 };
 
@@ -23,18 +20,67 @@ const STAGE_COLORS = {
   training: '#6366f1',
   validating: '#06b6d4',
   done: '#22c55e',
+  cancelled: '#94a3b8',
   error: '#ef4444',
 };
 
-function generateMockLoss(epoch, totalEpochs) {
-  const base = 2.4;
-  const decay = 1.8;
-  const noise = (Math.random() - 0.5) * 0.08;
-  return +(base * Math.exp(-decay * (epoch / totalEpochs)) + noise + 0.3).toFixed(4);
-}
+const mapServerStatus = (status = '') => {
+  const s = String(status).toLowerCase();
+  if (s.includes('complete') || s.includes('deploy') || s === 'done') return 'done';
+  if (s.includes('cancel')) return 'cancelled';
+  if (s.includes('valid')) return 'validating';
+  if (s.includes('train') || s.includes('running')) return 'training';
+  if (s.includes('fail') || s.includes('error')) return 'error';
+  if (s.includes('prep') || s.includes('queued')) return 'preparing';
+  return 'training';
+};
+
+const LossCurve = ({ data }) => {
+  if (!data.length) return null;
+  const w = 420, h = 160;
+  const maxLoss = Math.max(...data.map(d => d.loss), 2.5);
+  const minLoss = Math.min(...data.map(d => d.loss), 0.2);
+  const range = maxLoss - minLoss || 1;
+  const pts = data.map((d, i) => {
+    const x = (i / Math.max(data.length - 1, 1)) * (w - 40) + 20;
+    const y = h - 20 - ((d.loss - minLoss) / range) * (h - 40);
+    return `${x},${y}`;
+  }).join(' ');
+  const area = `20,${h - 20} ${pts} ${(data.length - 1) / Math.max(data.length - 1, 1) * (w - 40) + 20},${h - 20}`;
+
+  return (
+    <svg width={w} height={h} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="lossGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      {[0, 0.25, 0.5, 0.75, 1].map((t, i) => (
+        <g key={i}>
+          <line x1={20} y1={h - 20 - t * (h - 40)} x2={w - 20} y2={h - 20 - t * (h - 40)} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+          <text x={12} y={h - 20 - t * (h - 40) + 4} fill="#64748b" fontSize={9} textAnchor="end">
+            {(minLoss + t * range).toFixed(2)}
+          </text>
+        </g>
+      ))}
+      {data.length > 1 && (
+        <>
+          <polygon points={area} fill="url(#lossGrad)" />
+          <polyline points={pts} fill="none" stroke="#6366f1" strokeWidth={2} strokeLinejoin="round" />
+        </>
+      )}
+      {data.slice(-1).map(d => {
+        const x = ((data.length - 1) / Math.max(data.length - 1, 1)) * (w - 40) + 20;
+        const y = h - 20 - ((d.loss - minLoss) / range) * (h - 40);
+        return <circle key="dot" cx={x} cy={y} r={4} fill="#818cf8" />;
+      })}
+    </svg>
+  );
+};
 
 export const FineTuneManager = () => {
-  const { user } = useAuth();
+  const { user, token, API_URL } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
   const [config, setConfig] = useState({
@@ -48,6 +94,9 @@ export const FineTuneManager = () => {
     warmupSteps: 100,
     trainDataFileName: '',
     testDataFileName: '',
+    trainDataFilePath: '',
+    testDataFilePath: '',
+    executionMode: 'AUTO',
   });
   const [form, setForm] = useState({ showForm: false });
   const [lossData, setLossData] = useState([]);
@@ -55,6 +104,7 @@ export const FineTuneManager = () => {
   const [stage, setStage] = useState('idle');
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
+  const [trainingCapabilities, setTrainingCapabilities] = useState(null);
   const intervalRef = useRef(null);
   const logRef = useRef(null);
 
@@ -65,131 +115,230 @@ export const FineTuneManager = () => {
     setLogs(prev => [...prev.slice(-49), { msg, type, ts: new Date().toLocaleTimeString() }]);
   };
 
+  const normalizeJob = (job) => ({
+    id: job._id || job.id,
+    ...job,
+    stage: mapServerStatus(job.status),
+    hosted: Boolean(job.isDeployed || job.hosted),
+    trainDataFileName: job.trainDataFile || job.trainDataFileName || '',
+    testDataFileName: job.testDataFile || job.testDataFileName || '',
+    trainDataFilePath: job.trainDataFilePath || '',
+    testDataFilePath: job.testDataFilePath || '',
+    lossHistory: job.lossHistory || [],
+    executionMode: job.executionMode || 'SIMULATED_PROGRESS',
+    simulation: job.simulation !== false,
+    validation: job.validation || null
+  });
+
+  const applyJobToUi = (job) => {
+    if (!job) return;
+    const normalized = normalizeJob(job);
+    setActiveJob(normalized);
+    setStage(normalized.stage);
+    setProgress(Number(normalized.progressPercent || 0));
+    setLossData((normalized.lossHistory || []).map(entry => ({
+      epoch: entry.epoch,
+      loss: Number(entry.loss)
+    })));
+    if (normalized.validation) setValidationScore(normalized.validation);
+  };
+
+  const fetchJobs = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load fine-tune jobs');
+      const list = (Array.isArray(data) ? data : data.jobs || []).map(normalizeJob);
+      setJobs(list);
+      if (activeJob) {
+        const latest = list.find(item => item.id === activeJob.id);
+        if (latest) applyJobToUi(latest);
+      }
+    } catch (err) {
+      addLog(err.message, 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, [token, API_URL]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+    let cancelled = false;
+    fetch(`${API_URL}/models/training/capabilities`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => response.json())
+      .then(data => {
+        if (!cancelled) setTrainingCapabilities(data);
+      })
+      .catch(() => {
+        if (!cancelled) setTrainingCapabilities({ selectedMode: 'SIMULATED_PROGRESS', detail: 'Training capability probe unavailable.' });
+      });
+    return () => { cancelled = true; };
+  }, [token, API_URL]);
+
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [logs]);
+
+  const pollJob = async (jobId) => {
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to refresh training job');
+      const latest = normalizeJob(data);
+      setJobs(prev => prev.map(item => item.id === latest.id ? latest : item));
+      applyJobToUi(latest);
+      if (['Completed', 'Failed', 'Cancelled'].includes(latest.status)) {
+        clearInterval(intervalRef.current);
+        addLog(`[${latest.id}] Server job ended with status ${latest.status}.`, latest.status === 'Completed' ? 'success' : 'error');
+      }
+    } catch (err) {
+      addLog(err.message, 'error');
+    }
+  };
 
   const startFineTune = async () => {
     setStage('preparing');
     setProgress(0);
     setLossData([]);
     setValidationScore(null);
-    const jobId = `ft-${Date.now()}`;
-    const newJob = {
-      id: jobId,
-      ...config,
-      stage: 'preparing',
-      startedAt: new Date().toISOString(),
-      lossHistory: [],
-      trainDataFileName: config.trainDataFileName || 'No training file selected',
-      testDataFileName: config.testDataFileName || 'No test file selected',
-      hosted: false,
-      createdBy: user?.role || 'Employee'
-    };
-    setJobs(prev => [newJob, ...prev]);
-    setActiveJob(newJob);
-    addLog(`[${jobId}] Preparing dataset for ${config.department} dept. (${config.epochs} epochs)…`, 'info');
+    addLog(`Submitting fine-tune job for ${config.department} (${config.epochs} epochs)…`, 'info');
 
-    // Simulate dataset preparation
-    await new Promise(r => setTimeout(r, 1500));
-    addLog(`[${jobId}] Dataset JSONL prepared — 2,847 instruction-response pairs`, 'success');
-    addLog(`[${jobId}] LoRA rank=${config.loraRank}, alpha=${config.loraAlpha}, lr=${config.learningRate}`, 'info');
-    setStage('training');
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          jobName: `${config.department.replace(/\s+/g, '_')}_QLoRA_${Date.now()}`,
+          baseModel: config.modelBase,
+          department: config.department,
+          method: 'QLoRA',
+          epochs: config.epochs,
+          learningRate: String(config.learningRate),
+          trainDataFile: config.trainDataFileName,
+          testDataFile: config.testDataFileName,
+          trainDataFilePath: config.trainDataFilePath,
+          testDataFilePath: config.testDataFilePath,
+          requestedExecutionMode: config.executionMode,
+          trainingConfig: {
+            batchSize: config.batchSize,
+            loraRank: config.loraRank,
+            loraAlpha: config.loraAlpha,
+            warmupSteps: config.warmupSteps
+          }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to launch fine-tune job');
 
-    let epoch = 0;
-    const totalEpochs = config.epochs;
-    intervalRef.current = setInterval(() => {
-      epoch++;
-      const loss = generateMockLoss(epoch, totalEpochs);
-      const step = Math.round((epoch / totalEpochs) * 100);
-      setProgress(step);
-      setLossData(prev => [...prev, { epoch, loss }]);
-      addLog(`[Epoch ${epoch}/${totalEpochs}] loss: ${loss}  lr: ${(config.learningRate * (1 - epoch / totalEpochs)).toFixed(6)}`, 'train');
-      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, stage: 'training', lossHistory: [...(j.lossHistory || []), { epoch, loss }] } : j));
-
-      if (epoch >= totalEpochs) {
-        clearInterval(intervalRef.current);
-        setStage('validating');
-        addLog(`[${jobId}] Training complete. Starting model validation…`, 'info');
-        setTimeout(() => {
-          const score = { bleu: +(0.72 + Math.random() * 0.15).toFixed(3), rouge: +(0.68 + Math.random() * 0.18).toFixed(3), perplexity: +(12.4 - Math.random() * 3).toFixed(2), improvement: `+${(18 + Math.random() * 12).toFixed(1)}%` };
-          setValidationScore(score);
-          setStage('done');
-          addLog(`[${jobId}] Validation — BLEU: ${score.bleu}  ROUGE: ${score.rouge}  PPL: ${score.perplexity}`, 'success');
-          addLog(`[${jobId}] LoRA adapter saved → /models/adapters/${jobId}.safetensors`, 'success');
-          setJobs(prev => prev.map(j => j.id === jobId ? { ...j, stage: 'done', score } : j));
-        }, 1800);
+      const job = normalizeJob(data.job || data);
+      setJobs((prev) => [job, ...prev.filter((j) => j.id !== job.id)]);
+      applyJobToUi(job);
+      addLog(`[${job.id}] Job registered on server — ${job.executionMode}${job.simulation ? ' (simulation)' : ' (live local trainer)'}.`, 'success');
+      addLog(`[${job.id}] base=${job.baseModel} dept=${job.department} epochs=${job.epochs}`, 'info');
+      if (data.datasetSummary) {
+        addLog(`[${job.id}] dataset=${data.datasetSummary.totalSamples} samples (${data.datasetSummary.trainCount} train / ${data.datasetSummary.testCount} test).`, 'info');
       }
-    }, 900);
+
+      clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => pollJob(job.id), 800);
+    } catch (err) {
+      setStage('error');
+      addLog(err.message, 'error');
+    }
   };
 
-  const stopJob = () => {
+  const stopJob = async () => {
     clearInterval(intervalRef.current);
-    setStage('idle');
-    addLog('Training stopped by user.', 'error');
+    if (!activeJob?.id) {
+      setStage('idle');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune/${activeJob.id}/cancel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Cancellation failed');
+      applyJobToUi(data.job);
+      addLog(`[${activeJob.id}] Cancellation requested.`, 'error');
+    } catch (err) {
+      addLog(err.message, 'error');
+    }
   };
 
-  const handleDatasetUpload = (key, event) => {
+  const handleDatasetUpload = async (key, event) => {
     const file = event.target.files?.[0];
-    const fileName = file ? file.name : '';
-    setConfig(prev => ({ ...prev, [key]: fileName }));
-    addLog(`${fileName ? fileName : 'No file selected'} assigned to ${key === 'trainDataFileName' ? 'training dataset' : 'test dataset'}.`, fileName ? 'success' : 'error');
+    if (!file) return;
+    const pathKey = key.replace('Name', 'Path');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune/dataset`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Dataset upload failed');
+      setConfig(prev => ({ ...prev, [key]: file.name, [pathKey]: data.datasetPath }));
+      addLog(`${file.name} staged as ${key === 'trainDataFileName' ? 'training' : 'test'} dataset (${data.sizeBytes} bytes).`, 'success');
+    } catch (err) {
+      addLog(err.message, 'error');
+    }
   };
 
-  const handleHostToLan = (job) => {
-    setJobs(prev => prev.map(item => item.id === job.id ? { ...item, hosted: true } : item));
-    addLog(`[${job.id}] Agent hosted to private LAN and broadcast to approved users.`, 'success');
+  const handleHostToLan = async (job) => {
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune/${job.id}/deploy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Deploy failed (Admin only)');
+      setJobs((prev) => prev.map((item) => (item.id === job.id ? { ...item, hosted: true, isDeployed: true } : item)));
+      addLog(`[${job.id}] Deployed to LAN via API.`, 'success');
+      fetchJobs();
+    } catch (err) {
+      addLog(err.message, 'error');
+    }
   };
 
-  const handleRemoveJob = (jobId) => {
-    setJobs(prev => prev.filter(item => item.id !== jobId));
-    if (activeJob?.id === jobId) setActiveJob(null);
-    addLog(`[${jobId}] Agent removed from the local training registry.`, 'error');
+  const handleRemoveJob = async (jobId) => {
+    try {
+      const res = await fetch(`${API_URL}/models/fine-tune/${jobId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Delete failed');
+      setJobs((prev) => prev.filter((item) => item.id !== jobId));
+      if (activeJob?.id === jobId) setActiveJob(null);
+      addLog(`[${jobId}] Removed from fine-tune registry.`, 'error');
+    } catch (err) {
+      addLog(err.message, 'error');
+    }
   };
 
-  const LossCurve = ({ data }) => {
-    if (!data.length) return null;
-    const w = 420, h = 160;
-    const maxLoss = Math.max(...data.map(d => d.loss), 2.5);
-    const minLoss = Math.min(...data.map(d => d.loss), 0.2);
-    const range = maxLoss - minLoss || 1;
-    const pts = data.map((d, i) => {
-      const x = (i / Math.max(data.length - 1, 1)) * (w - 40) + 20;
-      const y = h - 20 - ((d.loss - minLoss) / range) * (h - 40);
-      return `${x},${y}`;
-    }).join(' ');
-    const area = `20,${h - 20} ${pts} ${(data.length - 1) / Math.max(data.length - 1, 1) * (w - 40) + 20},${h - 20}`;
-
-    return (
-      <svg width={w} height={h} style={{ overflow: 'visible' }}>
-        <defs>
-          <linearGradient id="lossGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => (
-          <g key={i}>
-            <line x1={20} y1={h - 20 - t * (h - 40)} x2={w - 20} y2={h - 20 - t * (h - 40)} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-            <text x={12} y={h - 20 - t * (h - 40) + 4} fill="#64748b" fontSize={9} textAnchor="end">
-              {(minLoss + t * range).toFixed(2)}
-            </text>
-          </g>
-        ))}
-        {data.length > 1 && (
-          <>
-            <polygon points={area} fill="url(#lossGrad)" />
-            <polyline points={pts} fill="none" stroke="#6366f1" strokeWidth={2} strokeLinejoin="round" />
-          </>
-        )}
-        {data.slice(-1).map(d => {
-          const x = ((data.length - 1) / Math.max(data.length - 1, 1)) * (w - 40) + 20;
-          const y = h - 20 - ((d.loss - minLoss) / range) * (h - 40);
-          return <circle key="dot" cx={x} cy={y} r={4} fill="#818cf8" />;
-        })}
-      </svg>
-    );
-  };
+  const hasMeasuredValidation = validationScore && [
+    validationScore.bleu,
+    validationScore.rouge,
+    validationScore.perplexity
+  ].some(value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -201,6 +350,9 @@ export const FineTuneManager = () => {
           </h2>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: 4 }}>
             QLoRA · LoRA adapter training on enterprise knowledge base
+          </div>
+          <div style={{ color: trainingCapabilities?.liveReady ? '#22c55e' : '#f59e0b', fontSize: '0.72rem', marginTop: 6 }}>
+            Runtime: {trainingCapabilities?.selectedMode || 'Checking…'} · {trainingCapabilities?.detail || 'Checking local trainer capabilities…'}
           </div>
         </div>
         <button
@@ -219,6 +371,7 @@ export const FineTuneManager = () => {
             {[
               { key: 'modelBase', label: 'Base Model', type: 'select', opts: baseModels },
               { key: 'department', label: 'Department Corpus', type: 'select', opts: departments },
+              { key: 'executionMode', label: 'Runtime Mode', type: 'select', opts: ['AUTO', 'SIMULATED', 'LIVE'] },
               { key: 'epochs', label: 'Epochs', type: 'number', min: 1, max: 20 },
               { key: 'batchSize', label: 'Batch Size', type: 'number', min: 1, max: 16 },
               { key: 'learningRate', label: 'Learning Rate', type: 'number', step: 0.0001 },
@@ -335,7 +488,7 @@ export const FineTuneManager = () => {
           <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 20 }}>VALIDATION SCORECARD</div>
           {validationScore ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
+              {hasMeasuredValidation ? [
                 { label: 'BLEU Score', val: validationScore.bleu, max: 1, color: '#22c55e' },
                 { label: 'ROUGE-L', val: validationScore.rouge, max: 1, color: '#06b6d4' },
                 { label: 'Perplexity', val: validationScore.perplexity, max: 30, color: '#f59e0b', invert: true },
@@ -349,14 +502,18 @@ export const FineTuneManager = () => {
                     <div style={{ height: '100%', width: `${invert ? (1 - val / max) * 100 : (val / max) * 100}%`, background: color, borderRadius: 99 }} />
                   </div>
                 </div>
-              ))}
-              <div style={{ marginTop: 12, padding: '12px 16px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+              )) : (
+                <div style={{ padding: '14px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, color: '#fbbf24', fontSize: '0.8rem' }}>
+                  {validationScore.status || 'VALIDATION_PENDING'} — {validationScore.message || 'A held-out evaluation is required before quality metrics can be claimed.'}
+                </div>
+              )}
+              {hasMeasuredValidation && <div style={{ marginTop: 12, padding: '12px 16px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <CheckCircle size={18} color="#22c55e" />
                 <div>
                   <div style={{ fontWeight: 700, color: '#22c55e', fontSize: '0.85rem' }}>Adapter Validated</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Performance improvement: {validationScore.improvement}</div>
                 </div>
-              </div>
+              </div>}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 160, color: 'var(--text-dim)', gap: 12 }}>
@@ -409,6 +566,9 @@ export const FineTuneManager = () => {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{j.id}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{j.modelBase} · {j.department} · {j.epochs} epochs</div>
+                  <div style={{ color: j.simulation ? '#fbbf24' : '#86efac', fontSize: '0.72rem', marginTop: 3 }}>
+                    {j.executionMode} · {j.simulation ? 'development simulation' : 'live local trainer'} · {j.progressPercent || 0}%
+                  </div>
                   <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: 4 }}>
                     Train: {j.trainDataFileName || 'Not uploaded'} | Test: {j.testDataFileName || 'Not uploaded'}
                   </div>

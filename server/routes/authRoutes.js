@@ -4,17 +4,51 @@ import jwt from 'jsonwebtoken';
 import { state } from '../config/db.js';
 import User from '../models/User.js';
 import { authenticateToken, createAuditEntry } from '../middleware/auth.js';
+import { isKnownDepartment } from '../config/identity.js';
 
 const router = express.Router();
-const getSecret = () => process.env.JWT_SECRET || 'sovereign_enterprise_airgap_secret_key_2026_x992';
+const getSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured.');
+  }
+  return process.env.JWT_SECRET;
+};
+
+const normalizeText = (value, field, maxLength) => {
+  if (typeof value !== 'string') throw new Error(`${field} must be a string.`);
+  const normalized = value.trim();
+  if (!normalized || normalized.length > maxLength) throw new Error(`${field} must be between 1 and ${maxLength} characters.`);
+  return normalized;
+};
+
+const normalizeEmail = (value) => {
+  const email = normalizeText(value, 'Email', 254).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('A valid email address is required.');
+  return email;
+};
+
+const ensureSelfRegistrationEnabled = () => {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SELF_REGISTRATION !== 'true') {
+    const error = new Error('Self-registration is disabled for this deployment. Ask an administrator to create an account.');
+    error.status = 403;
+    throw error;
+  }
+};
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role, department } = req.body;
+    ensureSelfRegistrationEnabled();
+    const name = normalizeText(req.body?.name, 'Name', 120);
+    const email = normalizeEmail(req.body?.email);
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    const department = normalizeText(req.body?.department, 'Department', 100);
 
-    if (!name || !email || !password || !department) {
-      return res.status(400).json({ error: 'Name, email, password, and department are required.' });
+    if (password.length < 8 || password.length > 128) {
+      return res.status(400).json({ error: 'Password must be between 8 and 128 characters.' });
+    }
+    if (!isKnownDepartment(department)) {
+      return res.status(400).json({ error: 'Choose a supported enterprise department.' });
     }
 
     // Check existing
@@ -32,7 +66,9 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const assignedRole = role || 'Employee';
+    // Public registration must never be able to mint Manager/Admin/Auditor accounts.
+    // Privileged role assignment belongs to the authenticated admin governance route.
+    const assignedRole = 'Employee';
     let newUser;
 
     if (state.isMongooseConnected) {
@@ -89,17 +125,19 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ error: 'Internal server error during registration.' });
+    const status = err.status || (err.message.includes('must be') || err.message.includes('valid') || err.message.includes('supported') ? 400 : 500);
+    if (status === 500) console.error('Registration error:', err);
+    res.status(status).json({ error: status === 500 ? 'Internal server error during registration.' : err.message });
   }
 });
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
-    if (!email || !password) {
+    if (!password || password.length > 128) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
@@ -173,8 +211,9 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Internal server error during authentication.' });
+    const status = err.message.includes('Email') ? 400 : 500;
+    if (status === 500) console.error('Login error:', err);
+    res.status(status).json({ error: status === 500 ? 'Internal server error during authentication.' : err.message });
   }
 });
 

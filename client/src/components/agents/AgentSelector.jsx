@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   FileText, BarChart3, Zap, Terminal, 
   Workflow, GitFork, ShieldCheck, Sparkles 

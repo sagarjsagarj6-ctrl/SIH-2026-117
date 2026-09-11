@@ -75,6 +75,7 @@ export class InferenceRouter {
     return {
       model,
       backendUsed: output.backend,
+      usedFallback: Boolean(output.usedFallback) || /fallback|air-gap|airgap/i.test(String(output.backend || '')),
       response: output.text,
       metrics: {
         inputTokens,

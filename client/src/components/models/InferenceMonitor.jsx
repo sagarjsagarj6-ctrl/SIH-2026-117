@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Activity, Cpu, HardDrive, Zap, Server, 
-  RefreshCw, CheckCircle2, Clock, Gauge 
+  Server, RefreshCw
 } from 'lucide-react';
 
 export const InferenceMonitor = () => {

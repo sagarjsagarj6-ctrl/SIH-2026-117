@@ -46,7 +46,7 @@ The platform is configured via `.env` files in `server/` and `client/`. If any e
 
 | Variable | Default Value | Description & Purpose | Fallback Behavior |
 | :--- | :--- | :--- | :--- |
-| `PORT` | `5000` | HTTP port on which Express server listens. | Defaults to `5000`. |
+| `PORT` | `5001` | HTTP port on which Express server listens. | Defaults to `5001`. |
 | `NODE_ENV` | `development` | Runtime environment mode (`development` or `production`). | Defaults to `development`. |
 | `MONGODB_URI` | `mongodb://127.0.0.1:27017/sovereign_ai_db` | Connection string to local MongoDB database. | If MongoDB is unreachable, automatically activates the **Local High-Speed In-Memory Database**. |
 | `JWT_SECRET` | `sovereign_enterprise_airgap_secret_key_2026_x992` | HMAC-SHA256 secret key for signing enterprise user sessions. | Uses pre-shared key with warning. (Must be 32+ characters for production). |
@@ -62,7 +62,11 @@ The platform is configured via `.env` files in `server/` and `client/`. If any e
 
 | Variable | Default Value | Description & Purpose |
 | :--- | :--- | :--- |
-| `VITE_API_URL` | `http://localhost:5000/api` | Base API URL pointing to the Express server. Dynamic across components. |
+| `VITE_API_URL` | `/api` | Base API URL. Vite proxies this to the local Express server during development. |
+| `EMBEDDING_BACKEND` | `auto` | Uses Ollama neural embeddings when available, otherwise deterministic local hash vectors. |
+| `TRAINING_MODE` | `auto` | Enables live LoRA only when the local Python/PEFT runtime is ready; otherwise labeled simulation. |
+| `TRAINING_MODEL_PATH` | blank | Local model path required by the optional live LoRA runner. |
+| `TESSERACT_CMD` | `tesseract` | Optional executable for real local image OCR. |
 | `VITE_APP_NAME` | `Sovereign AI Workbench` | Application branding header. |
 | `VITE_SECURITY_MODE` | `AIR_GAPPED_ENTERPRISE` | Enforces client-side security policies and display badges. |
 
@@ -90,7 +94,7 @@ npm run check:env
 -> Auditing Environment Variables...
 
 --- Environment Variables Matrix ---
-  [OK] PORT             = 5000                                          | Server HTTP listening port
+  [OK] PORT             = 5001                                          | Server HTTP listening port
   [OK] NODE_ENV         = development                                   | Execution environment runtime mode
   [OK] MONGODB_URI      = mongodb://127.0.0.1:27017/sovereign_ai_db     | MongoDB connection string with automatic in-memory fallback
   [WARN] JWT_SECRET     = sovere...[REDACTED]                           | HMAC-SHA256 signature secret for air-gapped authentication
@@ -130,7 +134,7 @@ The system provides dedicated REST endpoints for monitoring and pre-flight probe
 #### 1. Pre-Flight Health & Environment Diagnostics
 - **Method:** `GET`
 - **Path:** `/api/health/env-check`
-- **Authentication:** Public / Unauthenticated (suitable for load balancers & monitoring probes)
+- **Authentication:** Admin JWT required; use `/api/health/live` and `/api/health/ready` for public monitoring probes
 
 #### 2. Authenticated Hardware & Environment Diagnostics
 - **Method:** `GET`
@@ -149,7 +153,7 @@ The system provides dedicated REST endpoints for monitoring and pre-flight probe
   "variables": [
     {
       "key": "PORT",
-      "value": "5000",
+      "value": "5001",
       "configured": true,
       "status": "VALID",
       "description": "Server HTTP listening port"
@@ -284,7 +288,7 @@ The build completes cleanly with zero errors using Vite and vanilla CSS styling.
 ```bash
 cd server
 npm start
-# Server listens on http://localhost:5000
+# Server listens on http://localhost:5001
 ```
 
 ### 2. Start Frontend Web Client
@@ -300,7 +304,6 @@ npm run dev
 | **System Admin** | `admin@sovereign.local` | `Admin@123` | Executive & Strategy |
 | **Finance Manager** | `manager.finance@sovereign.local` | `Manager@123` | Finance & Accounting |
 | **R&D Lead** | `employee.rd@sovereign.local` | `Emp@123` | R&D / Engineering |
-| **HR Specialist** | `employee.hr@sovereign.local` | `Emp@123` | Human Resources |
 | **Legal Director** | `manager.legal@sovereign.local` | `Manager@123` | Legal & Compliance |
 
 ---

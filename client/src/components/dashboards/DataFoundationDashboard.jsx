@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Database, UploadCloud, Activity, ShieldCheck, 
-  Search, Layers, Server, Sparkles 
+  UploadCloud, Activity, ShieldCheck, Search, Server, Sparkles
 } from 'lucide-react';
 
 import { FileUploader } from '../data/FileUploader';
@@ -16,7 +15,7 @@ export const DataFoundationDashboard = () => {
   const [activeSubTab, setActiveSubTab] = useState('ingest'); // 'ingest', 'pipeline', 'explorer', 'quality', 'database'
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleUploadSuccess = (data) => {
+  const handleUploadSuccess = () => {
     setRefreshKey(prev => prev + 1);
     setActiveSubTab('pipeline');
   };

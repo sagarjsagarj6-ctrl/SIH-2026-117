@@ -7,16 +7,32 @@ import { REGISTERED_DATA_SOURCES, isPrivateLANAddress } from '../../config/datas
 import { MongoConnector } from './connectors/MongoConnector.js';
 import { SQLConnector } from './connectors/SQLConnector.js';
 
+const normalizedDepartment = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const departmentsMatch = (sourceDepartment, userDepartment) => {
+  const source = normalizedDepartment(sourceDepartment);
+  const user = normalizedDepartment(userDepartment);
+  return source === 'all' || source === user || source.includes(user) || user.includes(source);
+};
+
 export class DatabaseConnector {
   static listDataSources(departmentFilter = null) {
     if (!departmentFilter || departmentFilter === 'All') {
       return REGISTERED_DATA_SOURCES;
     }
-    return REGISTERED_DATA_SOURCES.filter(ds => ds.department === departmentFilter || ds.department === 'All');
+    return REGISTERED_DATA_SOURCES.filter(ds => departmentsMatch(ds.department, departmentFilter));
   }
 
   static getDataSourceById(id) {
     return REGISTERED_DATA_SOURCES.find(ds => ds.id === id);
+  }
+
+  static getAuthorizedDataSource(id, user) {
+    const dataSource = this.getDataSourceById(id);
+    if (!dataSource) throw new Error(`Data source '${id}' not found`);
+    if (user?.role !== 'Admin' && !departmentsMatch(dataSource.department, user?.department)) {
+      throw new Error('Access denied: this data source belongs to another department.');
+    }
+    return dataSource;
   }
 
   static async testConnection({ type, host, port, database }) {
@@ -30,9 +46,8 @@ export class DatabaseConnector {
     return SQLConnector.testConnection({ type, host, port, database });
   }
 
-  static async introspectSchema(dataSourceId) {
-    const ds = this.getDataSourceById(dataSourceId);
-    if (!ds) throw new Error(`Data source '${dataSourceId}' not found`);
+  static async introspectSchema(dataSourceId, user) {
+    const ds = this.getAuthorizedDataSource(dataSourceId, user);
 
     if (ds.type === 'mongodb') {
       return MongoConnector.introspectSchema(ds);
@@ -41,17 +56,25 @@ export class DatabaseConnector {
   }
 
   static async syncTableToKnowledge({ dataSourceId, tableName, user }) {
-    const ds = this.getDataSourceById(dataSourceId);
-    if (!ds) throw new Error(`Data source '${dataSourceId}' not found`);
+    const ds = this.getAuthorizedDataSource(dataSourceId, user);
+    const normalizedTableName = String(tableName || '').trim();
+    if (!/^[a-zA-Z0-9_]+$/.test(normalizedTableName)) {
+      throw new Error('Table name must contain only letters, numbers, and underscores.');
+    }
+    if (Array.isArray(ds.tables) && !ds.tables.includes(normalizedTableName)) {
+      throw new Error(`Table '${normalizedTableName}' is not registered for this data source.`);
+    }
 
     let records = [];
     if (ds.type === 'mongodb') {
-      records = await MongoConnector.fetchSampleRecords(tableName);
+      records = await MongoConnector.fetchSampleRecords(normalizedTableName);
     } else {
       const result = await SQLConnector.executeQuery({
         type: ds.type,
+        host: ds.host,
+        port: ds.port,
         database: ds.database,
-        sqlQuery: `SELECT * FROM ${tableName} LIMIT 10`
+        sqlQuery: `SELECT * FROM ${normalizedTableName} LIMIT 10`
       });
       records = result.rows;
     }
@@ -67,7 +90,7 @@ export class DatabaseConnector {
 
     return {
       success: true,
-      title: `${ds.name} — Table: ${tableName}`,
+      title: `${ds.name} — Table: ${normalizedTableName}`,
       category: 'Database Snapshot',
       department: ds.department,
       fileType: 'DATABASE',

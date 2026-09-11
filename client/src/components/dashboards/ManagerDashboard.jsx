@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  BarChart3, ShieldCheck, Users, Clock, AlertTriangle, 
-  Activity, CheckCircle2, Lock, ArrowUpRight 
+  BarChart3, ShieldCheck, Users, Clock, Activity, Lock
 } from 'lucide-react';
 
 export const ManagerDashboard = () => {
-  const { user, token, API_URL } = useAuth();
+  const { token, API_URL } = useAuth();
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,7 +13,7 @@ export const ManagerDashboard = () => {
     fetchManagerAnalytics();
   }, []);
 
-  const fetchManagerAnalytics = async () => {
+  async function fetchManagerAnalytics() {
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/analytics/manager`, {
@@ -29,7 +28,7 @@ export const ManagerDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   if (loading || !metrics) {
     return (

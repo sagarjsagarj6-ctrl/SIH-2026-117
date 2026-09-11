@@ -1,7 +1,5 @@
-import React from 'react';
 import { 
-  FileText, BarChart3, AlertTriangle, CheckCircle2, 
-  Download, Sparkles, ExternalLink, ShieldCheck, Zap 
+  Download, Sparkles, ShieldCheck
 } from 'lucide-react';
 
 export const ResponseRenderer = ({ responseData, userDepartment }) => {

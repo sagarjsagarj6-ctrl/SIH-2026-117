@@ -1,0 +1,7 @@
+{
+  "status": 400,
+  "ok": false,
+  "json": {
+    "error": "Query prompt is required and must be a string."
+  }
+}

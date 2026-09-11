@@ -1,7 +1,5 @@
-import React from 'react';
 import { 
-  GitCommit, CheckCircle2, Clock, Cpu, 
-  Layers, ShieldAlert, ArrowRight, CornerDownRight 
+  GitCommit
 } from 'lucide-react';
 
 export const AgentTraceViewer = ({ trace }) => {

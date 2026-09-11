@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useHardware } from '../../context/HardwareContext';
 import { 
-  Bot, Search, FileText, BarChart3, Zap, Terminal, 
-  Upload, CheckCircle2, AlertTriangle, ShieldCheck, 
-  Sparkles, Layers, ArrowRight, CornerDownRight,
-  UploadCloud, File, X, RefreshCw, Lock, EyeOff, Check,
+  Bot, FileText, BarChart3, Zap, Terminal,
+  Upload, CheckCircle2, AlertTriangle,
+  ArrowRight,
+  UploadCloud, File, X, RefreshCw, EyeOff,
   Eye, Trash2
 } from 'lucide-react';
 
@@ -63,7 +63,7 @@ export const EmployeeWorkspace = () => {
     };
   }, []);
 
-  const updateDefaultPrompt = (agentKey) => {
+  function updateDefaultPrompt(agentKey) {
     setActiveAgent(agentKey);
     setQueryResult(null);
     if (agentKey === 'RAG') {
@@ -75,9 +75,9 @@ export const EmployeeWorkspace = () => {
     } else if (agentKey === 'REPORTING') {
       setPrompt(`Generate an executive summary report on local AI operations and security for ${user.department}.`);
     }
-  };
+  }
 
-  const fetchDocuments = async (silent = false) => {
+  async function fetchDocuments(silent = false) {
     if (!silent) setFetchingDocs(true);
     try {
       const res = await fetch(`${API_URL}/documents`, {
@@ -92,7 +92,7 @@ export const EmployeeWorkspace = () => {
     } finally {
       if (!silent) setFetchingDocs(false);
     }
-  };
+  }
 
   const handleAgentQuery = async (e) => {
     e.preventDefault();
@@ -414,7 +414,11 @@ export const EmployeeWorkspace = () => {
                 <div className="glass-card" style={{ padding: '10px' }}>
                   <div style={{ fontSize: '0.76rem', fontWeight: 700, marginBottom: '8px' }}>{queryResult.chartData.title}</div>
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', height: '96px', padding: '8px 10px', borderBottom: '1px solid var(--border-color)' }}>
-                    {[40, 65, 85, 110].map((h, i) => (
+                    {(queryResult.chartData.series?.[0]?.data || [40, 65, 85, 110]).slice(0, 4).map((val, i) => {
+                      const series = queryResult.chartData.series?.[0]?.data || [];
+                      const max = Math.max(...series, 1);
+                      const h = Math.max(8, Math.round((Number(val) / max) * 90));
+                      return (
                       <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <div style={{
                           width: '100%',
@@ -422,9 +426,9 @@ export const EmployeeWorkspace = () => {
                           background: 'linear-gradient(180deg, var(--accent-indigo), var(--accent-cyan))',
                           borderRadius: '6px 6px 0 0'
                         }} />
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{queryResult.chartData.labels[i]}</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{queryResult.chartData.labels?.[i] || `P${i + 1}`}</span>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 </div>
               </div>
@@ -926,7 +930,7 @@ export const EmployeeWorkspace = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
               <span>Uploaded by: <strong style={{ color: 'var(--text-dim)' }}>{viewingDoc.uploadedBy || 'User'}</strong></span>
-              <span>Indexed: <strong style={{ color: 'var(--text-dim)' }}>{new Date(viewingDoc.createdAt || Date.now()).toLocaleString()}</strong></span>
+              <span>Indexed: <strong style={{ color: 'var(--text-dim)' }}>{viewingDoc.createdAt ? new Date(viewingDoc.createdAt).toLocaleString() : 'Not recorded'}</strong></span>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>

@@ -1,0 +1,149 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "mode": "SINGLE",
+    "primaryAgent": "RAGAgent",
+    "result": {
+      "agent": "RAGAgent",
+      "query": "Find compliance policies in knowledge base",
+      "answer": "[SOVEREIGN RAG AGENT SYNTHESIS]\n\nQuestion: Find compliance policies in knowledge base\n\nBased on your organization's confidential knowledge store (Executive & Strategy partition), here is the verified evidence:\n\n[Citation 1: synthetic-manager.txt | Section 2 | score=0.3581]\n\"===============================\r\nFixture ID: synthetic-enterprise-2026-09\r\nClassification: Internal Test Data\r\n\r\nFinance:\r\n- Q1 revenue: 1250000 USD\r\n- Q2 revenue: 1375000 USD\r\n- Q3 revenue: 1490000 USD\r\n- Variance threshold: 10 percent\r\n\r\nOperations:\r\n- Local inference jobs: 420\r\n- Average latency target: 150 ms\r\n- Compliance anomalies: 0 critical\r\n\r\nSecurity:\r\n- D...\"\n\n---\n\n[Citation 2: 02_compliance_checks.txt | SOVEREIGN AI — SYNTHETIC TEST DOCUMENT | score=0.3162]\n\"SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-COMP-002\nEffective Date: 2026-06-15\n\nEXECUTIVE COMPLIANCE CHECKLIST\n\nBefore approving a strategic initiative, executives should verify:\n\nA. Data handling\n- Sensitive data must have an assigned data owner.\n- Confidential datasets must have documented access controls.\n- Data retention...\"\n\n✓ Local Knowledge Verification: 100% processed locally on-premise (Ollama Engine (Air-Gapped Sovereign Fallback)).",
+      "citations": [
+        {
+          "citationId": "CIT-1",
+          "docId": "6aa036517c75769b2fc3023c",
+          "documentTitle": "synthetic-manager.txt",
+          "sectionTitle": "Section 2",
+          "department": "Finance & Accounting",
+          "sensitivity": "Internal",
+          "score": 0.3581,
+          "excerpt": "===============================\r\nFixture ID: synthetic-enterprise-2026-09\r\nClassification: Internal Test Data\r\n\r\nFinance:\r\n- Q1 revenue: 1250000 USD\r\n- Q2 revenue: 1375000 USD\r\n- Q3 revenue: 1490000 USD\r\n- Variance threshold: 10 percent\r\n\r\nOperations:\r\n- Local inference jobs: 420\r\n- Average latency target: 150 ms\r\n- Co..."
+        },
+        {
+          "citationId": "CIT-2",
+          "docId": "6aa2fbce6fbc8812c463e974",
+          "documentTitle": "02_compliance_checks.txt",
+          "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+          "department": "Legal",
+          "sensitivity": "Confidential",
+          "score": 0.3162,
+          "excerpt": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-COMP-002\nEffective Date: 2026-06-15\n\nEXECUTIVE COMPLIANCE CHECKLIST\n\nBefore approving a strategic initiative, executives should verify:\n\nA. Data handling\n- Sensitive data must have an assigned data owner..."
+        }
+      ],
+      "matchedChunksCount": 2,
+      "inference": {
+        "used": true,
+        "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
+        "usedFallback": true,
+        "metrics": {
+          "inputTokens": 401,
+          "tokensGenerated": 95,
+          "totalTokens": 496,
+          "latencyMs": 11,
+          "tokensPerSecond": 8636.4
+        }
+      },
+      "tokensUsed": 360,
+      "rawResults": [
+        {
+          "chunkId": "6aa036517c75769b2fc3023c_chunk_2",
+          "docId": "6aa036517c75769b2fc3023c",
+          "documentTitle": "synthetic-manager.txt",
+          "sectionTitle": "Section 2",
+          "text": "===============================\r\nFixture ID: synthetic-enterprise-2026-09\r\nClassification: Internal Test Data\r\n\r\nFinance:\r\n- Q1 revenue: 1250000 USD\r\n- Q2 revenue: 1375000 USD\r\n- Q3 revenue: 1490000 USD\r\n- Variance threshold: 10 percent\r\n\r\nOperations:\r\n- Local inference jobs: 420\r\n- Average latency target: 150 ms\r\n- Compliance anomalies: 0 critical\r\n\r\nSecurity:\r\n- D...",
+          "tokenCount": 93,
+          "metadata": {
+            "department": "Finance & Accounting",
+            "sensitivity": "Internal",
+            "category": "Synthetic Test Data",
+            "strategy": "semantic",
+            "indexedAt": "2026-09-11T17:44:39.826Z"
+          },
+          "similarityScore": 0.4775,
+          "hybridScore": 0.3581,
+          "scores": {
+            "vectorSimilarity": 0.4775,
+            "bm25Keyword": 0.1364,
+            "finalHybrid": 0.3581
+          }
+        },
+        {
+          "chunkId": "6aa2fbce6fbc8812c463e974_chunk_1",
+          "docId": "6aa2fbce6fbc8812c463e974",
+          "documentTitle": "02_compliance_checks.txt",
+          "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+          "text": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-COMP-002\nEffective Date: 2026-06-15\n\nEXECUTIVE COMPLIANCE CHECKLIST\n\nBefore approving a strategic initiative, executives should verify:\n\nA. Data handling\n- Sensitive data must have an assigned data owner.\n- Confidential datasets must have documented access controls.\n- Data retention...",
+          "tokenCount": 101,
+          "metadata": {
+            "department": "Legal",
+            "sensitivity": "Confidential",
+            "category": "Financial Ledger",
+            "strategy": "semantic",
+            "indexedAt": "2026-09-11T17:44:39.881Z"
+          },
+          "similarityScore": 0.413,
+          "hybridScore": 0.3162,
+          "scores": {
+            "vectorSimilarity": 0.413,
+            "bm25Keyword": 0.1364,
+            "finalHybrid": 0.3162
+          }
+        }
+      ]
+    },
+    "citations": [
+      {
+        "citationId": "CIT-1",
+        "docId": "6aa036517c75769b2fc3023c",
+        "documentTitle": "synthetic-manager.txt",
+        "sectionTitle": "Section 2",
+        "department": "Finance & Accounting",
+        "sensitivity": "Internal",
+        "score": 0.3581,
+        "excerpt": "===============================\r\nFixture ID: synthetic-enterprise-2026-09\r\nClassification: Internal Test Data\r\n\r\nFinance:\r\n- Q1 revenue: 1250000 USD\r\n- Q2 revenue: 1375000 USD\r\n- Q3 revenue: 1490000 USD\r\n- Variance threshold: 10 percent\r\n\r\nOperations:\r\n- Local inference jobs: 420\r\n- Average latency target: 150 ms\r\n- Co..."
+      },
+      {
+        "citationId": "CIT-2",
+        "docId": "6aa2fbce6fbc8812c463e974",
+        "documentTitle": "02_compliance_checks.txt",
+        "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+        "department": "Legal",
+        "sensitivity": "Confidential",
+        "score": 0.3162,
+        "excerpt": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-COMP-002\nEffective Date: 2026-06-15\n\nEXECUTIVE COMPLIANCE CHECKLIST\n\nBefore approving a strategic initiative, executives should verify:\n\nA. Data handling\n- Sensitive data must have an assigned data owner..."
+      }
+    ],
+    "confidence": 0.9,
+    "trace": {
+      "traceId": "trace_4e995c98",
+      "queryId": "query_1789148690680",
+      "userQuery": "Find compliance policies in knowledge base",
+      "orchestrationMode": "SINGLE",
+      "agentChain": [
+        "RAGAgent"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "agent": "RAGAgent",
+          "action": "Executed specialized RAGAgent operation",
+          "reasoning": "Selected based on query intent classification (RAG)",
+          "confidence": 0.9,
+          "sourcesUsed": [
+            "synthetic-manager.txt",
+            "02_compliance_checks.txt"
+          ],
+          "latencyMs": 30,
+          "tokensUsed": 360,
+          "timestamp": "2026-09-11T17:44:50.710Z"
+        }
+      ],
+      "aggregateMetrics": {
+        "totalTokens": 360,
+        "totalLatencyMs": 30,
+        "averageConfidence": 0.9
+      },
+      "completedAt": "2026-09-11T17:44:50.710Z"
+    }
+  }
+}

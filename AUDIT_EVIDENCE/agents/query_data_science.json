@@ -1,0 +1,189 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "agent": "DataScienceAgent",
+    "profileUsed": "Fast",
+    "departmentScope": "Executive & Strategy",
+    "query": "Test unique DATA_SCIENCE query 1789148690481",
+    "confidence": 0.72,
+    "modelUsed": "DeepSeek-R1-Distill-Qwen-14B",
+    "executionTimeMs": 31,
+    "registryPath": true,
+    "summary": "No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93.",
+    "metrics": {
+      "totalRecordsAnalyzed": 10,
+      "anomalyRatePct": 10,
+      "confidenceScore": 0.72,
+      "meanResponseTimeMs": null,
+      "mean": 157.1,
+      "stdDev": 22.73
+    },
+    "chartData": {
+      "title": "Executive & Strategy Operational Trajectory & Forecast",
+      "labels": [
+        "W1",
+        "W2",
+        "W3",
+        "W4"
+      ],
+      "series": [
+        {
+          "name": "Observed",
+          "data": [
+            120,
+            142,
+            138,
+            155
+          ]
+        }
+      ]
+    },
+    "insights": [
+      "No numeric series found in query/context — using labeled Executive & Strategy sample series.",
+      "Mean=157.1, median=157, max=210.",
+      "Outliers detected: 210."
+    ],
+    "statistics": {
+      "count": 10,
+      "sum": 1571,
+      "mean": 157.1,
+      "median": 157,
+      "min": 120,
+      "max": 210,
+      "variance": 516.69,
+      "stdDev": 22.73
+    },
+    "anomalies": {
+      "iqr": {
+        "q1": 142,
+        "q3": 165,
+        "iqr": 23,
+        "lowerBound": 107.5,
+        "upperBound": 199.5,
+        "outliers": [
+          210
+        ],
+        "hasAnomalies": true
+      },
+      "zScore": {
+        "threshold": 1.8,
+        "outliers": [
+          {
+            "index": 7,
+            "value": 210,
+            "zScore": 2.33
+          }
+        ],
+        "hasAnomalies": true
+      }
+    },
+    "regression": {
+      "slope": 6.15,
+      "intercept": 123.27,
+      "r2": 0.604,
+      "trendDirection": "UPWARD",
+      "forecastNext": 190.93
+    },
+    "dataSource": "department_sample_fallback",
+    "series": [
+      120,
+      142,
+      138,
+      155,
+      148,
+      162,
+      159,
+      210,
+      165,
+      172
+    ],
+    "charts": {
+      "trendLine": {
+        "type": "line",
+        "title": "Executive & Strategy Operational Trajectory & Forecast",
+        "labels": [
+          "W1",
+          "W2",
+          "W3",
+          "W4",
+          "W5",
+          "W6",
+          "W7",
+          "W8",
+          "W9",
+          "W10",
+          "Next (Est.)"
+        ],
+        "datasets": [
+          {
+            "label": "Executive & Strategy Metric Throughput",
+            "data": [
+              120,
+              142,
+              138,
+              155,
+              148,
+              162,
+              159,
+              210,
+              165,
+              172,
+              190.93
+            ],
+            "borderColor": "#00fff2",
+            "backgroundColor": "rgba(0, 255, 242, 0.15)",
+            "fill": true
+          }
+        ]
+      },
+      "anomalyBar": {
+        "type": "bar",
+        "title": "Executive & Strategy Anomaly Detection Distribution",
+        "labels": [
+          "W1",
+          "W2",
+          "W3",
+          "W4",
+          "W5",
+          "W6",
+          "W7",
+          "W8",
+          "W9",
+          "W10"
+        ],
+        "datasets": [
+          {
+            "label": "Dataset Values",
+            "data": [
+              120,
+              142,
+              138,
+              155,
+              148,
+              162,
+              159,
+              210,
+              165,
+              172
+            ],
+            "backgroundColor": [
+              "#00fff2",
+              "#00fff2",
+              "#00fff2",
+              "#00fff2",
+              "#00fff2",
+              "#00fff2",
+              "#00fff2",
+              "#ff0055",
+              "#00fff2",
+              "#00fff2"
+            ],
+            "hasAnomalies": true,
+            "outlierCount": 1
+          }
+        ]
+      }
+    }
+  }
+}

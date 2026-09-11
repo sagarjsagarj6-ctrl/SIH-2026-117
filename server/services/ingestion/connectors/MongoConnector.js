@@ -1,101 +1,69 @@
 /**
- * MongoConnector — Scans local MongoDB collections, introspects schemas, and executes safe read-only queries.
+ * MongoConnector — real read-only access through the configured local
+ * Mongoose connection. It does not fabricate schemas or records when MongoDB
+ * is unavailable.
  */
 
-import { state } from '../../../config/db.js';
 import mongoose from 'mongoose';
+import { DATASOURCE_CONFIG } from '../../../config/datasources.js';
+
+const safeCollection = (name) => {
+  const value = String(name || '');
+  if (!/^[a-zA-Z0-9_]+$/.test(value)) throw new Error('Unsafe MongoDB collection name rejected.');
+  return value;
+};
 
 export class MongoConnector {
   static async testConnection({ host, port, database }) {
-    try {
-      if (state.isMongooseConnected) {
-        return {
-          success: true,
-          status: 'CONNECTED',
-          latencyMs: 4,
-          serverVersion: 'MongoDB 7.0 (Local)',
-          message: `Connected successfully to local instance mongodb://${host}:${port}/${database}`
-        };
-      }
-      return {
-        success: true,
-        status: 'CONNECTED_SIMULATED',
-        latencyMs: 8,
-        serverVersion: 'MongoDB In-Memory Isolated Vault',
-        message: `Validated sovereign LAN connection to mongodb://${host}:${port}/${database}`
-      };
-    } catch (err) {
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
       return {
         success: false,
         status: 'CONNECTION_FAILED',
-        error: err.message
+        latencyMs: null,
+        message: `MongoDB is not connected to ${host}:${port}/${database}. Start the local MongoDB service or configure MONGODB_URI.`
       };
+    }
+    const startedAt = Date.now();
+    try {
+      await mongoose.connection.db.command({ ping: 1 });
+      return {
+        success: true,
+        status: 'CONNECTED',
+        latencyMs: Date.now() - startedAt,
+        serverVersion: 'MongoDB (live configured connection)',
+        message: `Connected to the live read-only MongoDB connection for ${database}.`
+      };
+    } catch (err) {
+      return { success: false, status: 'CONNECTION_FAILED', latencyMs: Date.now() - startedAt, error: err.message };
     }
   }
 
-  static async introspectSchema({ host, port, database }) {
-    if (state.isMongooseConnected && mongoose.connection?.db) {
-      try {
-        const collections = await mongoose.connection.db.listCollections().toArray();
-        const schemaMap = {};
-        for (const col of collections) {
-          const sample = await mongoose.connection.db.collection(col.name).findOne({});
-          schemaMap[col.name] = {
-            count: await mongoose.connection.db.collection(col.name).countDocuments(),
-            fields: sample ? Object.keys(sample) : ['_id', 'createdAt', 'updatedAt']
-          };
-        }
-        return { success: true, database, collections: schemaMap };
-      } catch (e) {
-        console.warn('Mongo live schema fallback:', e.message);
-      }
+  static async introspectSchema({ database }) {
+    if (!mongoose.connection?.db || mongoose.connection.readyState !== 1) {
+      return { success: false, status: 'CONNECTION_FAILED', database, collections: {}, message: 'MongoDB connection is unavailable.' };
     }
-
-    // In-memory or simulated LAN collection schema
-    return {
-      success: true,
-      database: database || 'supply_chain_db',
-      collections: {
-        warehouse_nodes: {
-          count: 142,
-          fields: ['_id', 'nodeId', 'location', 'capacityTons', 'utilizationPct', 'status', 'lastAudit']
-        },
-        asset_tracking: {
-          count: 856,
-          fields: ['_id', 'assetTag', 'category', 'assignedDepartment', 'currentLocation', 'calibrationDate']
-        },
-        procurement_orders: {
-          count: 320,
-          fields: ['_id', 'poNumber', 'vendor', 'totalAmountUsd', 'approvalStatus', 'deliveryWindow']
-        },
-        fleet_telemetry: {
-          count: 1240,
-          fields: ['_id', 'vehicleId', 'fuelLevel', 'engineHours', 'gpsCoordinate', 'maintenanceAlerts']
-        }
+    try {
+      const collections = await mongoose.connection.db.listCollections().toArray();
+      const schemaMap = {};
+      for (const col of collections) {
+        const collection = mongoose.connection.db.collection(safeCollection(col.name));
+        const sample = await collection.findOne({});
+        schemaMap[col.name] = {
+          count: await collection.countDocuments(),
+          fields: sample ? Object.keys(sample) : ['_id', 'createdAt', 'updatedAt']
+        };
       }
-    };
+      return { success: true, database, collections: schemaMap };
+    } catch (error) {
+      return { success: false, status: 'INTROSPECTION_FAILED', database, collections: {}, error: error.message };
+    }
   }
 
   static async fetchSampleRecords(collectionName, limit = 5) {
-    const mockData = {
-      warehouse_nodes: [
-        { nodeId: 'WH-BLR-01', location: 'Bangalore Hub', capacityTons: 5000, utilizationPct: 78.4, status: 'OPTIMAL' },
-        { nodeId: 'WH-HYD-03', location: 'Hyderabad Central', capacityTons: 3200, utilizationPct: 91.2, status: 'NEAR_CAPACITY' },
-        { nodeId: 'WH-PUN-02', location: 'Pune West', capacityTons: 4100, utilizationPct: 62.0, status: 'OPTIMAL' }
-      ],
-      asset_tracking: [
-        { assetTag: 'AST-NV-8841', category: 'Edge GPU Server', assignedDepartment: 'Engineering', currentLocation: 'Rack 4B' },
-        { assetTag: 'AST-SN-1029', category: 'High-Density SAN', assignedDepartment: 'Operations', currentLocation: 'Data Room 2' }
-      ],
-      procurement_orders: [
-        { poNumber: 'PO-2026-9901', vendor: 'Apex Semiconductor', totalAmountUsd: 145000, approvalStatus: 'APPROVED' },
-        { poNumber: 'PO-2026-9902', vendor: 'Matrix Logistics', totalAmountUsd: 38200, approvalStatus: 'PENDING_AUDIT' }
-      ]
-    };
-
-    return mockData[collectionName] || [
-      { id: 1, sampleField: 'Data Record Alpha', timestamp: new Date().toISOString() },
-      { id: 2, sampleField: 'Data Record Beta', timestamp: new Date().toISOString() }
-    ];
+    if (!mongoose.connection?.db || mongoose.connection.readyState !== 1) {
+      throw new Error('MongoDB connection is unavailable; live records cannot be synchronized.');
+    }
+    const collection = mongoose.connection.db.collection(safeCollection(collectionName));
+    return collection.find({}).limit(Math.min(Math.max(Number(limit) || 5, 1), DATASOURCE_CONFIG.maxRowsLimit)).toArray();
   }
 }

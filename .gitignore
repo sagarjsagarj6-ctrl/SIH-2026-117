@@ -23,6 +23,7 @@ yarn-debug.log*
 pnpm-debug.log*
 logs/
 **/logs/
+server/data/training/
 
 # IDE & OS files
 .vscode/

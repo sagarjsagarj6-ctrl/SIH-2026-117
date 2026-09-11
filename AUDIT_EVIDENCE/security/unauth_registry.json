@@ -1,0 +1,7 @@
+{
+  "status": 401,
+  "ok": false,
+  "json": {
+    "error": "Access denied. No authorization token provided."
+  }
+}

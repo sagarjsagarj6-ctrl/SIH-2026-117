@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Search, BookOpen, Layers, Cpu, ShieldCheck, 
-  Sparkles, RefreshCw, FileText, ChevronRight, ExternalLink,
-  Eye, Trash2, AlertTriangle, X, CheckCircle2
+  Search, BookOpen, Layers,
+  Sparkles, RefreshCw, FileText,
+  Eye, Trash2, AlertTriangle, X
 } from 'lucide-react';
 
 export const KnowledgeExplorer = ({ refreshKey = 0 }) => {
@@ -634,7 +634,7 @@ export const KnowledgeExplorer = ({ refreshKey = 0 }) => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
               <span>Uploaded by: <strong style={{ color: 'var(--text-dim)' }}>{viewingDoc.uploadedBy || 'User'}</strong></span>
-              <span>Indexed: <strong style={{ color: 'var(--text-dim)' }}>{new Date(viewingDoc.createdAt || Date.now()).toLocaleString()}</strong></span>
+              <span>Indexed: <strong style={{ color: 'var(--text-dim)' }}>{viewingDoc.createdAt ? new Date(viewingDoc.createdAt).toLocaleString() : 'Not recorded'}</strong></span>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>

@@ -1,0 +1,12 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "backends": {
+      "ollama": "AIR_GAP_MODE",
+      "vllm": "AIR_GAP_MODE",
+      "llamacpp": "AIR_GAP_MODE",
+      "sovereignEngine": "ACTIVE_PRIMARY"
+    }
+  }
+}

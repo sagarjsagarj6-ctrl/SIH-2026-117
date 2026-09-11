@@ -9,6 +9,7 @@ import KnowledgeDoc from '../models/KnowledgeDoc.js';
 import FineTuneJob from '../models/FineTuneJob.js';
 import { VectorStore } from '../services/knowledge/VectorStore.js';
 import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
+import { isKnownDepartment, isKnownRole, isKnownUserStatus } from '../config/identity.js';
 
 const router = express.Router();
 
@@ -179,15 +180,34 @@ router.put('/users/:id', authenticateToken, requireRole('Admin'), async (req, re
     const { role, department, status } = req.body;
     const userId = req.params.id;
 
+    if (role !== undefined && !isKnownRole(role)) {
+      return res.status(400).json({ error: 'Invalid user role.' });
+    }
+    if (department !== undefined && !isKnownDepartment(department)) {
+      return res.status(400).json({ error: 'Invalid enterprise department.' });
+    }
+    if (status !== undefined && !isKnownUserStatus(status)) {
+      return res.status(400).json({ error: 'Invalid user status.' });
+    }
+    if (role === undefined && department === undefined && status === undefined) {
+      return res.status(400).json({ error: 'At least one user field must be provided.' });
+    }
+    if (String(req.user._id || req.user.id) === String(userId) && role && role !== 'Admin') {
+      return res.status(400).json({ error: 'An admin cannot remove their own admin role.' });
+    }
+
+    const update = {};
+    if (role !== undefined) update.role = role;
+    if (department !== undefined) update.department = department;
+    if (status !== undefined) update.status = status;
+
     if (state.isMongooseConnected) {
-      await User.findByIdAndUpdate(userId, { role, department, status });
+      const updated = await User.findByIdAndUpdate(userId, update, { new: true, runValidators: true }).select('-password');
+      if (!updated) return res.status(404).json({ error: 'User not found.' });
     } else {
       const idx = state.memoryDb.users.findIndex(u => u._id.toString() === userId.toString());
-      if (idx !== -1) {
-        if (role) state.memoryDb.users[idx].role = role;
-        if (department) state.memoryDb.users[idx].department = department;
-        if (status) state.memoryDb.users[idx].status = status;
-      }
+      if (idx === -1) return res.status(404).json({ error: 'User not found.' });
+      Object.assign(state.memoryDb.users[idx], update);
     }
 
     createAuditEntry({
@@ -197,7 +217,7 @@ router.put('/users/:id', authenticateToken, requireRole('Admin'), async (req, re
       department: req.user.department,
       action: 'ADMIN_USER_UPDATED',
       resource: `/api/analytics/users/${userId}`,
-      details: `Admin modified user ${userId} settings: Role -> ${role}, Department -> ${department}`
+      details: `Admin modified user ${userId} settings: ${JSON.stringify(update)}`
     });
 
     res.json({ message: 'User role and permissions updated successfully.' });

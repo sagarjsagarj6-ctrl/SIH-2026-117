@@ -139,9 +139,11 @@ export class FileIngestor {
       recordStage('CHUNKING', 'SUCCESS', `Generated ${chunks.length} semantic chunks`);
 
       // Stage 7: Vector Embeddings & Storage
-      recordStage('VECTOR_EMBEDDING', 'RUNNING', 'Generating 768-dim vector embeddings and updating index');
+      recordStage('VECTOR_EMBEDDING', 'RUNNING', 'Generating local or Ollama vector embeddings and updating index');
       for (const chunk of chunks) {
-        chunk.embedding = EmbeddingService.generateEmbedding(chunk.text);
+        const embedding = await EmbeddingService.generateEmbeddingAsync(chunk.text);
+        chunk.embedding = embedding.embedding;
+        chunk.embeddingSource = embedding.source;
       }
       await VectorStore.addChunks(chunks);
       recordStage('VECTOR_EMBEDDING', 'SUCCESS', `Stored ${chunks.length} vectors in local VectorDB`);

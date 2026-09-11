@@ -1,0 +1,61 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "agent": "RAGAgent",
+    "profileUsed": "Fast",
+    "departmentScope": "Executive & Strategy",
+    "query": "What is the budget of Project Beta?",
+    "confidence": 0.9,
+    "modelUsed": "Mistral-7B-v0.3-Enterprise",
+    "executionTimeMs": 30,
+    "registryPath": true,
+    "answer": "[SOVEREIGN RAG AGENT SYNTHESIS]\n\nQuestion: What is the budget of Project Beta?\n\nBased on your organization's confidential knowledge store (Executive & Strategy partition), here is the verified evidence:\n\n[Citation 1: Project Beta Budget Charter | Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry  | score=0.5875]\n\"Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry expansion. Authorized owner: Executive & Strategy. Capex code: BETA-CAP-20L.\"\n\n---\n\n[Citation 2: Finance Ledger PostgreSQL (LAN) — Table: financial_ledgers.txt | LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] === | score=0.5353]\n\"=== LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===\nSource ID: ds-postgres-fin\nDatabase: enterprise_ledger (POSTGRES)\nDepartment Scope: Finance\nExtracted At: 2026-09-10T14:08:14.926Z\n\n-- RECORD SNAPSHOTS --\n[\n {\n \"txn_id\": \"TXN-2026-00918\",\n \"fiscal_period\": \"2026-Q2\",\n \"account_code\": \"4100-REVENUE\",\n \"amount_inr\": 8540000,\n \"debit_credit\": \"CR\",\n \"audit_state\": \"V...\"\n\n---\n\n[Citation 3: Project Alpha Budget Charter | Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modern | score=0.5209]\n\"Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L.\"\n\n---\n\n[Citation 4: 04 department performance | SOVEREIGN AI — SYNTHETIC TEST DOCUMENT | score=0.3077]\n\"SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-PERF-004\nReporting Period: Q2 2026\n\nDEPARTMENT PERFORMANCE SNAPSHOT\n\nStrategy Analytics\nBudget: $820,000\nActual spend: $786,000\nVariance: -4.1%\nStatus: On plan\n\nPlatform Operations\nBudget: $2,400,000\nActual spend: $2,610,000\nVariance: +8.75%\nStatus: Review required\n\nAI Governance Of...\"\n\n✓ Local Knowledge Verification: 100% processed locally on-premise (Ollama Engine (Air-Gapped Sovereign Fallback)).",
+    "citations": [
+      {
+        "title": "Project Beta Budget Charter",
+        "category": "Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry ",
+        "department": "Executive & Strategy",
+        "sensitivity": "Confidential",
+        "similarityScore": 0.5875,
+        "excerpt": "Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry expansion. Authorized owner: Executive & Strategy. Capex code: BETA-CAP-20L."
+      },
+      {
+        "title": "Finance Ledger PostgreSQL (LAN) — Table: financial_ledgers.txt",
+        "category": "LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===",
+        "department": "Finance",
+        "sensitivity": "Confidential",
+        "similarityScore": 0.5353,
+        "excerpt": "=== LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===\nSource ID: ds-postgres-fin\nDatabase: enterprise_ledger (POSTGRES)\nDepartment Scope: Finance\nExtracted At: 2026-09-10T14:08:14.926Z\n\n-- RECORD SNAPSHOTS --\n[\n {\n \"txn_id\": \"TXN-2026-00918\",\n \"fiscal_period\": \"2026-Q2\",\n \"account_code\": \"..."
+      },
+      {
+        "title": "Project Alpha Budget Charter",
+        "category": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modern",
+        "department": "Executive & Strategy",
+        "sensitivity": "Confidential",
+        "similarityScore": 0.5209,
+        "excerpt": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L."
+      },
+      {
+        "title": "04 department performance",
+        "category": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+        "department": "Finance",
+        "sensitivity": "Confidential",
+        "similarityScore": 0.3077,
+        "excerpt": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-PERF-004\nReporting Period: Q2 2026\n\nDEPARTMENT PERFORMANCE SNAPSHOT\n\nStrategy Analytics\nBudget: $820,000\nActual spend: $786,000\nVariance: -4.1%\nStatus: On plan\n\nPlatform Operations\nBudget: $2,400,000\nAct..."
+      }
+    ],
+    "inference": {
+      "used": true,
+      "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
+      "usedFallback": true,
+      "metrics": {
+        "inputTokens": 603,
+        "tokensGenerated": 95,
+        "totalTokens": 698,
+        "latencyMs": 15,
+        "tokensPerSecond": 6333.3
+      }
+    }
+  }
+}

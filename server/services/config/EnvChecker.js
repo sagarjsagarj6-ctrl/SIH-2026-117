@@ -8,6 +8,9 @@ import https from 'https';
 import { URL } from 'url';
 import mongoose from 'mongoose';
 import { state } from '../../config/db.js';
+import { TrainingRuntime } from '../finetune/TrainingRuntime.js';
+import { ImageOCRParser } from '../ingestion/parsers/ImageOCRParser.js';
+import { EmbeddingService } from '../knowledge/EmbeddingService.js';
 
 export class EnvChecker {
   /**
@@ -58,12 +61,12 @@ export class EnvChecker {
   static evaluateVariables() {
     const defaultSecret = 'sovereign_enterprise_airgap_secret_key_2026_x992';
     const currentSecret = process.env.JWT_SECRET;
-    const isDefaultSecret = !currentSecret || currentSecret === defaultSecret;
+    const isPlaceholderSecret = !currentSecret || currentSecret === defaultSecret || currentSecret === 'your_secure_airgapped_jwt_secret_key_minimum_32_chars_long';
 
     const variables = [
       {
         key: 'PORT',
-        value: process.env.PORT || '5000 (Default)',
+        value: process.env.PORT || '5001 (Default)',
         configured: Boolean(process.env.PORT),
         status: 'VALID',
         description: 'Server HTTP listening port'
@@ -76,6 +79,13 @@ export class EnvChecker {
         description: 'Execution environment runtime mode'
       },
       {
+        key: 'ALLOW_SELF_REGISTRATION',
+        value: process.env.ALLOW_SELF_REGISTRATION || 'true (Development Default)',
+        configured: Boolean(process.env.ALLOW_SELF_REGISTRATION),
+        status: process.env.NODE_ENV === 'production' && process.env.ALLOW_SELF_REGISTRATION !== 'true' ? 'VALID' : 'WARNING_REVIEW',
+        description: 'Controls whether unauthenticated users may create Employee accounts'
+      },
+      {
         key: 'MONGODB_URI',
         value: process.env.MONGODB_URI ? `${process.env.MONGODB_URI.split('@').pop()}` : 'mongodb://127.0.0.1:27017/sovereign_ai_db (Default)',
         configured: Boolean(process.env.MONGODB_URI),
@@ -86,7 +96,7 @@ export class EnvChecker {
         key: 'JWT_SECRET',
         value: currentSecret ? `${currentSecret.substring(0, 6)}...[REDACTED]` : 'Using fallback secret',
         configured: Boolean(process.env.JWT_SECRET),
-        status: isDefaultSecret ? 'WARNING_DEFAULT_KEY' : (currentSecret && currentSecret.length < 32) ? 'WARNING_LOW_ENTROPY' : 'OPTIMAL',
+        status: isPlaceholderSecret ? 'WARNING_DEFAULT_KEY' : (currentSecret && currentSecret.length < 32) ? 'WARNING_LOW_ENTROPY' : 'OPTIMAL',
         description: 'HMAC-SHA256 signature secret for air-gapped authentication'
       },
       {
@@ -137,6 +147,34 @@ export class EnvChecker {
         configured: Boolean(process.env.LOG_LEVEL),
         status: 'VALID',
         description: 'Diagnostic log verbosity level'
+      },
+      {
+        key: 'EMBEDDING_BACKEND',
+        value: process.env.EMBEDDING_BACKEND || 'auto (Default)',
+        configured: Boolean(process.env.EMBEDDING_BACKEND),
+        status: 'VALID',
+        description: 'Neural Ollama embedding selection with deterministic local fallback'
+      },
+      {
+        key: 'TRAINING_MODE',
+        value: process.env.TRAINING_MODE || 'auto (Default)',
+        configured: Boolean(process.env.TRAINING_MODE),
+        status: 'VALID',
+        description: 'Live or capability-gated simulated LoRA training mode'
+      },
+      {
+        key: 'TRAINING_MODEL_PATH',
+        value: process.env.TRAINING_MODEL_PATH || 'Not configured (optional)',
+        configured: Boolean(process.env.TRAINING_MODEL_PATH),
+        status: process.env.TRAINING_MODE === 'live' && !process.env.TRAINING_MODEL_PATH ? 'WARNING_REQUIRED_FOR_LIVE' : 'OPTIONAL',
+        description: 'Local Hugging Face-compatible model path for live training'
+      },
+      {
+        key: 'TESSERACT_CMD',
+        value: process.env.TESSERACT_CMD || 'tesseract (Default)',
+        configured: Boolean(process.env.TESSERACT_CMD),
+        status: 'OPTIONAL',
+        description: 'Local OCR executable for real image text extraction'
       }
     ];
 
@@ -151,10 +189,13 @@ export class EnvChecker {
     const vllmUrl = process.env.VLLM_HOST || 'http://127.0.0.1:8000';
     const llamacppUrl = process.env.LLAMACPP_HOST || 'http://127.0.0.1:8080';
 
-    const [ollamaProbe, vllmProbe, llamacppProbe] = await Promise.all([
+    const [ollamaProbe, vllmProbe, llamacppProbe, embeddingRuntime, trainingCapabilities, ocrCapabilities] = await Promise.all([
       this.probeEndpoint(ollamaUrl),
       this.probeEndpoint(vllmUrl),
-      this.probeEndpoint(llamacppUrl)
+      this.probeEndpoint(llamacppUrl),
+      EmbeddingService.getRuntimeInfo(),
+      TrainingRuntime.getCapabilities(),
+      ImageOCRParser.getCapabilities()
     ]);
 
     const mongoStatus = {
@@ -182,7 +223,10 @@ export class EnvChecker {
           ...llamacppProbe,
           fallbackActive: !llamacppProbe.reachable
         }
-      }
+      },
+      embeddingRuntime,
+      training: trainingCapabilities,
+      ocr: ocrCapabilities
     };
   }
 

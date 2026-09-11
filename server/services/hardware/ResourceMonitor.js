@@ -3,25 +3,58 @@
  */
 
 import os from 'os';
+import { execFileSync } from 'node:child_process';
 
 export class ResourceMonitor {
+  static getGpuMetrics() {
+    try {
+      const raw = execFileSync('nvidia-smi', [
+        '--query-gpu=utilization.gpu,memory.total,memory.used,temperature.gpu,fan.speed,power.draw',
+        '--format=csv,noheader,nounits'
+      ], { encoding: 'utf8', timeout: 1500, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+      const [utilization, total, used, temperature, fan, power] = raw.split(',').map(value => Number(value.trim()));
+      const vramTotalGB = Number((total / 1024).toFixed(1));
+      const vramUsedGB = Number((used / 1024).toFixed(1));
+      return {
+        utilizationPct: Number(utilization.toFixed(1)),
+        vramTotalGB,
+        vramUsedGB,
+        vramFreeGB: Number(Math.max(0, vramTotalGB - vramUsedGB).toFixed(1)),
+        temperatureC: temperature,
+        fanSpeedPct: fan,
+        powerDrawWatts: power,
+        telemetrySource: 'nvidia-smi'
+      };
+    } catch {
+      return {
+        utilizationPct: null,
+        vramTotalGB: 0,
+        vramUsedGB: 0,
+        vramFreeGB: 0,
+        temperatureC: null,
+        fanSpeedPct: null,
+        powerDrawWatts: null,
+        telemetrySource: 'unavailable'
+      };
+    }
+  }
+
   static getMetrics() {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
     const usedMem = totalMem - freeMem;
     const memPct = Number(((usedMem / totalMem) * 100).toFixed(1));
 
-    // Simulated / active hardware load telemetry
-    const gpuUtilPct = Number((35 + Math.random() * 25).toFixed(1));
-    const vramUsedGB = Number((5.8 + Math.random() * 2.2).toFixed(1));
-    const gpuTempC = Math.floor(46 + Math.random() * 8);
+    const gpu = this.getGpuMetrics();
+    const loadAverage = os.loadavg()[0] ? Number(os.loadavg()[0].toFixed(2)) : null;
 
     return {
       timestamp: new Date().toISOString(),
       cpu: {
         cores: os.cpus().length,
-        loadAverage: os.loadavg()[0] ? Number(os.loadavg()[0].toFixed(2)) : 0.45,
-        utilizationPct: Number((25 + Math.random() * 20).toFixed(1))
+        loadAverage,
+        utilizationPct: loadAverage === null ? null : Number(Math.min(100, (loadAverage / Math.max(1, os.cpus().length) * 100)).toFixed(1)),
+        telemetrySource: 'os'
       },
       ram: {
         totalGB: Number((totalMem / (1024 ** 3)).toFixed(1)),
@@ -29,15 +62,7 @@ export class ResourceMonitor {
         freeGB: Number((freeMem / (1024 ** 3)).toFixed(1)),
         utilizationPct: memPct
       },
-      gpu: {
-        utilizationPct: gpuUtilPct,
-        vramTotalGB: 24.0,
-        vramUsedGB,
-        vramFreeGB: Number((24.0 - vramUsedGB).toFixed(1)),
-        temperatureC: gpuTempC,
-        fanSpeedPct: 42,
-        powerDrawWatts: Math.floor(180 + Math.random() * 40)
-      }
+      gpu
     };
   }
 }

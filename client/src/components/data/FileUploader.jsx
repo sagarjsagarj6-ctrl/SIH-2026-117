@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  UploadCloud, FileText, CheckCircle2, AlertCircle, 
-  ShieldAlert, Sparkles, X, File, Lock, Cpu, EyeOff
+  UploadCloud, FileText, CheckCircle2, AlertCircle,
+  Sparkles, X, Cpu, EyeOff
 } from 'lucide-react';
 
 export const FileUploader = ({ onUploadSuccess }) => {

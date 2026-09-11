@@ -2,7 +2,42 @@
  * DatasetPreparer — Converts departmental knowledge documents into instruction-tuning JSONL format.
  */
 
+import fs from 'fs/promises';
+
 export class DatasetPreparer {
+  static async prepareUploadedDataset({ filePath, department = 'Finance' }) {
+    const content = await fs.readFile(filePath, 'utf8');
+    const extension = filePath.toLowerCase().split('.').pop();
+    let rows = [];
+
+    if (extension === 'jsonl' || extension === 'ndjson') {
+      rows = content.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
+    } else {
+      const parsed = JSON.parse(content);
+      rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.rows) ? parsed.rows : [parsed]);
+    }
+
+    const normalizedRows = rows.map((row) => ({
+      instruction: String(row.instruction || row.prompt || row.question || '').trim(),
+      input: String(row.input || row.context || `Department: ${department}`).trim(),
+      output: String(row.output || row.response || row.answer || '').trim()
+    })).filter(row => row.instruction && row.output).slice(0, 50000);
+
+    if (normalizedRows.length === 0) {
+      throw new Error('Uploaded dataset must contain instruction/prompt and output/response fields.');
+    }
+
+    const splitIndex = Math.max(1, Math.floor(normalizedRows.length * 0.9));
+    return {
+      totalSamples: normalizedRows.length,
+      trainCount: splitIndex,
+      testCount: normalizedRows.length - splitIndex,
+      samplePreview: normalizedRows.slice(0, 2),
+      jsonlContent: normalizedRows.map(row => JSON.stringify(row)).join('\n'),
+      source: 'uploaded_dataset'
+    };
+  }
+
   static prepareInstructionDataset({ documents = [], department = 'Finance' }) {
     const jsonlRows = [];
 

@@ -12,7 +12,11 @@ export const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'sovereign_enterprise_airgap_secret_key_2026_x992';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('[Auth] FATAL: JWT_SECRET environment variable is not set!');
+      return res.status(500).json({ error: 'Server configuration error: Authentication unavailable.' });
+    }
     const decoded = jwt.verify(token, secret);
     
     let user;

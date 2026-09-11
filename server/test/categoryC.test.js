@@ -37,8 +37,9 @@ async function runCategoryCTests() {
   assert(hw.cpuCores > 0, 'CPU cores must be greater than 0');
   assert(hw.ramTotalGB > 0, 'RAM total must be greater than 0');
   assert(Boolean(hw.gpu.name), 'GPU profile must be configured');
-  assert(hw.gpu.vramTotalGB >= 8, 'VRAM total must be at least 8GB');
-  console.log(`✓ HardwareProfiler PASSED (${hw.cpuCores} cores, ${hw.ramTotalGB}GB RAM, GPU: ${hw.gpu.name})`);
+  assert(hw.gpu.vramTotalGB >= 0, 'VRAM total must be a non-negative value');
+  assert(['nvidia-smi', 'unavailable'].includes(hw.gpu.telemetrySource), 'GPU telemetry source must be explicit');
+  console.log(`✓ HardwareProfiler PASSED (${hw.cpuCores} cores, ${hw.ramTotalGB}GB RAM, GPU: ${hw.gpu.name}, source: ${hw.gpu.telemetrySource})`);
 
   // 2. TokenCounter
   console.log('[Test 2] Testing TokenCounter (Estimation & Bounds)...');

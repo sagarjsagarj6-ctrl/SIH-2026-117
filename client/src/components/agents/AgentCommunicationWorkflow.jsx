@@ -138,6 +138,36 @@ const pickActionFromText = (agentId, text, modelName) => {
   };
 };
 
+const buildReportFromOrchestration = (agentId, orch, modelName, fallbackText) => {
+  const result = orch?.result || orch?.pipelineOutputs?.reporting || orch?.pipelineOutputs?.rag || {};
+  const answer = result.answer || result.summary || result.markdown || result.reportTitle || '';
+  const sections = Array.isArray(result.sections) ? result.sections.map((s) => s.content || s.heading).filter(Boolean) : [];
+  const citations = (orch?.citations || []).map((c) => c.title || c.documentTitle).filter(Boolean);
+
+  if (!answer && sections.length === 0) {
+    return pickActionFromText(agentId, fallbackText, modelName);
+  }
+
+  const takeaways = [
+    ...(answer ? [String(answer).slice(0, 280)] : []),
+    ...sections.slice(0, 2),
+    ...(citations.length ? [`Sources: ${citations.slice(0, 3).join(', ')}`] : [])
+  ].filter(Boolean);
+
+  return {
+    keyTakeaways: takeaways.length ? takeaways : ['Agent orchestration completed without structured takeaways.'],
+    proposedSolutions: [
+      'Review the multi-agent synthesis before employee approval.',
+      'Escalate to manager AI only after validating factual citations.',
+      agentId === 'manager-agent' ? 'Confirm final business decision with human manager.' : 'Prepare approval packet for manager agent.'
+    ],
+    recommendedAction: `${modelName}: ${String(answer || sections[0] || 'Orchestrated analysis ready for approval.').slice(0, 220)}`,
+    draftSummary: `Backend orchestration (${orch?.mode || 'AUTO'}) via ${modelName}. ${String(answer || '').slice(0, 320)}`,
+    orchestrationMode: orch?.mode,
+    usedBackendAgents: true
+  };
+};
+
 const readWorkflowResponse = async (response) => {
   const body = await response.text();
   if (!body.trim()) return {};
@@ -147,7 +177,7 @@ const readWorkflowResponse = async (response) => {
   } catch {
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html') || body.trim().startsWith('<!DOCTYPE') || body.trim().startsWith('<html')) {
-      throw new Error('Workflow service returned the app HTML instead of JSON. Start the backend on port 5000 and use the Vite /api proxy.');
+      throw new Error('Workflow service returned the app HTML instead of JSON. Confirm the backend is running on http://localhost:5001.');
     }
     throw new Error('Workflow service returned an invalid response. Refresh and try again.');
   }
@@ -163,6 +193,9 @@ export const AgentCommunicationWorkflow = () => {
   const [workflowLoading, setWorkflowLoading] = useState(false);
   const [employeeModelId, setEmployeeModelId] = useState('finance-expert');
   const [managerModelId, setManagerModelId] = useState('risk-review');
+  const [selectedRequestId, setSelectedRequestId] = useState('');
+  const [messageDraft, setMessageDraft] = useState('');
+  const [messageLoading, setMessageLoading] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
     if (!token) return;
@@ -215,13 +248,34 @@ export const AgentCommunicationWorkflow = () => {
 
     setSelectedFile(file);
     const content = await file.text().catch(() => '');
-    const decision = pickActionFromText(
-      selectedAgentId,
-      content || `Business communication case for ${selectedAgent.name}: review operational impact, extract the business issue, and propose a safe next step.`,
-      selectedAgentId === 'employee-agent' ? selectedEmployeeModel.name : selectedManagerModel.name
-    );
+    const modelName = selectedAgentId === 'employee-agent' ? selectedEmployeeModel.name : selectedManagerModel.name;
+    const fallbackPrompt = content || `Business communication case for ${selectedAgent.name}: review operational impact, extract the business issue, and propose a safe next step.`;
 
-    setReport(decision);
+    try {
+      setWorkflowLoading(true);
+      const mode = selectedAgentId === 'manager-agent' ? 'SUPERVISOR' : 'AUTO';
+      const response = await fetch(`${API_URL}/agents/orchestrate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          query: `Analyze this business file and produce actionable recommendations.\nFilename: ${file.name}\n\n${fallbackPrompt.slice(0, 8000)}`,
+          mode,
+          sessionId: `workflow_${user?._id || user?.id || 'anon'}`
+        })
+      });
+      const orch = await response.json();
+      if (!response.ok) throw new Error(orch.error || 'Agent orchestration failed for uploaded file.');
+      setReport(buildReportFromOrchestration(selectedAgentId, orch, modelName, fallbackPrompt));
+      setWorkflowError('');
+    } catch (err) {
+      setReport(pickActionFromText(selectedAgentId, fallbackPrompt, modelName));
+      setWorkflowError(`Live agent path unavailable (${err.message}). Showing heuristic draft.`);
+    } finally {
+      setWorkflowLoading(false);
+    }
   };
 
   const submitRequest = async () => {
@@ -285,6 +339,50 @@ export const AgentCommunicationWorkflow = () => {
       setWorkflowError(err.message);
     } finally {
       setWorkflowLoading(false);
+    }
+  };
+
+  const focusedRequest = requests.find(request => (request._id || request.id) === selectedRequestId);
+
+  const sendWorkflowMessage = async () => {
+    if (!focusedRequest || !messageDraft.trim() || user?.role === 'Admin') return;
+    try {
+      setMessageLoading(true);
+      const response = await fetch(`${API_URL}/workflows/${focusedRequest._id || focusedRequest.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: messageDraft })
+      });
+      const data = await readWorkflowResponse(response);
+      if (!response.ok) throw new Error(data.error || 'Could not send workflow message.');
+      setRequests(prev => prev.map(request => (request._id || request.id) === (data.workflow._id || data.workflow.id) ? data.workflow : request));
+      setMessageDraft('');
+      setWorkflowError('');
+    } catch (err) {
+      setWorkflowError(err.message);
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
+  const reanalyzeWorkflow = async () => {
+    if (!focusedRequest) return;
+    try {
+      setMessageLoading(true);
+      const response = await fetch(`${API_URL}/workflows/${focusedRequest._id || focusedRequest.id}/reanalyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ feedback: messageDraft })
+      });
+      const data = await readWorkflowResponse(response);
+      if (!response.ok) throw new Error(data.error || 'Could not re-analyze workflow.');
+      setRequests(prev => prev.map(request => (request._id || request.id) === (data.workflow._id || data.workflow.id) ? data.workflow : request));
+      setMessageDraft('');
+      setWorkflowError('Workflow re-analyzed with the latest context.');
+    } catch (err) {
+      setWorkflowError(err.message);
+    } finally {
+      setMessageLoading(false);
     }
   };
 
@@ -506,6 +604,18 @@ export const AgentCommunicationWorkflow = () => {
                   Employee: {req.employeeName} · Manager AI: {req.managerModel} · Human manager: {req.managerName || 'Pending'}
                 </div>
                 <div style={{ marginTop: '10px', fontSize: '0.8rem', lineHeight: 1.5 }}>{req.summary}</div>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRequestId(req._id || req.id)}
+                    style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid rgba(129,140,248,0.35)', background: 'rgba(129,140,248,0.12)', color: '#a5b4fc', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Open communication log
+                  </button>
+                  <span style={{ padding: '6px 10px', borderRadius: '7px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', fontSize: '0.7rem' }}>
+                    {(req.events || req.transitions || []).length} timeline events · {(req.messages || []).length} messages
+                  </span>
+                </div>
 
                 <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {req.status === 'awaiting employee approval' && isEmployee && (
@@ -540,6 +650,49 @@ export const AgentCommunicationWorkflow = () => {
               </div>
             ))}
           </div>
+
+          {focusedRequest && (
+            <div style={{ marginTop: '16px', padding: '16px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid rgba(6,182,212,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <div style={{ fontWeight: 800, color: '#67e8f9' }}>Live communication log · {focusedRequest._id || focusedRequest.id}</div>
+                <button
+                  type="button"
+                  onClick={reanalyzeWorkflow}
+                  disabled={messageLoading}
+                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1px solid rgba(6,182,212,0.35)', background: 'rgba(6,182,212,0.12)', color: '#67e8f9', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {messageLoading ? 'Re-analyzing…' : 'Re-analyze with feedback'}
+                </button>
+              </div>
+              <div style={{ maxHeight: '190px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                {[...(focusedRequest.events || [])].reverse().slice(0, 12).map(event => (
+                  <div key={event.id || `${event.type}-${event.createdAt}`} style={{ padding: '8px 10px', borderLeft: '2px solid #06b6d4', background: 'rgba(6,182,212,0.06)', fontSize: '0.72rem' }}>
+                    <div style={{ color: '#67e8f9', fontWeight: 700 }}>{event.type} · {event.actorName}</div>
+                    <div style={{ color: 'var(--text-muted)', marginTop: '3px' }}>{event.message}</div>
+                  </div>
+                ))}
+                {(!focusedRequest.events || focusedRequest.events.length === 0) && <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>No event records yet.</div>}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                <textarea
+                  value={messageDraft}
+                  onChange={event => setMessageDraft(event.target.value)}
+                  placeholder={user?.role === 'Admin' ? 'Admin ledger access is read-only.' : 'Add context, feedback, or a question for the next agent handoff…'}
+                  disabled={user?.role === 'Admin' || messageLoading}
+                  rows={2}
+                  style={{ flex: 1, resize: 'vertical', background: 'var(--bg-primary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '7px', padding: '8px', fontSize: '0.75rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={sendWorkflowMessage}
+                  disabled={user?.role === 'Admin' || !messageDraft.trim() || messageLoading}
+                  style={{ padding: '9px 12px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #6366f1, #06b6d4)', color: '#fff', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
+                >
+                  <Send size={13} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Send
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="glass-card" style={{ padding: '20px' }}>

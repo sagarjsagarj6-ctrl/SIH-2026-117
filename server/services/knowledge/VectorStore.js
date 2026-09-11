@@ -6,12 +6,14 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import crypto from 'node:crypto';
 import { VECTOR_DB_CONFIG } from '../../config/vectordb.js';
 import { EmbeddingService } from './EmbeddingService.js';
 
 export class VectorStore {
   static chunks = []; // In-memory vector index items: { chunkId, docId, documentTitle, sectionTitle, text, tokenCount, metadata, embedding }
   static isInitialized = false;
+  static persistQueue = Promise.resolve();
 
   static async initialize() {
     if (this.isInitialized) return;
@@ -33,13 +35,20 @@ export class VectorStore {
   }
 
   static async persist() {
-    try {
-      await fs.mkdir(VECTOR_DB_CONFIG.storagePath, { recursive: true });
-      const indexPath = path.join(VECTOR_DB_CONFIG.storagePath, 'vector_index.json');
-      await fs.writeFile(indexPath, JSON.stringify(this.chunks, null, 2), 'utf-8');
-    } catch (err) {
-      console.error('[VectorStore] Persist error:', err.message);
-    }
+    const persistSnapshot = async () => {
+      try {
+        await fs.mkdir(VECTOR_DB_CONFIG.storagePath, { recursive: true });
+        const indexPath = path.join(VECTOR_DB_CONFIG.storagePath, 'vector_index.json');
+        const tempPath = `${indexPath}.${process.pid}.${crypto.randomUUID()}.tmp`;
+        await fs.writeFile(tempPath, JSON.stringify(this.chunks, null, 2), 'utf-8');
+        await fs.rename(tempPath, indexPath);
+      } catch (err) {
+        console.error('[VectorStore] Persist error:', err.message);
+      }
+    };
+
+    this.persistQueue = this.persistQueue.then(persistSnapshot, persistSnapshot);
+    return this.persistQueue;
   }
 
   /**
@@ -55,7 +64,11 @@ export class VectorStore {
     // Append new vectors
     for (const chunk of chunksWithEmbeddings) {
       if (!chunk.embedding || chunk.embedding.length === 0) {
-        chunk.embedding = EmbeddingService.generateEmbedding(chunk.text);
+        const embedding = await EmbeddingService.generateEmbeddingAsync(chunk.text);
+        chunk.embedding = embedding.embedding;
+        chunk.embeddingSource = embedding.source;
+      } else if (!chunk.embeddingSource) {
+        chunk.embeddingSource = 'deterministic-local-hash';
       }
       this.chunks.push(chunk);
     }
@@ -97,7 +110,12 @@ export class VectorStore {
   }) {
     await this.initialize();
 
-    const searchVec = queryEmbedding || EmbeddingService.generateEmbedding(queryText);
+    const storedSources = new Set(this.chunks.map(chunk => chunk.embeddingSource || 'deterministic-local-hash'));
+    const preferredSource = storedSources.size === 1 ? [...storedSources][0] : 'deterministic-local-hash';
+    const generatedQuery = queryEmbedding
+      ? { embedding: queryEmbedding, source: preferredSource }
+      : await EmbeddingService.generateEmbeddingAsync(queryText, { preferredSource });
+    const searchVec = generatedQuery.embedding;
     const results = [];
 
     for (const chunk of this.chunks) {
@@ -146,6 +164,7 @@ export class VectorStore {
     await this.initialize();
     const deptCounts = {};
     const categoryCounts = {};
+    const embeddingSources = {};
     let totalTokens = 0;
 
     for (const c of this.chunks) {
@@ -154,6 +173,8 @@ export class VectorStore {
       deptCounts[dept] = (deptCounts[dept] || 0) + 1;
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
       totalTokens += c.tokenCount || 0;
+      const embeddingSource = c.embeddingSource || 'deterministic-local-hash';
+      embeddingSources[embeddingSource] = (embeddingSources[embeddingSource] || 0) + 1;
     }
 
     return {
@@ -161,6 +182,7 @@ export class VectorStore {
       totalIndexedTokens: totalTokens,
       dimension: VECTOR_DB_CONFIG.dimension,
       storageMode: 'Air-Gapped Local JSON/ANN',
+      embeddingSources,
       departmentDistribution: deptCounts,
       categoryDistribution: categoryCounts
     };

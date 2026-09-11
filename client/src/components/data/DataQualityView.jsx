@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  ShieldCheck, AlertTriangle, CheckCircle2, Lock, EyeOff, 
-  Search, ShieldAlert, Cpu, Sparkles, RefreshCw, Hash 
+  ShieldCheck, EyeOff, RefreshCw
 } from 'lucide-react';
 
 export const DataQualityView = ({ refreshKey = 0 }) => {
@@ -44,7 +43,7 @@ export const DataQualityView = ({ refreshKey = 0 }) => {
     return () => window.removeEventListener('document-indexed', handleDocIndexed);
   }, [refreshKey]);
 
-  const handleScanSandbox = async () => {
+  async function handleScanSandbox() {
     if (!sandboxText) return;
     setScanningSandbox(true);
     try {
@@ -65,7 +64,7 @@ export const DataQualityView = ({ refreshKey = 0 }) => {
     } finally {
       setScanningSandbox(false);
     }
-  };
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

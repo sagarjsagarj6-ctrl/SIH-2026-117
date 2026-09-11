@@ -1,0 +1,36 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "status": "HEALTHY",
+    "totalVectors": 14,
+    "totalIndexedTokens": 1119,
+    "dimension": 768,
+    "storageMode": "Air-Gapped Local JSON/ANN",
+    "embeddingSources": {
+      "deterministic-local-hash": 14
+    },
+    "departmentDistribution": {
+      "Finance & Accounting": 2,
+      "Executive & Strategy": 4,
+      "Finance": 5,
+      "Legal": 1,
+      "Operations": 2
+    },
+    "categoryDistribution": {
+      "Synthetic Test Data": 2,
+      "Policy": 4,
+      "Financial Ledger": 6,
+      "Database Snapshot": 1,
+      "Technical Telemetry": 1
+    },
+    "embeddingRuntime": {
+      "configuredBackend": "auto",
+      "activeBackend": "deterministic-local-hash",
+      "model": null,
+      "live": false
+    },
+    "annEngine": "Local Sovereign Cosine ANN",
+    "lastChecked": "2026-09-11T17:44:50.886Z"
+  }
+}

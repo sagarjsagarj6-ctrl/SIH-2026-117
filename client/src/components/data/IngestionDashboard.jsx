@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Activity, CheckCircle2, AlertTriangle, Clock, RefreshCw, 
-  Layers, Database, FileText, ChevronDown, ChevronUp, ShieldCheck, Trash2 
+  Activity, CheckCircle2, AlertTriangle, RefreshCw,
+  ChevronDown, ChevronUp, Trash2
 } from 'lucide-react';
 
 export const IngestionDashboard = ({ refreshKey = 0 }) => {

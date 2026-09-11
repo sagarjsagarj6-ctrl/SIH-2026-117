@@ -35,7 +35,9 @@ export class VectorIndexManager {
       });
 
       for (const chunk of chunks) {
-        chunk.embedding = EmbeddingService.generateEmbedding(chunk.text);
+        const embedding = await EmbeddingService.generateEmbeddingAsync(chunk.text);
+        chunk.embedding = embedding.embedding;
+        chunk.embeddingSource = embedding.source;
         allChunks.push(chunk);
       }
       rebuiltCount++;
@@ -54,9 +56,11 @@ export class VectorIndexManager {
 
   static async getIndexHealth() {
     const stats = await VectorStore.getStats();
+    const embeddingRuntime = await EmbeddingService.getRuntimeInfo();
     return {
       status: 'HEALTHY',
       ...stats,
+      embeddingRuntime,
       annEngine: 'Local Sovereign Cosine ANN',
       lastChecked: new Date().toISOString()
     };

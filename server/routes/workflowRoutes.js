@@ -1,8 +1,12 @@
 import express from 'express';
+import { randomUUID } from 'node:crypto';
 import { state } from '../config/db.js';
 import User from '../models/User.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { createAIHandoff, pushNotifications } from '../services/notificationService.js';
+import { RuntimeStateStore } from '../services/runtime/RuntimeStateStore.js';
+import { WorkflowEventBus } from '../services/workflow/WorkflowEventBus.js';
+import { AgentOrchestrator } from '../agents/AgentOrchestrator.js';
 
 const router = express.Router();
 
@@ -49,6 +53,23 @@ const canViewWorkflow = (workflow, user) => {
 };
 
 const getWorkflow = (workflowId) => (state.memoryDb.workflowRequests || []).find(workflow => workflow._id === workflowId || workflow.id === workflowId);
+
+const appendEvent = (workflow, { type, actorType = 'human', actorId = '', actorName = '', message = '', metadata = {} }) => {
+  const event = {
+    id: randomUUID(),
+    type,
+    actorType,
+    actorId: String(actorId || ''),
+    actorName: actorName || 'System',
+    status: workflow.status,
+    message: compact(message, 500),
+    metadata,
+    createdAt: new Date().toISOString()
+  };
+  workflow.events = [...(workflow.events || []), event].slice(-250);
+  WorkflowEventBus.publish(workflow._id, event);
+  return event;
+};
 
 const consistencyCheck = (workflow) => {
   const transitions = workflow.transitions || [];
@@ -152,6 +173,8 @@ router.post('/', authenticateToken, requireRole(['Employee', 'Manager']), async 
       managerFeedback: '',
       managerDecision: '',
       status: 'awaiting employee approval',
+      messages: [],
+      events: [],
       createdAt: now,
       updatedAt: now,
       transitions: [
@@ -160,8 +183,18 @@ router.post('/', authenticateToken, requireRole(['Employee', 'Manager']), async 
         { label: 'awaiting employee approval', at: now, actor: employee.name }
       ]
     };
+    appendEvent(workflow, {
+      type: 'WORKFLOW_CREATED',
+      actorType: 'human',
+      actorId: employee._id || employee.id,
+      actorName: employee.name,
+      message: 'Employee AI draft created and is waiting for employee approval.',
+      metadata: { employeeModel: workflow.employeeModel, managerModel: workflow.managerModel }
+    });
 
     state.memoryDb.workflowRequests.unshift(workflow);
+    await RuntimeStateStore.upsert('workflowRequests', workflow);
+    WorkflowEventBus.publish(workflow._id, { type: 'WORKFLOW_SNAPSHOT', workflow: serializeWorkflow(workflow) });
     notifyStakeholders({
       directory,
       recipients: manager ? [userId(manager)] : [],
@@ -216,6 +249,15 @@ router.post('/:workflowId/transition', authenticateToken, async (req, res) => {
     if (action === 'manager_approve') workflow.managerDecision = 'accepted';
     if (action === 'manager_reject') workflow.managerDecision = 'rejected';
 
+    appendEvent(workflow, {
+      type: `TRANSITION_${action.toUpperCase()}`,
+      actorType: 'human',
+      actorId: userId(req.user),
+      actorName: req.user.name,
+      message: feedback || `Workflow transitioned to ${workflow.status}.`,
+      metadata: { action, previousStatus: transition.from, nextStatus: transition.to }
+    });
+
     if (action === 'employee_approve' || action === 'employee_resubmit') {
       createAIHandoff({
         workflowId: workflow._id,
@@ -257,10 +299,127 @@ router.post('/:workflowId/transition', authenticateToken, async (req, res) => {
       notifyStakeholders({ directory, recipients: [workflow.employeeId], type: action === 'manager_approve' ? 'WORKFLOW_MANAGER_ACCEPTED' : action === 'manager_reject' ? 'WORKFLOW_MANAGER_REJECTED' : 'WORKFLOW_MANAGER_FEEDBACK', title: action === 'manager_approve' ? `Manager accepted proposal: ${workflow.employeeName}` : action === 'manager_reject' ? `Manager rejected proposal: ${workflow.employeeName}` : `Manager feedback for: ${workflow.employeeName}`, workflow, feedback: decisionSummary });
     }
 
+    await RuntimeStateStore.upsert('workflowRequests', workflow);
+    WorkflowEventBus.publish(workflow._id, { type: 'WORKFLOW_SNAPSHOT', workflow: serializeWorkflow(workflow) });
+
     res.json({ message: `Workflow moved to ${workflow.status}.`, workflow: serializeWorkflow(workflow) });
   } catch (err) {
     console.error('[Workflow transition error]', err.message);
     res.status(500).json({ error: 'Failed to update communication workflow.' });
+  }
+});
+
+router.get('/:workflowId/events', authenticateToken, (req, res) => {
+  const workflow = getWorkflow(req.params.workflowId);
+  if (!workflow) return res.status(404).json({ error: 'Communication workflow not found.' });
+  if (!canViewWorkflow(workflow, req.user)) return res.status(403).json({ error: 'You are not assigned to this workflow.' });
+  res.json({ workflowId: workflow._id, events: workflow.events || [], messages: workflow.messages || [] });
+});
+
+router.get('/:workflowId/stream', authenticateToken, (req, res) => {
+  const workflow = getWorkflow(req.params.workflowId);
+  if (!workflow) return res.status(404).json({ error: 'Communication workflow not found.' });
+  if (!canViewWorkflow(workflow, req.user)) return res.status(403).json({ error: 'You are not assigned to this workflow.' });
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+  res.write(`event: workflow-connected\ndata: ${JSON.stringify({ workflowId: workflow._id, status: workflow.status })}\n\n`);
+  const unsubscribe = WorkflowEventBus.subscribe(workflow._id, res);
+  const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 15000);
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    unsubscribe();
+  });
+});
+
+router.post('/:workflowId/messages', authenticateToken, async (req, res) => {
+  try {
+    const workflow = getWorkflow(req.params.workflowId);
+    if (!workflow) return res.status(404).json({ error: 'Communication workflow not found.' });
+    if (!canViewWorkflow(workflow, req.user)) return res.status(403).json({ error: 'You are not assigned to this workflow.' });
+    if (req.user.role === 'Admin') return res.status(403).json({ error: 'Admin ledger access is read-only.' });
+    const text = compact(req.body?.message || '', 1000);
+    if (!text) return res.status(400).json({ error: 'Message text is required.' });
+
+    const message = {
+      id: randomUUID(),
+      senderId: userId(req.user),
+      senderName: req.user.name,
+      senderRole: req.user.role,
+      text,
+      createdAt: new Date().toISOString()
+    };
+    workflow.messages = [...(workflow.messages || []), message].slice(-200);
+    workflow.updatedAt = message.createdAt;
+    appendEvent(workflow, {
+      type: 'HUMAN_MESSAGE',
+      actorType: 'human',
+      actorId: userId(req.user),
+      actorName: req.user.name,
+      message: text,
+      metadata: { senderRole: req.user.role }
+    });
+    await RuntimeStateStore.upsert('workflowRequests', workflow);
+    const directory = await getDirectoryUsers();
+    notifyStakeholders({
+      directory,
+      recipients: [workflow.employeeId, workflow.managerId].filter(Boolean),
+      type: 'WORKFLOW_MESSAGE',
+      title: `New workflow message from ${req.user.name}`,
+      workflow,
+      feedback: text
+    });
+    res.status(201).json({ message, workflow: serializeWorkflow(workflow) });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add workflow message.' });
+  }
+});
+
+router.post('/:workflowId/reanalyze', authenticateToken, async (req, res) => {
+  try {
+    const workflow = getWorkflow(req.params.workflowId);
+    if (!workflow) return res.status(404).json({ error: 'Communication workflow not found.' });
+    if (!canViewWorkflow(workflow, req.user)) return res.status(403).json({ error: 'You are not assigned to this workflow.' });
+    const feedback = compact(req.body?.feedback || workflow.managerFeedback || '', 1000);
+    const query = [
+      'Re-analyze this communication workflow using the latest human feedback.',
+      `Original summary: ${workflow.summary}`,
+      `Key takeaways: ${(workflow.keyTakeaways || []).join(' | ')}`,
+      `Proposed solutions: ${(workflow.proposedSolutions || []).join(' | ')}`,
+      `Human feedback: ${feedback || 'No additional feedback.'}`
+    ].join('\n');
+    const result = await AgentOrchestrator.orchestrate({
+      query,
+      user: req.user,
+      requestedMode: 'AUTO',
+      sessionId: `workflow_${workflow._id}`
+    });
+    const output = result.result || result.pipelineOutputs?.reporting || result.pipelineOutputs?.rag || {};
+    const narrative = compact(output.answer || output.summary || output.markdown || 'Agent re-analysis completed.', 500);
+    workflow.summary = narrative;
+    workflow.keyTakeaways = [
+      ...(output.insights || []),
+      ...(output.citations || []).slice(0, 2).map(citation => `Source: ${citation.documentTitle || citation.title}`)
+    ].filter(Boolean).slice(0, 3);
+    workflow.proposedSolutions = [
+      'Review the refreshed evidence before approving the next workflow transition.',
+      feedback ? 'Confirm that the latest human feedback is addressed in the revised proposal.' : 'Add human feedback if the proposal needs another refinement pass.'
+    ];
+    workflow.updatedAt = new Date().toISOString();
+    appendEvent(workflow, {
+      type: 'AI_REANALYSIS_COMPLETED',
+      actorType: 'agent',
+      actorName: result.primaryAgent || 'Agent Orchestrator',
+      message: narrative,
+      metadata: { mode: result.mode, confidence: result.confidence, feedbackProvided: Boolean(feedback) }
+    });
+    await RuntimeStateStore.upsert('workflowRequests', workflow);
+    WorkflowEventBus.publish(workflow._id, { type: 'WORKFLOW_SNAPSHOT', workflow: serializeWorkflow(workflow) });
+    res.json({ message: 'Workflow re-analyzed with the latest context.', workflow: serializeWorkflow(workflow), orchestration: result });
+  } catch (err) {
+    res.status(500).json({ error: `Workflow re-analysis failed: ${err.message}` });
   }
 });
 

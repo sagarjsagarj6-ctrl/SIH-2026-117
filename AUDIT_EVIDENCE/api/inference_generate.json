@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "model": "Mistral-7B-v0.3-Enterprise",
+    "backendUsed": "Ollama Engine (Air-Gapped Sovereign Fallback)",
+    "usedFallback": true,
+    "response": "[Sovereign Local Inference Engine — FALLBACK]\nModel: Mistral-7B-v0.3-Enterprise.\nOllama daemon unavailable at http://127.0.0.1:11434.\nGrounded prompt preview: [SYSTEM INSTRUCTION] You are a Sovereign AI Enterprise Assistant operating in a secure, isolated on-premise perimeter. Provide accurate, professional responses. [USER QUERY] Say hello from sovereign in one sentence [RESP\nProvide a local Ollama model to replace this deterministic fallback.",
+    "metrics": {
+      "inputTokens": 60,
+      "tokensGenerated": 95,
+      "totalTokens": 155,
+      "latencyMs": 15,
+      "tokensPerSecond": 6333.3
+    }
+  }
+}

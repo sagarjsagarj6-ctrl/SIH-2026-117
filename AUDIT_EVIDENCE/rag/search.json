@@ -1,0 +1,184 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "query": "budget project",
+    "resultsCount": 5,
+    "topK": 5,
+    "userContext": {
+      "role": "Admin",
+      "department": "Executive & Strategy",
+      "allowedSensitivities": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted",
+        "Top Secret"
+      ]
+    },
+    "results": [
+      {
+        "chunkId": "6aa432269f35b82ffba9c32d_chunk_1",
+        "docId": "6aa432269f35b82ffba9c32d",
+        "documentTitle": "Project Beta Budget Charter",
+        "sectionTitle": "Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry ",
+        "text": "Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry expansion. Authorized owner: Executive & Strategy. Capex code: BETA-CAP-20L.",
+        "tokenCount": 39,
+        "metadata": {
+          "department": "Executive & Strategy",
+          "sensitivity": "Confidential",
+          "category": "Financial Ledger",
+          "strategy": "semantic",
+          "indexedAt": "2026-09-11T17:44:39.894Z"
+        },
+        "similarityScore": 0.6011,
+        "hybridScore": 0.6741,
+        "scores": {
+          "vectorSimilarity": 0.6011,
+          "bm25Keyword": 0.8097,
+          "finalHybrid": 0.6741
+        }
+      },
+      {
+        "chunkId": "6aa432269f35b82ffba9c32a_chunk_1",
+        "docId": "6aa432269f35b82ffba9c32a",
+        "documentTitle": "Project Alpha Budget Charter",
+        "sectionTitle": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modern",
+        "text": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L.",
+        "tokenCount": 45,
+        "metadata": {
+          "department": "Executive & Strategy",
+          "sensitivity": "Confidential",
+          "category": "Financial Ledger",
+          "strategy": "semantic",
+          "indexedAt": "2026-09-11T17:44:39.893Z"
+        },
+        "similarityScore": 0.5711,
+        "hybridScore": 0.6546,
+        "scores": {
+          "vectorSimilarity": 0.5711,
+          "bm25Keyword": 0.8097,
+          "finalHybrid": 0.6546
+        }
+      },
+      {
+        "chunkId": "6aa2b9ce6fbc8812c463e725_chunk_1",
+        "docId": "6aa2b9ce6fbc8812c463e725",
+        "documentTitle": "Finance Ledger PostgreSQL (LAN) — Table: financial_ledgers.txt",
+        "sectionTitle": "LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===",
+        "text": "=== LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===\nSource ID: ds-postgres-fin\nDatabase: enterprise_ledger (POSTGRES)\nDepartment Scope: Finance\nExtracted At: 2026-09-10T14:08:14.926Z\n\n-- RECORD SNAPSHOTS --\n[\n {\n \"txn_id\": \"TXN-2026-00918\",\n \"fiscal_period\": \"2026-Q2\",\n \"account_code\": \"4100-REVENUE\",\n \"amount_inr\": 8540000,\n \"debit_credit\": \"CR\",\n \"audit_state\": \"V...",
+        "tokenCount": 101,
+        "metadata": {
+          "department": "Finance",
+          "sensitivity": "Confidential",
+          "category": "Database Snapshot",
+          "strategy": "semantic",
+          "indexedAt": "2026-09-11T17:44:39.879Z"
+        },
+        "similarityScore": 0.878,
+        "hybridScore": 0.5707,
+        "scores": {
+          "vectorSimilarity": 0.878,
+          "bm25Keyword": 0,
+          "finalHybrid": 0.5707
+        }
+      },
+      {
+        "chunkId": "6aa2fc616fbc8812c463e9b4_chunk_1",
+        "docId": "6aa2fc616fbc8812c463e9b4",
+        "documentTitle": "04 department performance",
+        "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+        "text": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-PERF-004\nReporting Period: Q2 2026\n\nDEPARTMENT PERFORMANCE SNAPSHOT\n\nStrategy Analytics\nBudget: $820,000\nActual spend: $786,000\nVariance: -4.1%\nStatus: On plan\n\nPlatform Operations\nBudget: $2,400,000\nActual spend: $2,610,000\nVariance: +8.75%\nStatus: Review required\n\nAI Governance Of...",
+        "tokenCount": 101,
+        "metadata": {
+          "department": "Finance",
+          "sensitivity": "Confidential",
+          "category": "Policy",
+          "strategy": "semantic",
+          "indexedAt": "2026-09-11T17:44:39.883Z"
+        },
+        "similarityScore": 0.4003,
+        "hybridScore": 0.4243,
+        "scores": {
+          "vectorSimilarity": 0.4003,
+          "bm25Keyword": 0.4688,
+          "finalHybrid": 0.4243
+        }
+      },
+      {
+        "chunkId": "6aa311946fbc8812c463eda6_chunk_1",
+        "docId": "6aa311946fbc8812c463eda6",
+        "documentTitle": "04_department_performance.txt",
+        "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+        "text": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-PERF-004\nReporting Period: Q2 2026\n\nDEPARTMENT PERFORMANCE SNAPSHOT\n\nStrategy Analytics\nBudget: $820,000\nActual spend: $786,000\nVariance: -4.1%\nStatus: On plan\n\nPlatform Operations\nBudget: $2,400,000\nActual spend: $2,610,000\nVariance: +8.75%\nStatus: Review required\n\nAI Governance Of...",
+        "tokenCount": 101,
+        "metadata": {
+          "department": "Finance",
+          "sensitivity": "Restricted",
+          "category": "Technical Telemetry",
+          "strategy": "semantic",
+          "indexedAt": "2026-09-11T17:44:39.888Z"
+        },
+        "similarityScore": 0.4003,
+        "hybridScore": 0.4243,
+        "scores": {
+          "vectorSimilarity": 0.4003,
+          "bm25Keyword": 0.4688,
+          "finalHybrid": 0.4243
+        }
+      }
+    ],
+    "citations": [
+      {
+        "citationId": "CIT-1",
+        "docId": "6aa432269f35b82ffba9c32d",
+        "documentTitle": "Project Beta Budget Charter",
+        "sectionTitle": "Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry ",
+        "department": "Executive & Strategy",
+        "sensitivity": "Confidential",
+        "score": 0.6741,
+        "excerpt": "Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry expansion. Authorized owner: Executive & Strategy. Capex code: BETA-CAP-20L."
+      },
+      {
+        "citationId": "CIT-2",
+        "docId": "6aa432269f35b82ffba9c32a",
+        "documentTitle": "Project Alpha Budget Charter",
+        "sectionTitle": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modern",
+        "department": "Executive & Strategy",
+        "sensitivity": "Confidential",
+        "score": 0.6546,
+        "excerpt": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L."
+      },
+      {
+        "citationId": "CIT-3",
+        "docId": "6aa2b9ce6fbc8812c463e725",
+        "documentTitle": "Finance Ledger PostgreSQL (LAN) — Table: financial_ledgers.txt",
+        "sectionTitle": "LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===",
+        "department": "Finance",
+        "sensitivity": "Confidential",
+        "score": 0.5707,
+        "excerpt": "=== LIVE DATABASE SNAPSHOT: Finance Ledger PostgreSQL (LAN) [financial_ledgers] ===\nSource ID: ds-postgres-fin\nDatabase: enterprise_ledger (POSTGRES)\nDepartment Scope: Finance\nExtracted At: 2026-09-10T14:08:14.926Z\n\n-- RECORD SNAPSHOTS --\n[\n {\n \"txn_id\": \"TXN-2026-00918\",\n \"fiscal_period\": \"2026-Q2\",\n \"account_code\": \"..."
+      },
+      {
+        "citationId": "CIT-4",
+        "docId": "6aa2fc616fbc8812c463e9b4",
+        "documentTitle": "04 department performance",
+        "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+        "department": "Finance",
+        "sensitivity": "Confidential",
+        "score": 0.4243,
+        "excerpt": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-PERF-004\nReporting Period: Q2 2026\n\nDEPARTMENT PERFORMANCE SNAPSHOT\n\nStrategy Analytics\nBudget: $820,000\nActual spend: $786,000\nVariance: -4.1%\nStatus: On plan\n\nPlatform Operations\nBudget: $2,400,000\nAct..."
+      },
+      {
+        "citationId": "CIT-5",
+        "docId": "6aa311946fbc8812c463eda6",
+        "documentTitle": "04_department_performance.txt",
+        "sectionTitle": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT",
+        "department": "Finance",
+        "sensitivity": "Restricted",
+        "score": 0.4243,
+        "excerpt": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-PERF-004\nReporting Period: Q2 2026\n\nDEPARTMENT PERFORMANCE SNAPSHOT\n\nStrategy Analytics\nBudget: $820,000\nActual spend: $786,000\nVariance: -4.1%\nStatus: On plan\n\nPlatform Operations\nBudget: $2,400,000\nAct..."
+      }
+    ]
+  }
+}

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { apiRequest } from '../lib/api';
 
 const HardwareContext = createContext();
 
@@ -22,22 +23,19 @@ export const HardwareProvider = ({ children }) => {
     }
   }, [user]);
 
-  const detectHardware = async () => {
+  async function detectHardware() {
     try {
       setLoadingSpecs(true);
-      const res = await fetch(`${API_URL}/hardware/detect`, {
+      const data = await apiRequest(`${API_URL}/hardware/detect`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setHardwareSpecs(data);
-      }
+      setHardwareSpecs(data);
     } catch (err) {
-      console.error('Failed to detect hardware specs', err);
+      console.error('Failed to detect hardware specs', err.message);
     } finally {
       setLoadingSpecs(false);
     }
-  };
+  }
 
   return (
     <HardwareContext.Provider value={{

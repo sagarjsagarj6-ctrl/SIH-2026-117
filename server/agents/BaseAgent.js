@@ -64,7 +64,10 @@ export class BaseAgent {
     const executionResult = await this.execute({ ...context, plannedSteps });
     const validation = await this.validate(executionResult);
     const latencyMs = Date.now() - startTime;
-    const tokensUsed = executionResult.tokensUsed || Math.floor(120 + Math.random() * 250);
+    // Handle missing tokensUsed deterministically; never fabricate usage with Math.random().
+    const tokensUsed = (executionResult && executionResult.tokensUsed)
+      ? executionResult.tokensUsed
+      : Math.max(1, Math.ceil(JSON.stringify(executionResult || {}).length / 4));
 
     return this.report(context, executionResult, validation, latencyMs, tokensUsed);
   }

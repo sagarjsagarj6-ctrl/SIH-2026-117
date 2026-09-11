@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "status": "READY",
+    "system": "Sovereign AI Enterprise Workbench Backend",
+    "deploymentMode": "Air-Gapped Private LAN",
+    "databaseMode": "Live MongoDB Daemon",
+    "startup": {
+      "startedAt": "2026-09-11T17:44:38.978Z",
+      "ready": true,
+      "vectorIndex": "READY",
+      "hardware": "READY",
+      "models": "READY",
+      "runtimeState": "READY"
+    },
+    "timestamp": "2026-09-11T17:44:50.004Z"
+  }
+}

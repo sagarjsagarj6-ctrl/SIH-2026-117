@@ -1,11 +1,20 @@
 import express from 'express';
+import multer from 'multer';
 import { state } from '../config/db.js';
 import Model from '../models/Model.js';
 import FineTuneJob from '../models/FineTuneJob.js';
 import { ModelHealthChecker } from '../services/models/ModelHealthChecker.js';
+import { FineTuneOrchestrator } from '../services/finetune/FineTuneOrchestrator.js';
+import { TrainingRuntime } from '../services/finetune/TrainingRuntime.js';
+import { MAX_UPLOAD_BYTES, uploadFileFilter } from '../services/ingestion/uploadPolicy.js';
 import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
 
 const router = express.Router();
+const trainingDatasetUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: uploadFileFilter,
+  limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 }
+});
 
 const isOwnedByUser = (job, user) => {
   const ownerId = job.ownerId || job.createdBy || '';
@@ -75,13 +84,18 @@ router.post('/:id/toggle', authenticateToken, requireRole('Admin'), async (req, 
   }
 });
 
-// POST /api/models/benchmark (Admin only)
-router.post('/benchmark', authenticateToken, requireRole('Admin'), (req, res) => {
+// POST /api/models/benchmark — timed InferenceRouter probe (Admin; Managers may read-compare via /inference/generate)
+router.post('/benchmark', authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
   try {
-    const { modelName } = req.body;
-    const tps = (40 + Math.random() * 50).toFixed(1);
-    const latency = Math.floor(90 + Math.random() * 80);
-    const vramPeak = (4.2 + Math.random() * 8).toFixed(1);
+    const { modelName, prompt } = req.body;
+    const { InferenceRouter } = await import('../services/inference/InferenceRouter.js');
+    const benchPrompt = prompt || 'Benchmark probe: summarize air-gapped sovereign AI readiness in one sentence.';
+
+    const result = await InferenceRouter.infer({
+      model: modelName || 'Mistral-7B-v0.3-Enterprise',
+      role: 'GENERAL',
+      query: benchPrompt
+    });
 
     createAuditEntry({
       userId: req.user._id || req.user.id,
@@ -90,21 +104,32 @@ router.post('/benchmark', authenticateToken, requireRole('Admin'), (req, res) =>
       department: req.user.department,
       action: 'MODEL_BENCHMARK_EXECUTED',
       resource: '/api/models/benchmark',
-      details: `Ran local hardware inference benchmark on ${modelName || 'Active Models'}`
+      details: `Ran inference benchmark on ${modelName || 'default'} via ${result.backendUsed}`
     });
 
     res.json({
       message: `Benchmark completed for ${modelName || 'Local Models'}`,
+      usedFallback: result.usedFallback,
+      backendUsed: result.backendUsed,
+      sampleResponse: result.response,
       results: {
-        tokensPerSecond: `${tps} t/s`,
-        firstTokenLatencyMs: `${latency} ms`,
-        vramPeakGB: `${vramPeak} GB`,
-        cudaMemoryEfficiency: '96.4%',
-        thermalStatus: 'Normal (48°C)'
+        tokensPerSecond: `${result.metrics.tokensPerSecond} t/s`,
+        firstTokenLatencyMs: `${result.metrics.latencyMs} ms`,
+        tokensGenerated: result.metrics.tokensGenerated,
+        inputTokens: result.metrics.inputTokens,
+        usedFallback: result.usedFallback
       }
     });
   } catch (err) {
     res.status(500).json({ error: 'Benchmarking failed.' });
+  }
+});
+// GET /api/models/training/capabilities — truthfully report whether live local LoRA is available
+router.get('/training/capabilities', authenticateToken, async (req, res) => {
+  try {
+    res.json(await TrainingRuntime.getCapabilities());
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to inspect local training capabilities.' });
   }
 });
 
@@ -137,10 +162,40 @@ router.get('/fine-tune', authenticateToken, async (req, res) => {
 });
 
 // POST /api/models/fine-tune
+router.post('/fine-tune/dataset', authenticateToken, trainingDatasetUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Upload a JSON or JSONL training dataset.' });
+    const saved = await TrainingRuntime.saveUploadedDataset({
+      buffer: req.file.buffer,
+      originalName: req.file.originalname
+    });
+    res.status(201).json({ message: 'Training dataset staged locally.', ...saved });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 router.post('/fine-tune', authenticateToken, async (req, res) => {
   try {
     const user = req.user;
-    const { jobName, baseModel, department, datasetName, method, epochs, learningRate, trainDataFile, testDataFile, isDeployed, accessRoles, networkId, networkName, networkKey } = req.body;
+    const {
+      jobName,
+      baseModel,
+      department,
+      method,
+      epochs,
+      learningRate,
+      trainingConfig,
+      requestedExecutionMode,
+      trainDataFile,
+      testDataFile,
+      trainDataFilePath,
+      isDeployed,
+      accessRoles,
+      networkId,
+      networkName,
+      networkKey
+    } = req.body;
 
     if (!jobName || !baseModel || !(department || user.department)) {
       return res.status(400).json({ error: 'Job name, base model, and target department are required.' });
@@ -153,39 +208,33 @@ router.post('/fine-tune', authenticateToken, async (req, res) => {
     const targetDepartment = department || user.department;
     const deploy = user.role === 'Admin' && Boolean(isDeployed);
     const deploymentKey = deploy ? `LAN-${Math.random().toString(36).slice(2, 8).toUpperCase()}` : (networkKey || '');
-    const jobData = {
+    const result = await FineTuneOrchestrator.startJob({
       jobName,
       baseModel,
       department: targetDepartment,
-      datasetName: datasetName || `${targetDepartment.replace(/\s+/g, '_')}_Confidential_Corpus_v2`,
       method: method || 'QLoRA',
-      epochs: parseInt(epochs) || 3,
+      epochs,
       learningRate: learningRate || '2e-4',
-      status: 'Training',
-      progressPercent: 12,
-      currentLoss: 1.64,
-      startedAt: new Date(),
+      trainingConfig: trainingConfig || {},
+      requestedExecutionMode: requestedExecutionMode || 'AUTO',
       createdBy: user.name,
       ownerRole: user.role,
       ownerId: user._id || user.id,
       trainDataFile: trainDataFile || '',
       testDataFile: testDataFile || '',
-      networkId: networkId || '',
-      networkName: networkName || '',
-      networkKey: networkKey || '',
-      isDeployed: deploy,
-      isGlobal: deploy,
-      accessRoles: Array.isArray(accessRoles) && accessRoles.length ? accessRoles : (deploy ? ['Employee', 'Manager', 'Admin'] : [user.role]),
-      deploymentKey
-    };
-
-    let newJob;
-    if (state.isMongooseConnected) {
-      newJob = await FineTuneJob.create(jobData);
-    } else {
-      newJob = { _id: 'job_' + Date.now(), ...jobData };
-      state.memoryDb.fineTuneJobs.unshift(newJob);
-    }
+      trainDataFilePath: trainDataFilePath || '',
+      extra: {
+        networkId: networkId || '',
+        networkName: networkName || '',
+        networkKey: networkKey || '',
+        isDeployed: deploy,
+        isGlobal: deploy,
+        accessRoles: Array.isArray(accessRoles) && accessRoles.length ? accessRoles : (deploy ? ['Employee', 'Manager', 'Admin'] : [user.role]),
+        deploymentKey
+      }
+    });
+    const newJob = result.job;
+    void FineTuneOrchestrator.runJob(newJob._id || newJob.id);
 
     createAuditEntry({
       userId: req.user._id || req.user.id,
@@ -197,9 +246,56 @@ router.post('/fine-tune', authenticateToken, async (req, res) => {
       details: `${user.role} initiated ${newJob.method} fine-tuning job "${jobName}" on ${baseModel}${deploy ? ' and deployed network-wide' : ''}`
     });
 
-    res.status(201).json({ message: 'Fine-tuning job launched successfully', job: newJob });
+    res.status(201).json({
+      message: `Fine-tuning job launched in ${newJob.executionMode} mode.`,
+      job: newJob,
+      datasetSummary: result.datasetSummary,
+      trainingCapabilities: result.capabilities
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to launch fine-tuning job.' });
+    const status = Number.isInteger(err.status) ? err.status : 500;
+    res.status(status).json({ error: status === 500 ? 'Failed to launch fine-tuning job.' : err.message });
+  }
+});
+
+router.get('/fine-tune/:id', authenticateToken, async (req, res) => {
+  try {
+    const job = await FineTuneOrchestrator.getJob(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
+    if (!isOwnedByUser(job, req.user) && req.user.role !== 'Admin') {
+      return res.status(403).json({ error: 'You are not allowed to view this training job.' });
+    }
+    res.json(job);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch fine-tune job.' });
+  }
+});
+
+router.post('/fine-tune/:id/cancel', authenticateToken, async (req, res) => {
+  try {
+    const job = await FineTuneOrchestrator.getJob(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
+    if (!isOwnedByUser(job, req.user) && req.user.role !== 'Admin') {
+      return res.status(403).json({ error: 'Only the job owner or an administrator can cancel training.' });
+    }
+    const updated = await FineTuneOrchestrator.cancelJob(req.params.id);
+    res.json({ message: 'Cancellation requested.', job: updated });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to cancel fine-tune job.' });
+  }
+});
+
+router.post('/fine-tune/:id/validate', authenticateToken, async (req, res) => {
+  try {
+    const job = await FineTuneOrchestrator.getJob(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
+    if (!isOwnedByUser(job, req.user) && req.user.role !== 'Admin') {
+      return res.status(403).json({ error: 'Only the job owner or an administrator can validate training.' });
+    }
+    const result = await FineTuneOrchestrator.validateJob(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to validate fine-tune job.' });
   }
 });
 

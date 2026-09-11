@@ -1,8 +1,7 @@
-import React from 'react';
 import { 
-  ShieldCheck, Cpu, Database, Network, Lock, Zap, 
-  Bot, FileText, BarChart3, ChevronRight, Layers, UserCheck, 
-  Terminal, ShieldAlert, Sparkles, CheckCircle2
+  ShieldCheck, Cpu, Lock, Zap,
+  Bot, FileText, BarChart3, ChevronRight, UserCheck,
+  Terminal, Sparkles, CheckCircle2
 } from 'lucide-react';
 
 export const LandingPage = ({ onLaunchClick, onLoginClick }) => {

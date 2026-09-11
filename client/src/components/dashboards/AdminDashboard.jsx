@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Shield, Users, Cpu, HardDrive, Server, Activity, 
-  Lock, Edit, CheckCircle2, AlertOctagon, RefreshCw, Key 
+  Cpu, Edit, AlertOctagon, RefreshCw
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
@@ -18,7 +17,7 @@ export const AdminDashboard = () => {
     fetchAdminData();
   }, []);
 
-  const fetchAdminData = async () => {
+  async function fetchAdminData() {
     try {
       setLoading(true);
       const [telRes, usrRes] = await Promise.all([
@@ -39,7 +38,7 @@ export const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleUpdateUser = async (userId, updatedFields) => {
     try {
@@ -88,7 +87,7 @@ export const AdminDashboard = () => {
     );
   }
 
-  const { hardwareUtilization, departmentDistribution, recentSystemAudit } = telemetry;
+  const { hardwareUtilization } = telemetry;
 
   return (
     <div style={{ padding: '32px', color: 'var(--text-main)', maxWidth: '1400px', margin: '0 auto' }}>

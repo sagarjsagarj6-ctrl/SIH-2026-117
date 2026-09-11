@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, Lock, Mail, User, Building, X, KeyRound, AlertCircle, Sparkles } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, User, X, AlertCircle, Sparkles } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const { login, register, authError, setAuthError } = useAuth();
@@ -11,7 +11,6 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     name: '',
     email: '',
     password: '',
-    role: 'Employee',
     department: 'R&D / Engineering'
   });
 
@@ -24,12 +23,9 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    let success = false;
-    if (isRegister) {
-      success = await register(formData);
-    } else {
-      success = await login(formData.email, formData.password);
-    }
+    const success = isRegister
+      ? await register(formData)
+      : await login(formData.email, formData.password);
     setLoading(false);
     if (success && onLoginSuccess) {
       onLoginSuccess();
@@ -172,6 +168,7 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 className="form-input" 
                 style={{ paddingLeft: '40px' }} 
                 placeholder="••••••••••••"
+                minLength={8}
                 required 
               />
             </div>
@@ -179,15 +176,6 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
           {isRegister && (
             <>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Role</label>
-                <select name="role" value={formData.role} onChange={handleChange} className="form-select">
-                  <option value="Employee">Employee (Department Workspace)</option>
-                  <option value="Manager">Manager (Department Audit & Analytics)</option>
-                  <option value="Admin">Admin (Full System Governance)</option>
-                </select>
-              </div>
-
               <div>
                 <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Department</label>
                 <select name="department" value={formData.department} onChange={handleChange} className="form-select">
@@ -197,6 +185,9 @@ export const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                   <option value="Executive & Strategy">Executive & Strategy</option>
                 </select>
               </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '-6px 0 0' }}>
+                New self-registered accounts start as Employee. An administrator can grant additional access after verification.
+              </p>
             </>
           )}
 

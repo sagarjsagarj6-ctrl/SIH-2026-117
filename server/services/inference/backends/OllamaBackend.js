@@ -37,6 +37,7 @@ export class OllamaBackend {
           return {
             text: data.response,
             backend: 'Ollama (Live Local Daemon)',
+            usedFallback: false,
             tokens: data.eval_count || 120,
             latencyMs: Math.floor(data.total_duration ? data.total_duration / 1e6 : 140)
           };
@@ -46,10 +47,12 @@ export class OllamaBackend {
       }
     }
 
-    // Air-gap sovereign deterministic inference engine
+    // Air-gap sovereign deterministic inference engine (echoes prompt so callers can detect offline mode)
+    const promptPreview = String(prompt || '').replace(/\s+/g, ' ').slice(0, 220);
     return {
-      text: `[Sovereign Local Inference Engine]\nResponse generated for model: ${model}.\nQuery processed in air-gapped environment. Verified system state and parameters.`,
+      text: `[Sovereign Local Inference Engine — FALLBACK]\nModel: ${model}.\nOllama daemon unavailable at ${this.endpoint}.\nGrounded prompt preview: ${promptPreview}\nProvide a local Ollama model to replace this deterministic fallback.`,
       backend: 'Ollama Engine (Air-Gapped Sovereign Fallback)',
+      usedFallback: true,
       tokens: 95,
       latencyMs: 38
     };

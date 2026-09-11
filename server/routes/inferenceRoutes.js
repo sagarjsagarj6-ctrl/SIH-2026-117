@@ -25,8 +25,12 @@ router.get('/backends', authenticateToken, async (req, res) => {
 // POST /api/inference/generate — Direct inference request
 router.post('/generate', authenticateToken, async (req, res) => {
   try {
-    const { model, role, query, context, preferredBackend } = req.body;
-    if (!query) return res.status(400).json({ error: 'Query prompt is required' });
+    const { model, role, context, preferredBackend } = req.body;
+    // Accept both `query` and legacy/client `prompt` field names
+    const query = req.body.query || req.body.prompt;
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ error: 'Query prompt is required' });
+    }
 
     const result = await InferenceRouter.infer({
       model,
@@ -41,7 +45,6 @@ router.post('/generate', authenticateToken, async (req, res) => {
     res.status(500).json({ error: `Inference failed: ${err.message}` });
   }
 });
-
 // GET /api/inference/allocation — Hardware-aware model allocation recommendation
 router.get('/allocation', authenticateToken, async (req, res) => {
   try {

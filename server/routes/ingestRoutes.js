@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { FileIngestor } from '../services/ingestion/FileIngestor.js';
 import { DatabaseConnector } from '../services/ingestion/DatabaseConnector.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { MAX_UPLOAD_BYTES, safeUploadFilename, uploadFileFilter } from '../services/ingestion/uploadPolicy.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,14 +27,15 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+    cb(null, uniqueSuffix + '-' + safeUploadFilename(file.originalname));
   }
 });
 
 const upload = multer({
   storage,
+  fileFilter: uploadFileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50 MB
+    fileSize: MAX_UPLOAD_BYTES,
     files: 10 // Up to 10 files simultaneously
   }
 });
@@ -142,7 +144,7 @@ router.post('/database/test', authenticateToken, async (req, res) => {
 router.post('/database/introspect', authenticateToken, async (req, res) => {
   try {
     const { dataSourceId } = req.body;
-    const schema = await DatabaseConnector.introspectSchema(dataSourceId);
+    const schema = await DatabaseConnector.introspectSchema(dataSourceId, req.user);
     res.json(schema);
   } catch (err) {
     res.status(400).json({ error: err.message });
