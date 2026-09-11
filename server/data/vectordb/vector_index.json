@@ -13,7 +13,7 @@
       "sensitivity": "Internal",
       "category": "Synthetic Test Data",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.597Z"
+      "indexedAt": "2026-09-11T03:59:10.407Z"
     },
     "embedding": [
       0,
@@ -800,7 +800,7 @@
       "sensitivity": "Internal",
       "category": "Synthetic Test Data",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.597Z"
+      "indexedAt": "2026-09-11T03:59:10.408Z"
     },
     "embedding": [
       0.12331300228834152,
@@ -1587,7 +1587,7 @@
       "sensitivity": "Confidential",
       "category": "Policy",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.600Z"
+      "indexedAt": "2026-09-11T03:59:10.412Z"
     },
     "embedding": [
       0,
@@ -2374,7 +2374,7 @@
       "sensitivity": "Confidential",
       "category": "Financial Ledger",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.600Z"
+      "indexedAt": "2026-09-11T03:59:10.413Z"
     },
     "embedding": [
       0.06174499914050102,
@@ -3161,7 +3161,7 @@
       "sensitivity": "Confidential",
       "category": "Database Snapshot",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.601Z"
+      "indexedAt": "2026-09-11T03:59:10.414Z"
     },
     "embedding": [
       0.11305200308561325,
@@ -3948,7 +3948,7 @@
       "sensitivity": "Confidential",
       "category": "Financial Ledger",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.602Z"
+      "indexedAt": "2026-09-11T03:59:10.415Z"
     },
     "embedding": [
       0,
@@ -4735,7 +4735,7 @@
       "sensitivity": "Confidential",
       "category": "Policy",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.603Z"
+      "indexedAt": "2026-09-11T03:59:10.416Z"
     },
     "embedding": [
       0.05239399895071983,
@@ -5522,7 +5522,7 @@
       "sensitivity": "Confidential",
       "category": "Policy",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.604Z"
+      "indexedAt": "2026-09-11T03:59:10.417Z"
     },
     "embedding": [
       0.046578001230955124,
@@ -6309,7 +6309,7 @@
       "sensitivity": "Confidential",
       "category": "Policy",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.604Z"
+      "indexedAt": "2026-09-11T03:59:10.418Z"
     },
     "embedding": [
       0,
@@ -7096,7 +7096,7 @@
       "sensitivity": "Restricted",
       "category": "Technical Telemetry",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.605Z"
+      "indexedAt": "2026-09-11T03:59:10.418Z"
     },
     "embedding": [
       0.05239399895071983,
@@ -7883,7 +7883,7 @@
       "sensitivity": "Confidential",
       "category": "Financial Ledger",
       "strategy": "semantic",
-      "indexedAt": "2026-09-10T21:57:04.606Z"
+      "indexedAt": "2026-09-11T03:59:10.419Z"
     },
     "embedding": [
       0,

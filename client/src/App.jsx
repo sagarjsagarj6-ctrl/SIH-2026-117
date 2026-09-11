@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LandingPage } from './components/LandingPage';
 import { AuthModal } from './components/AuthModal';
 import { HardwareSelector } from './components/HardwareSelector';
@@ -13,6 +13,8 @@ import { DataFoundationDashboard } from './components/dashboards/DataFoundationD
 import { IntelligenceDashboard } from './components/dashboards/IntelligenceDashboard';
 import { AuditorDashboard } from './components/dashboards/AuditorDashboard';
 import { AgentCommunicationWorkflow } from './components/agents/AgentCommunicationWorkflow';
+import { LanNetworkSetup } from './components/dashboards/LanNetworkSetup';
+import { LanConnectionPanel } from './components/dashboards/LanConnectionPanel';
 import { useAuth } from './context/AuthContext';
 import { useHardware } from './context/HardwareContext';
 
@@ -25,10 +27,12 @@ export default function App() {
   useEffect(() => {
     if (user) {
       if (user.role === 'Employee') {
-        if (activeTab !== 'workspace' && activeTab !== 'data-foundation') {
+        if (activeTab !== 'workspace' && activeTab !== 'data-foundation' && activeTab !== 'connect-lan') {
           setActiveTab('workspace');
         }
-      } else if (user.role === 'Manager' && (activeTab === 'admin-governance' || activeTab === 'model-center')) {
+      } else if (user.role === 'Manager' && (activeTab === 'admin-governance' || activeTab === 'lan-setup')) {
+        setActiveTab('workspace');
+      } else if (user.role !== 'Admin' && activeTab === 'lan-setup') {
         setActiveTab('workspace');
       } else if (user.role === 'Auditor' && activeTab !== 'auditor-dashboard') {
         setActiveTab('auditor-dashboard');
@@ -97,6 +101,10 @@ export default function App() {
         return (user.role === 'Manager' || user.role === 'Admin') ? <ManagerDashboard /> : <EmployeeWorkspace />;
       case 'admin-governance':
         return user.role === 'Admin' ? <AdminDashboard /> : <EmployeeWorkspace />;
+      case 'lan-setup':
+        return user.role === 'Admin' ? <LanNetworkSetup /> : <EmployeeWorkspace />;
+      case 'connect-lan':
+        return (user.role === 'Manager' || user.role === 'Employee') ? <LanConnectionPanel /> : <EmployeeWorkspace />;
       case 'model-center':
         return <ModelManagementCenter />;
       case 'auditor-dashboard':

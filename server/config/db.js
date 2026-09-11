@@ -10,7 +10,8 @@ export const state = {
     knowledgeDocs: [],
     fineTuneJobs: [],
     dataQualityReports: [],
-    networks: []
+    networks: [],
+    notifications: []
   }
 };
 

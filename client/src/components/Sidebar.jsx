@@ -1,8 +1,7 @@
-import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Bot, BarChart3, Shield, Cpu, FileText,
-  Settings, Database, Layers, Sparkles, Brain, ClipboardCheck, MessageSquareText
+  Bot, BarChart3, Shield, Cpu, Database, Sparkles, Brain, ClipboardCheck, MessageSquareText,
+  Network, PlugZap
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -37,6 +36,20 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: <MessageSquareText size={18} />,
       roles: ['Employee', 'Manager', 'Admin'],
       badge: 'LAN'
+    },
+    {
+      id: 'lan-setup',
+      label: 'LAN Setup & Devices',
+      icon: <Network size={18} />,
+      roles: ['Admin'],
+      badge: 'Secure LAN'
+    },
+    {
+      id: 'connect-lan',
+      label: 'Connect to LAN',
+      icon: <PlugZap size={18} />,
+      roles: ['Manager', 'Employee'],
+      badge: 'Token'
     },
     {
       id: 'manager-analytics',
