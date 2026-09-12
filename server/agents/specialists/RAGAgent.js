@@ -54,20 +54,25 @@ export class RAGAgent extends BaseAgent {
         inferenceMeta = {
           used: true,
           backend: inference.backendUsed,
-          usedFallback: /fallback|air-gap|airgap/i.test(String(inference.backendUsed || '')),
-          metrics: inference.metrics
+          usedFallback: Boolean(inference.usedFallback),
+          live: Boolean(inference.live),
+          modelUsed: inference.modelUsed || null,
+          metrics: inference.metrics,
+          error: inference.error || null
         };
 
-        // If live model responded, prefer it; still append citation block for auditability
+        // A natural-language answer is only emitted when a real local model
+        // actually completed it. Retrieved evidence remains available without
+        // being converted into a pre-written pseudo-answer.
         const modelAnswer = (inference.response || '').trim();
-        if (modelAnswer && !inferenceMeta.usedFallback) {
+        if (modelAnswer && inferenceMeta.live) {
           answerText = `[SOVEREIGN RAG AGENT SYNTHESIS]\n\n${modelAnswer}\n\n---\nGrounding excerpts:\n${excerpts}\n\n✓ Local Knowledge Verification: processed on-premise (${inference.backendUsed}).`;
         } else {
-          // Deterministic grounded fallback — answer changes with retrieved excerpts + query
-          answerText = `[SOVEREIGN RAG AGENT SYNTHESIS]\n\nQuestion: ${query}\n\nBased on your organization's confidential knowledge store (${user?.department || 'Enterprise'} partition), here is the verified evidence:\n\n${excerpts}\n\n✓ Local Knowledge Verification: 100% processed locally on-premise (${inference.backendUsed || 'template grounding'}).`;
+          answerText = `Local language-model synthesis is unavailable. The following evidence was retrieved but has not been converted into an AI answer:\n\n${excerpts}\n\nStart a configured local model and retry to receive a generated, evidence-grounded response.`;
         }
       } catch (err) {
-        answerText = `[SOVEREIGN RAG AGENT SYNTHESIS]\n\nQuestion: ${query}\n\nBased on your organization's confidential knowledge store (${user?.department || 'Enterprise'} partition), here is the verified evidence:\n\n${excerpts}\n\n✓ Local Knowledge Verification: retrieval-only (inference error: ${err.message}).`;
+        inferenceMeta = { used: false, backend: null, usedFallback: false, live: false, error: err.message };
+        answerText = `Local language-model synthesis failed. The following evidence was retrieved but has not been converted into an AI answer:\n\n${excerpts}`;
       }
     } else {
       answerText = `No high-confidence documents found matching "${query}" in the ${user?.department || 'Enterprise'} local vector store. The system will not invent an answer without retrieved evidence.`;

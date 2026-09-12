@@ -37,6 +37,9 @@ export class LlamaCppBackend {
           return {
             text: data.content || '',
             backend: 'llama.cpp (Live Low-VRAM Daemon)',
+            usedFallback: false,
+            live: true,
+            modelUsed: model || 'configured-gguf',
             tokens: data.tokens_evaluated || 105,
             latencyMs: 92
           };
@@ -47,10 +50,14 @@ export class LlamaCppBackend {
     }
 
     return {
-      text: `[llama.cpp GGUF Low-VRAM Quantization Mode]\nExecuted on quantized weights for model ${model}.`,
-      backend: 'llama.cpp Engine (Air-Gapped Sovereign Fallback)',
-      tokens: 90,
-      latencyMs: 55
+      text: '',
+      backend: 'llama.cpp (Unavailable)',
+      usedFallback: true,
+      live: false,
+      modelUsed: model || 'configured-gguf',
+      error: 'llama.cpp is unavailable or its GGUF model is not loaded.',
+      tokens: 0,
+      latencyMs: 0
     };
   }
 }

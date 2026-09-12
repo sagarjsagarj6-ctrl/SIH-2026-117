@@ -1,180 +1,155 @@
 /**
- * VisionAgent — Specialist Agent for Local Air-Gapped Document OCR, Table Detection, and Schematic Inspection.
- * Derives OCR output from provided image metadata, pasted document text, or query content (deterministic).
+ * VisionAgent — Specialist agent for local image/OCR analysis.
+ *
+ * It keeps observed image/OCR evidence, local-model inferences, and integrity
+ * verification separate so a missing OCR/VLM runtime cannot become fake data.
  */
 
-import crypto from 'crypto';
-import fs from 'fs/promises';
+import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { BaseAgent } from '../BaseAgent.js';
-import { ImageOCRParser } from '../../services/ingestion/parsers/ImageOCRParser.js';
+import { ComputerVisionService } from '../../services/vision/ComputerVisionService.js';
 
 export class VisionAgent extends BaseAgent {
   constructor() {
     super('VisionAgent', 'All', 'Qwen2-VL-7B-Instruct');
   }
 
-  static hashRef(seed) {
-    return `REF-2026-${crypto.createHash('sha256').update(String(seed)).digest('hex').slice(0, 8).toUpperCase()}`;
+  static createReference(seed, prefix = 'TXT') {
+    return `${prefix}-${crypto.createHash('sha256').update(String(seed)).digest('hex').slice(0, 16).toUpperCase()}`;
   }
 
-  static extractTablesFromText(text) {
-    const rows = [];
-    const linePattern = /^\s*\|?\s*([^|\n]+)\s*\|\s*([^|\n]+)\s*\|\s*([^|\n]+)\s*\|\s*([^|\n]+)\s*\|?\s*$/gm;
-    let match;
-    while ((match = linePattern.exec(text)) !== null) {
-      const cells = match.slice(1).map((c) => c.trim());
-      if (cells.some((c) => /^-+$/.test(c) || /parameter/i.test(c))) continue;
-      rows.push({
-        Parameter: cells[0],
-        Nominal: cells[1],
-        Measured: cells[2],
-        Status: cells[3]
-      });
-    }
-    return rows;
+  static decodeBase64Image(value) {
+    const encoded = String(value || '')
+      .replace(/^data:[^;]+;base64,/, '')
+      .replace(/\s+/g, '');
+    if (!encoded || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) return null;
+    const buffer = Buffer.from(encoded, 'base64');
+    return buffer.length ? buffer : null;
   }
 
-  static extractKeyValues(text) {
-    const entities = [];
-    const patterns = [
-      [/classification[:\s]+([^\n.]+)/i, 'Security Classification'],
-      [/department[:\s]+([^\n.]+)/i, 'Department Scoping'],
-      [/reference[:\s]+([A-Z0-9\-]+)/i, 'Document Reference'],
-      [/budget[:\s]+([^\n.]+)/i, 'Budget'],
-      [/status[:\s]+([^\n.]+)/i, 'Status']
-    ];
-    for (const [re, label] of patterns) {
-      const m = text.match(re);
-      if (m) entities.push({ label, value: m[1].trim() });
-    }
-    return entities;
-  }
-
-  async plan(context) {
+  async plan() {
     return [
-      '1. Load input visual artifact, pasted document text, or query-described form',
-      '2. Execute localized OCR token extraction and bounding-box segmentation',
-      '3. Detect tabular matrices, cell boundaries, and structured key-value pairs',
-      '4. Verify security classification tags and air-gap integrity checksums'
+      '1. Verify the actual image signature, size, dimensions, and checksum locally',
+      '2. Run OCR only through an available local OCR runtime',
+      '3. Optionally call an explicitly configured private-LAN vision model',
+      '4. Return observed evidence, AI inferences, and verification separately'
     ];
   }
 
   async execute(context) {
-    const { query, user, imageText, imageBase64, fileName, inputContext = [] } = context;
-    const department = user?.department || 'Engineering';
-
-    // Prefer explicit OCR/image text, then upstream vision/RAG text, then the query itself
+    const { query = '', imageText, imageBase64, fileName, inputContext = [] } = context;
+    const safeFileName = ComputerVisionService.safeFilename(fileName || 'upload-image');
+    let analysis = null;
+    let sourceType = 'no_visual_input';
     let sourceText = '';
-    let sourceType = 'query_description';
-    let ocrMetadata = null;
+    const warnings = [];
 
     if (typeof imageText === 'string' && imageText.trim()) {
+      sourceType = 'caller_supplied_text';
       sourceText = imageText.trim();
-      sourceType = 'image_text';
-    } else if (typeof imageBase64 === 'string' && imageBase64.length > 32) {
-      const rawBase64 = imageBase64.replace(/^data:[^;]+;base64,/, '');
-      const extension = path.extname(fileName || '.png') || '.png';
-      const tempPath = path.join(os.tmpdir(), `sovereign-vision-${crypto.randomUUID()}${extension}`);
-      try {
-        await fs.writeFile(tempPath, Buffer.from(rawBase64, 'base64'));
-        const ocrResult = await ImageOCRParser.parse(tempPath, fileName || `upload${extension}`);
-        ocrMetadata = ocrResult.metadata || null;
-        if (ocrResult.success && ocrResult.text) {
-          sourceText = ocrResult.text;
-          sourceType = ocrResult.metadata?.simulation ? 'image_ocr_fallback' : 'image_ocr';
+      warnings.push('Text was supplied by the caller; it was not generated by OCR for this request.');
+    } else if (typeof imageBase64 === 'string' && imageBase64.trim()) {
+      const bytes = VisionAgent.decodeBase64Image(imageBase64);
+      if (!bytes) {
+        sourceType = 'image_validation_failed';
+        warnings.push('The image payload is not valid base64. No visual analysis was performed.');
+      } else {
+        const extension = path.extname(safeFileName) || '.bin';
+        const temporaryPath = path.join(os.tmpdir(), `sovereign-vision-${crypto.randomUUID()}${extension}`);
+        try {
+          await fs.writeFile(temporaryPath, bytes);
+          analysis = await ComputerVisionService.analyzeFile(temporaryPath, safeFileName, { query });
+          if (analysis.success) {
+            sourceType = analysis.ocr.text ? 'local_ocr' : 'image_metadata_only';
+            sourceText = analysis.ocr.text || '';
+            warnings.push(...(analysis.warnings || []));
+          } else {
+            sourceType = 'image_validation_failed';
+            warnings.push(analysis.error?.message || 'The supplied image could not be analyzed locally.');
+          }
+        } finally {
+          await fs.unlink(temporaryPath).catch(() => {});
         }
-      } finally {
-        await fs.unlink(tempPath).catch(() => {});
-      }
-
-      if (!sourceText) {
-        const buf = Buffer.from(rawBase64.slice(0, 4000), 'base64');
-        const ascii = buf.toString('utf8').replace(/[^\x20-\x7E\n\r\t]/g, ' ').trim();
-        sourceText = ascii.length > 20
-          ? ascii
-          : `[BINARY IMAGE PAYLOAD]\nFile: ${fileName || 'upload.bin'}\nBytes decoded sample length: ${buf.length}\nQuery: ${query}`;
-        sourceType = 'image_base64';
       }
     } else {
-      for (const msg of inputContext) {
-        const t = msg?.payload?.result?.ocrResult?.extractedText
-          || msg?.payload?.result?.answer
-          || '';
-        if (t) {
-          sourceText = t;
+      for (const message of inputContext) {
+        const result = message?.payload?.result;
+        const upstreamText = result?.ocrResult?.textExtracted || result?.ocrResult?.extractedText || result?.answer || '';
+        if (typeof upstreamText === 'string' && upstreamText.trim()) {
           sourceType = 'upstream_context';
+          sourceText = upstreamText.trim();
+          warnings.push('The text came from upstream context; this request did not perform a new image OCR pass.');
           break;
         }
       }
     }
 
-    if (!sourceText) {
-      sourceText = query || '';
-      sourceType = 'query_description';
+    if (sourceType === 'no_visual_input') {
+      warnings.push('No image or OCR text was supplied, so no visual observation was made from the query alone.');
     }
 
-    const refNumber = VisionAgent.hashRef(`${department}|${fileName || ''}|${sourceText}|${query}`);
-    const checksum = crypto.createHash('sha256').update(sourceText).digest('hex').slice(0, 16);
-    const tableData = VisionAgent.extractTablesFromText(sourceText);
-    const kvEntities = VisionAgent.extractKeyValues(sourceText);
-
-    const extractedText = `[SOVEREIGN VISION OCR EXTRACT - ${department.toUpperCase()}]\n` +
-      `Document Reference: ${refNumber}\n` +
-      `Source: ${sourceType}${fileName ? ` (${fileName})` : ''}\n` +
-      `Verification Authority: Sovereign Air-Gap Visual Pipeline\n` +
-      `Integrity Checksum: ${checksum}\n` +
-      `Detected Entities:\n` +
-      `  - Classification Level: ${(kvEntities.find((e) => e.label.includes('Classification'))?.value) || 'RESTRICTED INTERNAL'}\n` +
-      `  - Authorized Department: ${department}\n` +
-      `  - Content Preview: ${sourceText.replace(/\s+/g, ' ').slice(0, 280)}\n` +
-      (tableData.length
-        ? `Extracted Table:\n${tableData.map((r) => `  | ${r.Parameter} | ${r.Nominal} | ${r.Measured} | ${r.Status} |`).join('\n')}`
-        : `Extracted Signals:\n  - Token length: ${sourceText.length}\n  - Query echo: ${(query || '').slice(0, 120)}`);
-
-    const detectedEntities = [
-      { label: 'Security Classification', value: kvEntities.find((e) => e.label.includes('Classification'))?.value || 'RESTRICTED INTERNAL' },
-      { label: 'Department Scoping', value: department },
-      { label: 'Integrity Checksum', value: checksum },
-      { label: 'Source Type', value: sourceType },
-      { label: 'Table Formats Detected', value: `${tableData.length} Matrix` },
-      ...kvEntities.filter((e) => !e.label.includes('Classification'))
-    ];
+    const textEvidence = ['local_ocr', 'caller_supplied_text', 'upstream_context'].includes(sourceType) ? sourceText : '';
+    const textHash = textEvidence ? crypto.createHash('sha256').update(textEvidence).digest('hex') : null;
+    const referenceId = analysis?.verification?.sha256
+      ? VisionAgent.createReference(analysis.verification.sha256, 'IMG')
+      : textHash ? VisionAgent.createReference(textHash, 'TXT') : null;
+    const detectedEntities = analysis?.entities?.length
+      ? analysis.entities
+      : ComputerVisionService.extractObservedEntities(textEvidence);
+    const tableData = analysis?.tables?.length
+      ? analysis.tables
+      : ComputerVisionService.extractObservedTables(textEvidence);
+    const confidenceScore = Number.isFinite(analysis?.ocr?.confidence) ? analysis.ocr.confidence : null;
+    const observations = analysis?.observations || (textEvidence
+      ? [{ label: 'Supplied text length', value: `${textEvidence.length} characters`, provenance: sourceType }]
+      : []);
+    const verification = analysis?.verification || (textHash
+      ? { textSha256: textHash, provenance: 'calculated_from_supplied_text' }
+      : {});
+    const inferenceTextLength = (analysis?.inferences || []).reduce((total, item) => total + String(item?.value || '').length, 0);
 
     return {
       agent: this.name,
       query,
       ocrResult: {
-        documentType: sourceType === 'image_base64' || sourceType === 'image_text'
-          ? 'Scanned Document / Image'
-          : 'Technical Schematic / Operational Form',
-        confidenceScore: sourceType === 'query_description' ? 0.78 : 0.94,
-        confidence: sourceType === 'query_description' ? '78%' : '94%',
-        referenceId: refNumber,
-        extractedText,
-        textExtracted: extractedText,
+        documentType: analysis?.image?.format
+          ? `${analysis.image.format} image`
+          : sourceType === 'no_visual_input' ? 'No image supplied' : 'Text-only input',
+        sourceType,
+        analysisStatus: analysis?.success
+          ? 'COMPLETED'
+          : sourceType === 'image_validation_failed' ? 'IMAGE_VALIDATION_FAILED' : 'NO_IMAGE_ANALYSIS',
+        confidenceScore,
+        confidence: confidenceScore === null ? 'UNAVAILABLE' : `${Math.round(confidenceScore * 1000) / 10}%`,
+        referenceId,
+        extractedText: textEvidence,
+        textExtracted: textEvidence,
         detectedEntities,
-        tableData: tableData.length
-          ? tableData
-          : [
-              { Parameter: 'Content Hash', Nominal: checksum.slice(0, 8), Measured: checksum.slice(8), Status: 'VERIFIED' },
-              { Parameter: 'Source', Nominal: sourceType, Measured: `${sourceText.length} chars`, Status: 'PASS' },
-              { Parameter: 'Department', Nominal: department, Measured: department, Status: 'PASS' }
-            ]
+        tableData,
+        observations,
+        inferences: analysis?.inferences || [],
+        verification,
+        capabilities: analysis?.capabilities || {
+          ocr: { available: false, engine: 'not-run' },
+          localVisionModel: { configured: false, ran: false, status: 'NOT_RUN' }
+        },
+        warnings
       },
-      ocrEngine: ocrMetadata?.ocrEngine || (sourceType === 'image_ocr' ? 'tesseract' : 'deterministic-text-extraction'),
-      ocrSimulation: ocrMetadata?.simulation ?? sourceType !== 'image_ocr',
-      tokensUsed: 120 + Math.floor(sourceText.length / 8)
+      ocrEngine: analysis?.ocr?.engine || (sourceType === 'caller_supplied_text' ? 'caller-provided-text' : 'not-run'),
+      ocrSimulation: analysis?.ocr?.isSimulated ?? false,
+      tokensUsed: 60 + Math.ceil((textEvidence.length + inferenceTextLength) / 4)
     };
   }
 
   async validate(result) {
-    const hasEntities = result.ocrResult?.detectedEntities?.length > 0;
+    const confidence = Number.isFinite(result.ocrResult?.confidenceScore) ? result.ocrResult.confidenceScore : 0;
     return {
-      isValid: hasEntities,
-      confidence: result.ocrResult?.confidenceScore || 0.8,
-      notes: `OCR derived from ${result.ocrResult?.detectedEntities?.find((e) => e.label === 'Source Type')?.value || 'unknown'} source.`
+      isValid: Boolean(result.ocrResult) && result.ocrResult.analysisStatus !== 'IMAGE_VALIDATION_FAILED',
+      confidence,
+      notes: result.ocrResult?.warnings?.[0] || 'Vision analysis completed without a confidence score from the local OCR engine.'
     };
   }
 }

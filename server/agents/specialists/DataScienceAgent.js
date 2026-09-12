@@ -86,20 +86,34 @@ export class DataScienceAgent extends BaseAgent {
       dataSource = 'upstream_context';
     }
 
-    let labels;
     if (rawSeries.length < 2) {
-      // Explicit fallback sample — labeled so callers know it is not user data
-      dataSource = 'department_sample_fallback';
-      if (department.includes('Finance')) {
-        rawSeries = [840, 890, 860, 920, 915, 960, 1250, 980, 1020, 1050];
-        labels = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10'];
-      } else {
-        rawSeries = [120, 142, 138, 155, 148, 162, 159, 210, 165, 172];
-        labels = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10'];
-      }
-    } else {
-      labels = rawSeries.map((_, i) => `P${i + 1}`);
+      return {
+        agent: this.name,
+        query,
+        summary: 'No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.',
+        dataSource: 'no_numeric_input',
+        inference: { used: false, live: false, usedFallback: false, backend: null },
+        modelNarrative: '',
+        series: [],
+        statistics: { count: 0, mean: null, median: null, min: null, max: null, stdDev: null },
+        anomalies: { iqr: { outliers: [] }, zScore: { outliers: [] } },
+        regression: null,
+        charts: null,
+        metrics: {
+          totalRecordsAnalyzed: 0,
+          anomalyRatePct: null,
+          confidenceScore: 0,
+          meanResponseTimeMs: null,
+          mean: null,
+          stdDev: null
+        },
+        chartData: { title: 'No data analyzed', labels: [], series: [] },
+        insights: ['No statistical sample was created from department defaults.'],
+        tokensUsed: 20
+      };
     }
+
+    const labels = rawSeries.map((_, i) => `P${i + 1}`);
 
     const stats = StatisticalEngine.computeDescriptive(rawSeries);
     const iqrAnomalies = StatisticalEngine.detectAnomaliesIQR(rawSeries);
@@ -121,9 +135,7 @@ export class DataScienceAgent extends BaseAgent {
       outliers: iqrAnomalies.outliers
     });
 
-    const sourceNote = dataSource === 'department_sample_fallback'
-      ? `No numeric series found in query/context — using labeled ${department} sample series.`
-      : `Series sourced from ${dataSource} (${rawSeries.length} points).`;
+    const sourceNote = `Series sourced from ${dataSource} (${rawSeries.length} points).`;
 
     const summary = `${sourceNote} Statistical analysis of ${stats.count} data points for ${department} completed. ` +
       `Mean: ${stats.mean}, StdDev: ${stats.stdDev}. Identified ${iqrAnomalies.outliers.length} statistical anomaly (values: ${iqrAnomalies.outliers.join(', ') || 'none'}). ` +
@@ -144,13 +156,16 @@ export class DataScienceAgent extends BaseAgent {
       });
       inference = {
         used: true,
+        live: Boolean(inferenceResult.live),
         backend: inferenceResult.backendUsed,
         usedFallback: inferenceResult.usedFallback,
-        metrics: inferenceResult.metrics
+        modelUsed: inferenceResult.modelUsed || null,
+        metrics: inferenceResult.metrics,
+        error: inferenceResult.error || null
       };
-      if (!inferenceResult.usedFallback) modelNarrative = inferenceResult.response;
+      if (inferenceResult.live && inferenceResult.response) modelNarrative = inferenceResult.response;
     } catch (error) {
-      inference = { used: false, usedFallback: true, backend: null, error: error.message };
+      inference = { used: false, live: false, usedFallback: false, backend: null, error: error.message };
     }
 
     return {
@@ -175,7 +190,7 @@ export class DataScienceAgent extends BaseAgent {
       metrics: {
         totalRecordsAnalyzed: stats.count,
         anomalyRatePct,
-        confidenceScore: dataSource === 'department_sample_fallback' ? 0.72 : 0.96,
+        confidenceScore: 0.96,
         meanResponseTimeMs: null,
         mean: stats.mean,
         stdDev: stats.stdDev
@@ -202,7 +217,7 @@ export class DataScienceAgent extends BaseAgent {
     const hasStats = result.statistics && result.statistics.count > 0;
     return {
       isValid: hasStats,
-      confidence: result.dataSource === 'department_sample_fallback' ? 0.72 : 0.95,
+      confidence: 0.95,
       notes: hasStats
         ? `Computed over ${result.statistics.count} points from ${result.dataSource}.`
         : 'No numeric series available.'

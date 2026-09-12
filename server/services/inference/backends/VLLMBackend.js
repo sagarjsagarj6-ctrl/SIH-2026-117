@@ -38,6 +38,9 @@ export class VLLMBackend {
           return {
             text: data.choices[0]?.text || '',
             backend: 'vLLM (Live High-Throughput Daemon)',
+            usedFallback: false,
+            live: true,
+            modelUsed: model || 'default',
             tokens: data.usage?.completion_tokens || 140,
             latencyMs: 85
           };
@@ -48,10 +51,14 @@ export class VLLMBackend {
     }
 
     return {
-      text: `[vLLM Sovereign Tensor Core Acceleration]\nProcessed query under CUDA air-gap profile for ${model}. High-throughput batch verified.`,
-      backend: 'vLLM Engine (Air-Gapped Sovereign Fallback)',
-      tokens: 110,
-      latencyMs: 42
+      text: '',
+      backend: 'vLLM (Unavailable)',
+      usedFallback: true,
+      live: false,
+      modelUsed: model || 'default',
+      error: 'vLLM is unavailable or the requested model is not loaded.',
+      tokens: 0,
+      latencyMs: 0
     };
   }
 }

@@ -1,0 +1,3 @@
+# Operational SOP
+Step 1: Check server air-gap status.
+Step 2: Authenticate zero trust token.

@@ -97,10 +97,11 @@ export class FileIngestor {
       recordStage('PARSING_EXTRACTION', 'SUCCESS', `Extracted ${parseResult.metadata.wordCount || 0} words`);
 
       // Stage 3: PII Scanning & Cleaning
-      recordStage('PII_CLEANING', 'RUNNING', 'Scanning for PII tokens (SSN, credit cards, phones)');
-      const piiScan = DataCleaner.scanPII(parseResult.text);
-      const cleanedText = DataCleaner.cleanAndRedact(parseResult.text, autoRedactPII);
-      recordStage('PII_CLEANING', 'SUCCESS', piiScan.piiDetected ? `Detected & redacted ${piiScan.matches.length} PII categories` : 'No PII detected');
+      recordStage('PII_CLEANING', 'RUNNING', 'Scanning for PII tokens (SSN, cards, emails, phones, addresses, HIPAA/PCI fields)');
+      const piiScan = DataCleaner.scanPII(parseResult.text, { framework: 'FULL', format: 'auto' });
+      const cleanedText = DataCleaner.cleanAndRedact(parseResult.text, autoRedactPII, { framework: 'FULL', format: 'auto' });
+      const piiTokenCount = piiScan.matches.reduce((sum, item) => sum + item.count, 0);
+      recordStage('PII_CLEANING', 'SUCCESS', piiScan.piiDetected ? `Detected & redacted ${piiTokenCount} PII tokens across ${piiScan.matches.length} categories` : 'No PII detected');
 
       // Stage 4: Data Quality Scoring
       recordStage('QUALITY_SCORING', 'RUNNING', 'Computing completeness, consistency, and validity scores');

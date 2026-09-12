@@ -41,7 +41,9 @@ export class BaseAgent {
       query: context.query,
       context: context.inputContext || [],
       result,
-      confidence: validation.confidence || 0.95,
+      // Preserve an explicit zero confidence (for example, when OCR did not
+      // produce observed text) instead of silently converting it to 95%.
+      confidence: validation.confidence ?? 0.95,
       citations: result.citations || [],
       metadata: {
         latencyMs,

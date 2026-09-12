@@ -20,7 +20,7 @@ export class ReportTemplates {
     // Header section
     sections.push({
       heading: '1. Executive Briefing',
-      content: `This intelligence document compiles findings and verified evidence for ${department}. All analytical operations, vector embeddings, and inference calculations were executed 100% locally within an air-gapped sovereign perimeter without external cloud transmission.`
+      content: `This report compiles the supplied findings and citations for ${department}. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.`
     });
 
     // Key findings section
@@ -28,7 +28,7 @@ export class ReportTemplates {
       heading: '2. Core Analytical Findings',
       content: findings.length > 0 
         ? findings.map((f, i) => `${i + 1}. ${f}`).join('\n')
-        : 'Comprehensive analysis indicates all operations conform to departmental baseline expectations.'
+        : 'No source evidence was supplied. No operational or compliance conclusion has been generated.'
     });
 
     // Quantitative metrics section
@@ -44,7 +44,7 @@ export class ReportTemplates {
       heading: '4. Strategic Recommendations',
       content: recommendations.length > 0
         ? recommendations.map((r, i) => `• Recommendation ${i + 1}: ${r}`).join('\n')
-        : '• Maintain current continuous monitoring protocols and periodic local vector re-indexing.'
+        : '• No recommendation has been generated without supporting evidence.'
     });
 
     // Source citations section
@@ -60,7 +60,7 @@ export class ReportTemplates {
       `> **Watermark**: ${watermark}\n` +
       `> **Generated**: ${timestamp}\n\n` +
       sections.map(s => `## ${s.heading}\n\n${s.content}\n\n`).join('---\n\n') +
-      `\n*Sovereign AI Verification Checksum Verified — Air-Gap Secured*`;
+      `\n*Report integrity metadata recorded. Verify conclusions against the cited sources and local-model runtime status.*`;
 
     return {
       title,

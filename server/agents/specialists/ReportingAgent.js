@@ -48,8 +48,7 @@ export class ReportingAgent extends BaseAgent {
     });
 
     if (findings.length === 0) {
-      findings.push(`Direct report generation executed for prompt: "${query}".`);
-      findings.push(`Operational systems operating at 99.8% compliance across ${department} nodes.`);
+      findings.push('No upstream specialist evidence was supplied. The report does not assert a business, compliance, or operational conclusion.');
     }
 
     const reportTitle = `Sovereign AI Executive Intelligence & Audit Dossier — ${department}`;
@@ -58,16 +57,10 @@ export class ReportingAgent extends BaseAgent {
       title: reportTitle,
       department,
       findings,
-      metrics: Object.keys(metrics).length > 0 ? metrics : {
-        'Compliance Rate': '99.4%',
-        'Air-Gap Integrity': '100% Isolated',
-        'Active Models': '3 Verified'
-      },
-      recommendations: [
-        'Maintain daily local vector embeddings synchronization.',
-        'Review detected numerical outliers in upcoming departmental committee meeting.',
-        'Archive current intelligence dossier to immutable on-premise audit log.'
-      ],
+      metrics,
+      recommendations: citations.length || Object.keys(metrics).length
+        ? ['Review the cited evidence and computed metrics before acting on this report.']
+        : ['Provide source documents, data-science results, or verified citations before requesting recommendations.'],
       citations
     });
 
@@ -82,22 +75,34 @@ export class ReportingAgent extends BaseAgent {
       });
       inference = {
         used: true,
+        live: Boolean(inferenceResult.live),
         backend: inferenceResult.backendUsed,
         usedFallback: inferenceResult.usedFallback,
-        metrics: inferenceResult.metrics
+        modelUsed: inferenceResult.modelUsed || null,
+        metrics: inferenceResult.metrics,
+        error: inferenceResult.error || null
       };
-      if (!inferenceResult.usedFallback) modelNarrative = inferenceResult.response;
+      if (inferenceResult.live && inferenceResult.response) modelNarrative = inferenceResult.response;
     } catch (error) {
-      inference = { used: false, usedFallback: true, backend: null, error: error.message };
+      inference = { used: false, live: false, usedFallback: false, backend: null, error: error.message };
     }
+
+    // Put genuine local-model synthesis first. The structured sections remain
+    // available as traceable evidence, but must not obscure a live answer.
+    const sections = modelNarrative
+      ? [{ heading: 'Local Model Narrative', content: modelNarrative }, ...reportData.sections]
+      : reportData.sections;
+    const markdown = modelNarrative
+      ? `## Local Model Narrative\n\n${modelNarrative}\n\n${reportData.markdown}`
+      : reportData.markdown;
 
     return {
       agent: this.name,
       query,
       reportTitle: reportData.title,
       watermark: reportData.watermark,
-      sections: reportData.sections,
-      markdown: reportData.markdown,
+      sections,
+      markdown,
       modelNarrative,
       inference,
       generatedAt: reportData.generatedAt,

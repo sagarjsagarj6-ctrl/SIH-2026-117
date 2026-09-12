@@ -78,6 +78,39 @@ async function runTests() {
   assert(redacted.includes('[REDACTED_CARD]'));
   console.log('✓ DataCleaner & PII Redaction PASSED');
 
+  console.log('[Test 5b] Testing extended PII categories, masking, JSON, and compliance profiles...');
+  const mixed = 'Employee John Doe (SSN: 123-45-6789, email: jdoe@enterprise.com, phone: 415-555-0199) processed card 4532-1234-5678-9012 CVV 123 at 221B Baker Street, London 94105.';
+  const mixedScan = DataCleaner.scanAndRedact(mixed, { framework: 'FULL' });
+  assert.strictEqual(mixedScan.ok, true);
+  assert(mixedScan.counts.SSN >= 1);
+  assert(mixedScan.counts.CREDIT_CARD >= 1);
+  assert(mixedScan.counts.EMAIL >= 1);
+  assert(mixedScan.counts.PHONE >= 1);
+  assert(mixedScan.counts.ADDRESS >= 1);
+  assert(mixedScan.redactedPreview.includes('[REDACTED_SSN]'));
+  assert(mixedScan.redactedPreview.includes('[REDACTED_CARD]'));
+  assert(mixedScan.redactedPreview.includes('j***@enterprise.com'));
+  assert(!mixedScan.redactedPreview.includes('123-45-6789'));
+  assert(!mixedScan.redactedPreview.includes('4532-1234-5678-9012'));
+
+  const emptyScan = DataCleaner.scanAndRedact('');
+  assert.strictEqual(emptyScan.ok, false);
+
+  const jsonScan = DataCleaner.scanAndRedact('{"employee":"John Doe","email":"jdoe@enterprise.com","ssn":"123-45-6789"}', { format: 'json' });
+  assert.strictEqual(jsonScan.format, 'json');
+  assert(jsonScan.redactedPreview.includes('[REDACTED_SSN]') || jsonScan.redactedPreview.includes('***@'));
+
+  const gdpr = DataCleaner.scanAndRedact('Customer Jane Smith email jane.smith@contoso.org', { framework: 'GDPR' });
+  assert(gdpr.counts.CREDIT_CARD === 0);
+  assert(gdpr.redactedPreview.includes('j***@contoso.org') || gdpr.redactedPreview.includes('[REDACTED_NAME]'));
+
+  const pci = DataCleaner.scanAndRedact('PAN 4111 1111 1111 1111 CVV 987', { framework: 'PCI-DSS' });
+  assert(pci.counts.CREDIT_CARD >= 1);
+  assert(pci.counts.CVV >= 1);
+  assert(pci.redactedPreview.includes('[REDACTED_CARD]'));
+  assert(pci.redactedPreview.includes('[REDACTED_CVV]'));
+  console.log('✓ Extended PII / compliance profiles PASSED');
+
   // 6. Quality Scorer Test
   console.log('[Test 6] Testing QualityScorer...');
   const quality = QualityScorer.evaluateQuality({
