@@ -250,10 +250,124 @@ router.post('/join', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/networks/:networkId/reset — stop a LAN, revoke its token, and disconnect every device.
+router.post('/:networkId/reset', authenticateToken, requireRole('Admin'), async (req, res) => {
+  try {
+    const network = getNetworkByIdentifier(req.params.networkId);
+    if (!network) return res.status(404).json({ error: 'LAN network not found.' });
+
+    const connectedMembers = Array.isArray(network.members) ? [...network.members] : [];
+    const disconnectedCount = connectedMembers.length;
+    const resetAt = new Date().toISOString();
+
+    // Clearing both the membership list and both token aliases makes the reset
+    // effective immediately: existing devices lose their server-side LAN
+    // membership and previously copied invitations cannot be reused.
+    network.members = [];
+    network.networkKey = null;
+    network.accessToken = null;
+    network.status = 'Stopped';
+    network.inviteCount = 0;
+    network.lastInviteAt = null;
+    network.resetAt = resetAt;
+    await RuntimeStateStore.upsert('networks', network);
+
+    const affectedUserIds = connectedMembers
+      .map(member => member.userId || member.id)
+      .filter(Boolean);
+    if (affectedUserIds.length) {
+      pushNotifications({
+        recipientUserIds: affectedUserIds,
+        type: 'LAN_RESET',
+        title: `Private LAN stopped: ${network.name}`,
+        message: 'An administrator stopped this private LAN. All connected devices were disconnected and the previous access token was revoked.',
+        summary: `${network.name} was reset at ${resetAt}. Request a new invitation if access is required.`,
+        networkId: network.networkId,
+        networkName: network.name,
+        metadata: { disconnectedCount, resetAt, tokenRevoked: true }
+      });
+    }
+
+    createAuditEntry({
+      userId: req.user._id || req.user.id,
+      userName: req.user.name,
+      role: req.user.role,
+      department: req.user.department,
+      action: 'LAN_NETWORK_RESET',
+      resource: `/api/networks/${network.networkId}/reset`,
+      details: `Admin stopped LAN ${network.name}, revoked its access token, and disconnected ${disconnectedCount} device(s)`
+    });
+
+    res.json({
+      message: disconnectedCount
+        ? `LAN stopped. ${disconnectedCount} connected device(s) were disconnected and the access token was revoked.`
+        : 'LAN stopped. The access token was revoked and no connected devices remained.',
+      disconnectedCount,
+      network: serializeNetwork(network, req.user)
+    });
+  } catch (err) {
+    console.error('[LAN reset error]', err.message);
+    res.status(500).json({ error: 'Failed to reset LAN network.' });
+  }
+});
+
+// DELETE /api/networks/:networkId — permanently remove a LAN and its membership record.
+router.delete('/:networkId', authenticateToken, requireRole('Admin'), async (req, res) => {
+  try {
+    const networkIndex = (state.memoryDb.networks || []).findIndex(network => (
+      network._id === req.params.networkId || network.networkId === req.params.networkId
+    ));
+    if (networkIndex === -1) return res.status(404).json({ error: 'LAN network not found.' });
+
+    const [network] = state.memoryDb.networks.splice(networkIndex, 1);
+    const connectedMembers = Array.isArray(network.members) ? network.members : [];
+    const affectedUserIds = connectedMembers
+      .map(member => member.userId || member.id)
+      .filter(Boolean);
+
+    await RuntimeStateStore.remove('networks', network._id || network.networkId);
+
+    if (affectedUserIds.length) {
+      pushNotifications({
+        recipientUserIds: affectedUserIds,
+        type: 'LAN_REMOVED',
+        title: `Private LAN removed: ${network.name}`,
+        message: 'An administrator permanently removed this private LAN. All connected devices were disconnected and its access token was revoked.',
+        summary: `${network.name} was removed. Request a new invitation if access is required.`,
+        networkId: network.networkId,
+        networkName: network.name,
+        metadata: { disconnectedCount: connectedMembers.length, tokenRevoked: true, removedAt: new Date().toISOString() }
+      });
+    }
+
+    createAuditEntry({
+      userId: req.user._id || req.user.id,
+      userName: req.user.name,
+      role: req.user.role,
+      department: req.user.department,
+      action: 'LAN_NETWORK_REMOVED',
+      resource: `/api/networks/${network.networkId}`,
+      details: `Admin permanently removed LAN ${network.name} and disconnected ${connectedMembers.length} device(s)`
+    });
+
+    res.json({
+      message: `LAN ${network.name} was removed. ${connectedMembers.length} connected device(s) were disconnected.`,
+      removedNetworkId: network.networkId,
+      disconnectedCount: connectedMembers.length
+    });
+  } catch (err) {
+    console.error('[LAN remove error]', err.message);
+    res.status(500).json({ error: 'Failed to remove LAN network.' });
+  }
+});
+
 router.post('/:networkId/notify', authenticateToken, requireRole('Admin'), async (req, res) => {
   try {
     const network = getNetworkByIdentifier(req.params.networkId);
     if (!network) return res.status(404).json({ error: 'LAN network not found.' });
+    if (network.status !== 'Active' || !network.accessToken) {
+      return res.status(409).json({ error: 'This LAN is stopped. Create a new LAN before sending invitations.' });
+    }
 
     let recipients = [];
     if (state.isMongooseConnected) {

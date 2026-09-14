@@ -351,7 +351,7 @@ export const EmployeeWorkspace = () => {
             </div>
             <h3 style={{ fontSize: '1rem' }}>Executing {activeAgent} Agent Logic...</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-              Performing vector similarity search & localized tensor inference on {activeProfile} model endpoint.
+              Checking the local runtime, then executing authorized retrieval, analysis, or OCR work.
             </p>
           </div>
         )}
@@ -363,12 +363,33 @@ export const EmployeeWorkspace = () => {
                 <span className="badge badge-cyan">{queryResult.agent}</span>
                 <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Latency: {queryResult.executionTimeMs} ms</span>
               </div>
-              <span className="badge badge-green">LOCAL AIR-GAP</span>
+              <span className={queryResult.liveModelResponse ? 'badge badge-green' : 'badge badge-cyan'}>
+                {queryResult.liveModelResponse
+                  ? 'LIVE LOCAL MODEL'
+                  : queryResult.answerMode === 'LOCAL_DETERMINISTIC_FALLBACK'
+                    ? 'LOCAL FALLBACK'
+                    : 'EVIDENCE MODE'}
+              </span>
             </div>
+
+            {queryResult.runtimeError && (
+              <div style={{ marginBottom: '10px', padding: '8px 10px', borderRadius: '7px', background: 'rgba(6, 182, 212, 0.10)', border: '1px solid rgba(6, 182, 212, 0.35)', color: 'var(--text-main)', fontSize: '0.74rem' }}>
+                <strong>{queryResult.answerMode === 'EVIDENCE_ONLY' ? 'Evidence-only mode: ' : 'Local runtime note: '}</strong>
+                {queryResult.answerMode === 'EVIDENCE_ONLY'
+                  ? 'No live local model is running. The retrieved evidence below is still valid and has been shown without inventing a generated answer. Start Ollama, vLLM, or llama.cpp to enable synthesis.'
+                  : queryResult.runtimeError.message || queryResult.runtimeError}
+              </div>
+            )}
 
             {queryResult.answer && (
                 <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5, fontSize: '0.86rem', marginBottom: '12px' }}>
                 {queryResult.answer}
+              </div>
+            )}
+
+            {queryResult.modelNarrative && (
+              <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5, fontSize: '0.86rem', marginBottom: '12px', padding: '10px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.06)', border: '1px solid rgba(6, 182, 212, 0.22)' }}>
+                {queryResult.modelNarrative}
               </div>
             )}
 
@@ -403,7 +424,7 @@ export const EmployeeWorkspace = () => {
                   </div>
                   <div className="glass-card" style={{ padding: '9px', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Anomaly</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-green)' }}>{queryResult.metrics.anomalyRatePct}%</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-green)' }}>{queryResult.metrics.anomalyRatePct == null ? 'N/A' : `${queryResult.metrics.anomalyRatePct}%`}</div>
                   </div>
                   <div className="glass-card" style={{ padding: '9px', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Confidence</div>
@@ -411,37 +432,50 @@ export const EmployeeWorkspace = () => {
                   </div>
                 </div>
 
-                <div className="glass-card" style={{ padding: '10px' }}>
-                  <div style={{ fontSize: '0.76rem', fontWeight: 700, marginBottom: '8px' }}>{queryResult.chartData.title}</div>
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', height: '96px', padding: '8px 10px', borderBottom: '1px solid var(--border-color)' }}>
-                    {(queryResult.chartData.series?.[0]?.data || [40, 65, 85, 110]).slice(0, 4).map((val, i) => {
-                      const series = queryResult.chartData.series?.[0]?.data || [];
-                      const max = Math.max(...series, 1);
-                      const h = Math.max(8, Math.round((Number(val) / max) * 90));
-                      return (
-                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                        <div style={{
-                          width: '100%',
-                          height: `${h}px`,
-                          background: 'linear-gradient(180deg, var(--accent-indigo), var(--accent-cyan))',
-                          borderRadius: '6px 6px 0 0'
-                        }} />
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{queryResult.chartData.labels?.[i] || `P${i + 1}`}</span>
-                      </div>
-                    );})}
+                {(queryResult.chartData?.series?.[0]?.data || []).length > 0 ? (
+                  <div className="glass-card" style={{ padding: '10px' }}>
+                    <div style={{ fontSize: '0.76rem', fontWeight: 700, marginBottom: '8px' }}>{queryResult.chartData.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', height: '96px', padding: '8px 10px', borderBottom: '1px solid var(--border-color)' }}>
+                      {(queryResult.chartData.series[0].data || []).slice(0, 4).map((val, i) => {
+                        const series = queryResult.chartData.series[0].data || [];
+                        const max = Math.max(...series, 1);
+                        const h = Math.max(8, Math.round((Number(val) / max) * 90));
+                        return (
+                          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                            <div style={{
+                              width: '100%',
+                              height: `${h}px`,
+                              background: 'linear-gradient(180deg, var(--accent-indigo), var(--accent-cyan))',
+                              borderRadius: '6px 6px 0 0'
+                            }} />
+                            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{queryResult.chartData.labels?.[i] || `P${i + 1}`}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="glass-card" style={{ padding: '10px', fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                    No chart is shown because no numeric series was analyzed.
+                  </div>
+                )}
               </div>
             )}
 
             {queryResult.ocrResult && (
               <div className="glass-card" style={{ padding: '10px', marginTop: '10px' }}>
                 <div className="badge badge-purple" style={{ marginBottom: '8px' }}>
-                  OCR Scan Complete ({queryResult.ocrResult.confidence})
+                  OCR: {queryResult.ocrResult.analysisStatus || 'NOT RUN'} ({queryResult.ocrResult.confidence})
                 </div>
-                <pre className="mono" style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px', fontSize: '0.74rem', color: 'var(--accent-cyan)', marginBottom: '10px' }}>
-                  {queryResult.ocrResult.textExtracted}
-                </pre>
+                {queryResult.ocrResult.textExtracted ? (
+                  <pre className="mono" style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px', fontSize: '0.74rem', color: 'var(--accent-cyan)', marginBottom: '10px' }}>
+                    {queryResult.ocrResult.textExtracted}
+                  </pre>
+                ) : (
+                  <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
+                    {queryResult.ocrResult.warnings?.[0] || 'No observed OCR text is available.'}
+                  </p>
+                )}
                 <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                   Extracted Entities:
                   {queryResult.ocrResult.detectedEntities.map((ent, i) => (
@@ -590,6 +624,25 @@ export const EmployeeWorkspace = () => {
               <span className="badge badge-indigo">{documents.length} Files</span>
               <button className="btn-secondary" onClick={() => setShowUploadModal(true)} style={{ padding: '8px 14px', fontSize: '0.8rem' }}>
                 <Upload size={15} /> Upload Doc
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveWorkspaceTab('workspace')}
+                title="Close docs and return to workspace"
+                aria-label="Close docs"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '8px',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <X size={16} />
               </button>
             </div>
           </div>

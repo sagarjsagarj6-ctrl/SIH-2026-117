@@ -14,7 +14,12 @@ export const state = {
     networks: [],
     notifications: [],
     workflowRequests: [],
-    aiHandoffEvents: []
+    playgroundWorkflows: [],
+    playgroundRuns: [],
+    workflowOutputs: [],
+    aiHandoffEvents: [],
+    imageModelJobs: [],
+    imageModelUploads: []
   }
 };
 

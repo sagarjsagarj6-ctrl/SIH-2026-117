@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   UploadCloud, FileText, CheckCircle2, AlertCircle,
-  Sparkles, X, Cpu, EyeOff
+  Sparkles, X, EyeOff
 } from 'lucide-react';
 
 export const FileUploader = ({ onUploadSuccess }) => {
@@ -111,27 +111,23 @@ export const FileUploader = ({ onUploadSuccess }) => {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '24px', borderRadius: '14px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="glass-card" style={{ padding: '14px 16px', borderRadius: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <UploadCloud size={22} style={{ color: 'var(--accent-cyan)' }} />
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Air-Gapped Batch File Ingestor</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <UploadCloud size={18} style={{ color: 'var(--accent-cyan)' }} />
+            <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>File Ingestor</h2>
           </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Ingest local files (.pdf, .docx, .xlsx, .csv, .txt, .md, .json, .png) with automated parsing, PII scrubbing & 768-dim vector embedding.
-          </p>
+        
         </div>
-        <span className="badge badge-cyan" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Cpu size={14} /> AIR-GAPPED ON-PREMISE
-        </span>
+       
       </div>
 
       <form onSubmit={handleSubmit}>
         {/* Configuration Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px', marginBottom: '10px' }}>
           <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '6px', display: 'block' }}>
+            <label style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '3px', display: 'block' }}>
               DEPARTMENT SCOPE
             </label>
             <select
@@ -140,12 +136,12 @@ export const FileUploader = ({ onUploadSuccess }) => {
               disabled={user?.role === 'Employee'}
               style={{
                 width: '100%',
-                padding: '10px 14px',
+                padding: '6px 9px',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 color: 'var(--text-main)',
-                fontSize: '0.85rem'
+                fontSize: '0.74rem'
               }}
             >
               <option value="Finance & Accounting">Finance & Accounting</option>
@@ -158,7 +154,7 @@ export const FileUploader = ({ onUploadSuccess }) => {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '6px', display: 'block' }}>
+            <label style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '3px', display: 'block' }}>
               SECURITY CLASSIFICATION
             </label>
             <select
@@ -166,12 +162,12 @@ export const FileUploader = ({ onUploadSuccess }) => {
               onChange={(e) => setSensitivity(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 14px',
+                padding: '6px 9px',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 color: 'var(--text-main)',
-                fontSize: '0.85rem'
+                fontSize: '0.74rem'
               }}
             >
               <option value="Public">Public (Unrestricted)</option>
@@ -183,7 +179,7 @@ export const FileUploader = ({ onUploadSuccess }) => {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '6px', display: 'block' }}>
+            <label style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '3px', display: 'block' }}>
               CATEGORY TAG
             </label>
             <select
@@ -191,12 +187,12 @@ export const FileUploader = ({ onUploadSuccess }) => {
               onChange={(e) => setCategory(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 14px',
+                padding: '6px 9px',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 color: 'var(--text-main)',
-                fontSize: '0.85rem'
+                fontSize: '0.74rem'
               }}
             >
               <option value="Financial Ledger">Financial Ledger</option>
@@ -211,10 +207,10 @@ export const FileUploader = ({ onUploadSuccess }) => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '8px' }}>
+            <label style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '4px' }}>
               PRIVACY SAFEGUARD
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={autoRedactPII}
@@ -236,13 +232,13 @@ export const FileUploader = ({ onUploadSuccess }) => {
           onClick={() => fileInputRef.current?.click()}
           style={{
             border: `2px dashed ${isDragging ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
-            borderRadius: '12px',
-            padding: '36px 20px',
+            borderRadius: '9px',
+            padding: '20px 12px',
             textAlign: 'center',
             cursor: 'pointer',
             background: isDragging ? 'rgba(0, 255, 242, 0.05)' : 'rgba(255, 255, 255, 0.01)',
             transition: 'all 0.2s ease',
-            marginBottom: '16px'
+            marginBottom: '10px'
           }}
         >
           <input
@@ -256,10 +252,10 @@ export const FileUploader = ({ onUploadSuccess }) => {
             style={{ display: 'none' }}
           />
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '7px' }}>
             <div style={{
-              width: '56px',
-              height: '56px',
+              width: '42px',
+              height: '42px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(6,182,212,0.2))',
               display: 'flex',
@@ -267,22 +263,19 @@ export const FileUploader = ({ onUploadSuccess }) => {
               justifyContent: 'center',
               boxShadow: 'var(--shadow-cyan)'
             }}>
-              <UploadCloud size={28} style={{ color: 'var(--accent-cyan)' }} />
+              <UploadCloud size={22} style={{ color: 'var(--accent-cyan)' }} />
             </div>
           </div>
 
-          <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px' }}>
+          <div style={{ fontSize: '0.86rem', fontWeight: 700, marginBottom: '3px' }}>
             Drag & drop files here, or <span style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>browse</span>
           </div>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            Supports PDF, DOCX, XLSX, CSV, TXT, MD, JSON, PNG, JPG (Up to 10 files, max 50MB per file)
-          </p>
         </div>
 
         {/* Selected Files Queue */}
         {files.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '8px' }}>
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '5px' }}>
               STAGED FOR INGESTION ({files.length} / 10):
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -293,11 +286,11 @@ export const FileUploader = ({ onUploadSuccess }) => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '8px 14px',
+                    padding: '6px 10px',
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    fontSize: '0.82rem'
+                    borderRadius: '6px',
+                    fontSize: '0.72rem'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -328,8 +321,8 @@ export const FileUploader = ({ onUploadSuccess }) => {
 
         {/* Progress Bar */}
         {uploading && (
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '4px' }}>
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginBottom: '3px' }}>
               <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>PIPELINE: Validating → Parsing → PII Scrubbing → Chunking → Vectorizing...</span>
               <span>{progress}%</span>
             </div>
@@ -346,34 +339,34 @@ export const FileUploader = ({ onUploadSuccess }) => {
 
         {errorMessage && (
           <div style={{
-            padding: '12px 16px',
+            padding: '8px 10px',
             background: 'rgba(255, 0, 85, 0.12)',
             border: '1px solid var(--accent-rose)',
             borderRadius: '8px',
             color: 'var(--accent-rose)',
-            fontSize: '0.82rem',
+            fontSize: '0.72rem',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            marginBottom: '16px'
+            marginBottom: '10px'
           }}>
             <AlertCircle size={16} /> {errorMessage}
           </div>
         )}
 
         {/* Upload Button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
           {files.length > 0 && (
             <button
               type="button"
               onClick={() => setFiles([])}
               style={{
-                padding: '10px 18px',
+                padding: '7px 12px',
                 background: 'transparent',
                 border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 color: 'var(--text-muted)',
-                fontSize: '0.85rem',
+                fontSize: '0.74rem',
                 cursor: 'pointer'
               }}
             >
@@ -386,18 +379,18 @@ export const FileUploader = ({ onUploadSuccess }) => {
             disabled={uploading || files.length === 0}
             className="btn-glow"
             style={{
-              padding: '10px 24px',
+              padding: '7px 14px',
               background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))',
               border: 'none',
               borderRadius: '8px',
               color: '#000',
               fontWeight: 800,
-              fontSize: '0.88rem',
+              fontSize: '0.76rem',
               cursor: files.length > 0 && !uploading ? 'pointer' : 'not-allowed',
               opacity: files.length > 0 && !uploading ? 1 : 0.6,
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '6px'
             }}
           >
             <Sparkles size={16} /> {uploading ? 'INGESTING & VECTORIZING...' : `INGEST ${files.length > 0 ? `(${files.length})` : ''} TO VECTOR STORE`}

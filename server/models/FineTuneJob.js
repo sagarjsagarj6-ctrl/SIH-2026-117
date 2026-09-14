@@ -5,6 +5,7 @@ const fineTuneJobSchema = new mongoose.Schema({
   baseModel: { type: String, required: true },
   department: { type: String, required: true },
   datasetName: { type: String, default: '' },
+  trainingFamily: { type: String, enum: ['LLM_FINE_TUNING', 'CLASSICAL_ML'], default: 'LLM_FINE_TUNING' },
   method: { type: String, enum: ['LoRA', 'QLoRA', 'Full Parameter'], default: 'QLoRA' },
   epochs: { type: Number, default: 3 },
   learningRate: { type: String, default: '2e-4' },
@@ -26,6 +27,7 @@ const fineTuneJobSchema = new mongoose.Schema({
   trainingConfig: { type: mongoose.Schema.Types.Mixed, default: {} },
   datasetPath: { type: String, default: '' },
   validation: { type: mongoose.Schema.Types.Mixed, default: null },
+  evaluationStatus: { type: String, enum: ['NOT_RUN', 'RUNNING', 'PASSED', 'FAILED', 'REVIEW_REQUIRED'], default: 'NOT_RUN' },
   errorMessage: { type: String, default: '' },
   cancelRequested: { type: Boolean, default: false },
   startedAt: { type: Date, default: Date.now },
@@ -41,6 +43,9 @@ const fineTuneJobSchema = new mongoose.Schema({
   isGlobal: { type: Boolean, default: false },
   accessRoles: [{ type: String }],
   deploymentKey: { type: String, default: '' },
+  deploymentStatus: { type: String, enum: ['NOT_DEPLOYED', 'DEPLOYED', 'BLOCKED'], default: 'NOT_DEPLOYED' },
+  deployedAt: { type: Date, default: null },
+  deployedBy: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

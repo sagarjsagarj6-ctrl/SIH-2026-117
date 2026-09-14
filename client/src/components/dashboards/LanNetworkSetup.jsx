@@ -2,15 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   BellRing,
   Check,
-  CheckCircle2,
   Clipboard,
   Copy,
   KeyRound,
   Network,
+  PowerOff,
   RefreshCw,
   Send,
   Server,
   ShieldCheck,
+  Trash2,
   Users,
   Wifi
 } from 'lucide-react';
@@ -55,6 +56,23 @@ const MetricCard = ({ label, value, detail, icon, color = 'var(--accent-cyan)' }
   </div>
 );
 
+const RequirementsMetricCard = () => (
+  <div className="glass-card" style={{ padding: '12px 14px', minHeight: '92px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>SETUP REQUIREMENTS</div>
+      <Check size={17} color="var(--accent-green)" />
+    </div>
+    <div style={{ display: 'grid', gap: '3px' }}>
+      {setupRequirements.map((requirement) => (
+        <div key={requirement} style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', color: 'var(--text-muted)', fontSize: '0.61rem', lineHeight: 1.2 }}>
+          <Check size={11} color="var(--accent-green)" style={{ marginTop: '1px', flexShrink: 0 }} />
+          <span>{requirement}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 export const LanNetworkSetup = () => {
   const { token, API_URL } = useAuth();
   const [form, setForm] = useState(initialForm);
@@ -62,6 +80,8 @@ export const LanNetworkSetup = () => {
   const [createdNetwork, setCreatedNetwork] = useState(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [resending, setResending] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
@@ -73,10 +93,11 @@ export const LanNetworkSetup = () => {
       const response = await fetch(`${API_URL}/networks`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not load LAN networks.');
-      setNetworks(data.networks || []);
+      const loadedNetworks = data.networks || [];
+      setNetworks(loadedNetworks);
       setCreatedNetwork((current) => {
-        if (!current) return current;
-        return (data.networks || []).find((network) => network.networkId === current.networkId) || current;
+        if (current) return loadedNetworks.find((network) => network.networkId === current.networkId) || current;
+        return loadedNetworks.find((network) => network.status === 'Active') || loadedNetworks[0] || null;
       });
     } catch (err) {
       setError(err.message);
@@ -92,6 +113,16 @@ export const LanNetworkSetup = () => {
 
   const totalDevices = useMemo(
     () => networks.reduce((sum, network) => sum + Number(network.connectedDevices || network.members?.length || 0), 0),
+    [networks]
+  );
+  const activeNetworks = useMemo(
+    () => networks.filter((network) => network.status === 'Active'),
+    [networks]
+  );
+  const recentNetworks = useMemo(
+    () => [...networks]
+      .sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime())
+      .slice(0, 3),
     [networks]
   );
   const totalInvites = useMemo(
@@ -170,30 +201,120 @@ export const LanNetworkSetup = () => {
     }
   };
 
+  const resetNetwork = async () => {
+    if (!createdNetwork || createdNetwork.status !== 'Active') return;
+    const connectedCount = Number(createdNetwork.connectedDevices || createdNetwork.members?.length || 0);
+    const confirmed = window.confirm(
+      `Reset ${createdNetwork.name}? This will stop the LAN, disconnect ${connectedCount} device(s), revoke the current access token, and prevent new connections.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setResetting(true);
+      setError('');
+      setNotice('');
+      const identifier = createdNetwork._id || createdNetwork.networkId;
+      const response = await fetch(`${API_URL}/networks/${identifier}/reset`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not reset the LAN.');
+
+      setCreatedNetwork(data.network);
+      setNetworks((current) => current.map((network) => (
+        network.networkId === data.network.networkId ? data.network : network
+      )));
+      setCopied(false);
+      setNotice(data.message);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const removeNetwork = async () => {
+    if (!createdNetwork) return;
+    const connectedCount = Number(createdNetwork.connectedDevices || createdNetwork.members?.length || 0);
+    const confirmed = window.confirm(
+      `Remove ${createdNetwork.name} permanently? This will disconnect ${connectedCount} device(s), revoke its token, and delete the LAN record.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setRemoving(true);
+      setError('');
+      setNotice('');
+      const identifier = createdNetwork._id || createdNetwork.networkId;
+      const response = await fetch(`${API_URL}/networks/${identifier}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not remove the LAN.');
+
+      setNetworks((current) => current.filter((network) => network.networkId !== data.removedNetworkId));
+      setCreatedNetwork(null);
+      setCopied(false);
+      setNotice(data.message);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1420px', margin: '0 auto', padding: '22px 14px 40px', color: 'var(--text-main)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(320px, 0.9fr)', alignItems: 'start', gap: '18px', marginBottom: '16px' }}>
         <div>
-          <div className="badge badge-cyan" style={{ marginBottom: '10px' }}><Network size={13} /> ADMIN / LAN CONTROL</div>
-          <h1 style={{ fontSize: 'clamp(1.55rem, 3vw, 2.25rem)', margin: '0 0 7px', fontWeight: 800 }}>Private LAN Setup</h1>
-          <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '720px', lineHeight: 1.5, fontSize: '0.86rem' }}>
-            Establish an isolated enterprise network, configure its perimeter, and securely invite existing managers and employees with one generated access token.
-          </p>
+          <h1 style={{ fontSize: 'clamp(1.55rem, 3vw, 2.0rem)', margin: '0 0 7px', fontWeight: 500 }}>Private LAN Setup</h1>
         </div>
-        <div className="glass-card" style={{ padding: '12px 15px', minWidth: '220px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: 'var(--accent-green)', fontSize: '0.71rem', fontWeight: 700 }}>
-            <span className="pulse-live" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-green)' }} />
-            AIR-GAPPED PERIMETER SECURE
+        <div className="glass-panel" style={{ padding: '13px 14px', border: accessToken ? '1px solid rgba(57,255,20,0.42)' : undefined }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <KeyRound size={17} color={accessToken ? 'var(--accent-green)' : 'var(--accent-cyan)'} />
+            <div>
+              <h2 style={{ fontSize: '0.95rem', margin: 0 }}>Secure access token</h2>
+            </div>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.68rem', marginTop: '6px' }}>Admin-only provisioning surface</div>
+          {accessToken ? (
+            <>
+              <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(57,255,20,0.28)', borderRadius: '8px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                <code className="mono" style={{ color: 'var(--accent-green)', fontSize: '0.9rem', letterSpacing: '0.06em', overflowWrap: 'anywhere' }}>{accessToken}</code>
+                <button className="btn-secondary" type="button" onClick={copyToken} title="Copy LAN access token" style={{ padding: '6px 8px', flexShrink: 0 }}>
+                  {copied ? <Check size={14} color="var(--accent-green)" /> : <Copy size={14} />}
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px', marginTop: '8px' }}>
+                <div style={{ padding: '7px 8px', borderRadius: '7px', background: 'rgba(6,182,212,0.07)' }}><div style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>CONNECTED</div><strong style={{ fontSize: '0.78rem' }}>{createdNetwork.connectedDevices || createdNetwork.members?.length || 0} / {createdNetwork.deviceCapacity || createdNetwork.maxDevices}</strong></div>
+                <div style={{ padding: '7px 8px', borderRadius: '7px', background: 'rgba(245,158,11,0.07)' }}><div style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>INVITATIONS</div><strong style={{ fontSize: '0.78rem' }}>{createdNetwork.inviteCount || 0} delivered</strong></div>
+              </div>
+              <button className="btn-secondary" type="button" onClick={resendInvitations} disabled={resending} style={{ width: '100%', marginTop: '8px', padding: '6px 8px', fontSize: '0.68rem' }}>
+                <Send size={13} /> {resending ? 'Resending invitations...' : 'Resend to managers & employees'}
+              </button>
+              <button className="btn-secondary" type="button" onClick={resetNetwork} disabled={resetting} style={{ width: '100%', marginTop: '6px', padding: '6px 8px', fontSize: '0.68rem', color: 'var(--accent-rose)' }}>
+                <PowerOff size={13} /> {resetting ? 'Stopping LAN & disconnecting devices...' : 'Reset LAN & disconnect all devices'}
+              </button>
+            </>
+          ) : createdNetwork?.status === 'Stopped' ? (
+            <div style={{ border: '1px solid rgba(244,63,94,0.3)', borderRadius: '8px', padding: '12px 10px', color: '#fb7185', fontSize: '0.68rem', lineHeight: 1.35 }}>
+              This LAN is stopped. All devices were disconnected and its previous access token was revoked.
+            </div>
+          ) : (
+            <div style={{ border: '1px dashed var(--border-color)', borderRadius: '8px', padding: '12px 10px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: 1.35 }}>
+              <Clipboard size={18} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />
+              <div>Your one-time setup token will appear here after the LAN is created.</div>
+            </div>
+          )}
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-        <MetricCard label="ACTIVE PRIVATE LANS" value={networks.length} detail="Admin-managed network segments" icon={<Network size={17} />} />
+        <MetricCard label="ACTIVE PRIVATE LANS" value={activeNetworks.length} detail="Admin-managed network segments" icon={<Network size={17} />} />
         <MetricCard label="CONNECTED DEVICES" value={totalDevices} detail="Across all active LANs" icon={<Users size={17} />} color="var(--accent-green)" />
         <MetricCard label="INVITATIONS DISPATCHED" value={totalInvites} detail="Manager and employee delivery queue" icon={<BellRing size={17} />} color="var(--accent-amber)" />
-        <MetricCard label="ISOLATION POSTURE" value="100%" detail="Private IPv4 / local-only routing" icon={<ShieldCheck size={17} />} color="var(--accent-purple)" />
+        <RequirementsMetricCard />
       </div>
 
       {(error || notice) && (
@@ -202,7 +323,7 @@ export const LanNetworkSetup = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(320px, 0.9fr)', gap: '18px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '18px', alignItems: 'start' }}>
         <form onSubmit={handleCreate} className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '18px' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '9px', display: 'grid', placeItems: 'center', background: 'rgba(6,182,212,0.13)', color: 'var(--accent-cyan)' }}><Server size={17} /></div>
@@ -276,61 +397,26 @@ export const LanNetworkSetup = () => {
           </div>
         </form>
 
-        <div style={{ display: 'grid', gap: '18px' }}>
-          <div className="glass-panel" style={{ padding: '20px', border: accessToken ? '1px solid rgba(57,255,20,0.42)' : undefined }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '15px' }}>
-              <KeyRound size={18} color={accessToken ? 'var(--accent-green)' : 'var(--accent-cyan)'} />
-              <div>
-                <h2 style={{ fontSize: '1.05rem', margin: 0 }}>Secure access token</h2>
-                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '3px' }}>Generated after LAN creation and dispatched in-app.</div>
-              </div>
-            </div>
-            {accessToken ? (
-              <>
-                <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(57,255,20,0.28)', borderRadius: '10px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                  <code className="mono" style={{ color: 'var(--accent-green)', fontSize: '1.08rem', letterSpacing: '0.08em', overflowWrap: 'anywhere' }}>{accessToken}</code>
-                  <button className="btn-secondary" type="button" onClick={copyToken} title="Copy LAN access token" style={{ padding: '7px 9px', flexShrink: 0 }}>
-                    {copied ? <Check size={15} color="var(--accent-green)" /> : <Copy size={15} />}
-                  </button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', marginTop: '13px' }}>
-                  <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(6,182,212,0.07)' }}><div style={{ fontSize: '0.64rem', color: 'var(--text-muted)' }}>CONNECTED</div><strong>{createdNetwork.connectedDevices || createdNetwork.members?.length || 0} / {createdNetwork.deviceCapacity || createdNetwork.maxDevices}</strong></div>
-                  <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(245,158,11,0.07)' }}><div style={{ fontSize: '0.64rem', color: 'var(--text-muted)' }}>INVITATIONS</div><strong>{createdNetwork.inviteCount || 0} delivered</strong></div>
-                </div>
-                <button className="btn-secondary" type="button" onClick={resendInvitations} disabled={resending} style={{ width: '100%', marginTop: '12px', fontSize: '0.75rem' }}>
-                  <Send size={14} /> {resending ? 'Resending invitations...' : 'Resend to managers & employees'}
-                </button>
-              </>
-            ) : (
-              <div style={{ border: '1px dashed var(--border-color)', borderRadius: '10px', padding: '24px 15px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>
-                <Clipboard size={22} color="var(--accent-cyan)" style={{ marginBottom: '7px' }} />
-                <div>Your one-time setup token will appear here after the LAN is created.</div>
-              </div>
-            )}
-          </div>
-
-          <div className="glass-card" style={{ padding: '18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><CheckCircle2 size={17} color="var(--accent-green)" /><h3 style={{ margin: 0, fontSize: '0.95rem' }}>Setup requirements</h3></div>
-            <div style={{ display: 'grid', gap: '9px' }}>
-              {setupRequirements.map((requirement) => <div key={requirement} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: 'var(--text-muted)', fontSize: '0.72rem', lineHeight: 1.35 }}><Check size={14} color="var(--accent-green)" style={{ marginTop: '1px', flexShrink: 0 }} />{requirement}</div>)}
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="glass-panel" style={{ padding: '20px', marginTop: '18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '13px', flexWrap: 'wrap' }}>
-          <div><h2 style={{ margin: 0, fontSize: '1.05rem' }}>LAN device dashboard</h2><div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>Connected endpoints and invite delivery across managed private networks.</div></div>
-          <button className="btn-secondary" type="button" onClick={fetchNetworks} disabled={loading} style={{ padding: '7px 11px', fontSize: '0.72rem' }}><RefreshCw size={14} className={loading ? 'spin-animation' : ''} /> Refresh dashboard</button>
+          <div><h2 style={{ margin: 0, fontSize: '1.05rem' }}>Recent LAN devices</h2><div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>Showing the three most recently created private LANs.</div></div>
+          <div style={{ display: 'flex', gap: '7px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn-secondary" type="button" onClick={removeNetwork} disabled={!createdNetwork || removing || loading} style={{ padding: '7px 11px', fontSize: '0.72rem', color: 'var(--accent-rose)' }} title="Remove the selected LAN permanently">
+              <Trash2 size={14} /> {removing ? 'Removing...' : 'Remove selected LAN'}
+            </button>
+            <button className="btn-secondary" type="button" onClick={fetchNetworks} disabled={loading || removing} style={{ padding: '7px 11px', fontSize: '0.72rem' }}><RefreshCw size={14} className={loading ? 'spin-animation' : ''} /> Refresh dashboard</button>
+          </div>
         </div>
-        {networks.length === 0 ? (
+        {recentNetworks.length === 0 ? (
           <div style={{ padding: '22px', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '10px', fontSize: '0.75rem' }}>No private LANs have been created yet.</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '11px' }}>
-            {networks.map((network) => {
+            {recentNetworks.map((network) => {
               const isSelected = createdNetwork?.networkId === network.networkId;
               return <button key={network.networkId} type="button" onClick={() => setCreatedNetwork(network)} style={{ textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', background: isSelected ? 'rgba(6,182,212,0.09)' : 'rgba(255,255,255,0.025)', border: `1px solid ${isSelected ? 'rgba(6,182,212,0.4)' : 'var(--border-color)'}`, borderRadius: '10px', padding: '13px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}><strong style={{ fontSize: '0.82rem' }}>{network.name}</strong><span className="badge badge-green" style={{ fontSize: '0.58rem' }}>{network.status}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}><strong style={{ fontSize: '0.82rem' }}>{network.name}</strong><span className={`badge ${network.status === 'Active' ? 'badge-green' : 'badge-rose'}`} style={{ fontSize: '0.58rem' }}>{network.status}</span></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '11px', fontSize: '0.68rem', color: 'var(--text-muted)' }}><span><Wifi size={12} style={{ verticalAlign: 'middle' }} /> {network.connectedDevices || network.members?.length || 0} connected</span><span><Users size={12} style={{ verticalAlign: 'middle' }} /> {network.deviceCapacity || network.maxDevices} capacity</span></div>
                 <div className="mono" style={{ fontSize: '0.63rem', color: 'var(--text-dim)', marginTop: '9px' }}>{network.subnet} · {network.encryption}</div>
               </button>;

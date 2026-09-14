@@ -125,6 +125,7 @@ router.post('/query', authenticateToken, async (req, res) => {
       confidence,
       modelUsed: result.inference?.modelUsed || message.payload?.metadata?.modelUsed,
       liveModelResponse: Boolean(result.inference?.live),
+      answerMode: result.answerMode || (result.inference?.live ? 'LIVE_MODEL' : 'EVIDENCE_ONLY'),
       runtimeError: result.inference?.error || null,
       executionTimeMs,
       registryPath: true

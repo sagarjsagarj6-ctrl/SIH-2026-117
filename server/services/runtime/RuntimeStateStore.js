@@ -1,7 +1,14 @@
 import RuntimeRecord from '../../models/RuntimeRecord.js';
 import { state } from '../../config/db.js';
 
-const PERSISTED_COLLECTIONS = ['networks', 'notifications', 'workflowRequests', 'aiHandoffEvents'];
+const PERSISTED_COLLECTIONS = [
+  'networks',
+  'notifications',
+  'workflowRequests',
+  'aiHandoffEvents',
+  'imageModelJobs',
+  'imageModelUploads'
+];
 
 const recordIdFor = (collection, payload) => String(payload?._id || payload?.id || `${collection}_${Date.now()}`);
 

@@ -6,6 +6,9 @@ import { RAGAgent } from './specialists/RAGAgent.js';
 import { DataScienceAgent } from './specialists/DataScienceAgent.js';
 import { VisionAgent } from './specialists/VisionAgent.js';
 import { ReportingAgent } from './specialists/ReportingAgent.js';
+import { HardwareManualAgent } from './specialists/HardwareManualAgent.js';
+import { ImageAnalysisAgent } from './specialists/ImageAnalysisAgent.js';
+import { ComparisonPredictionAgent } from './specialists/ComparisonPredictionAgent.js';
 
 class AgentRegistryService {
   constructor() {
@@ -77,6 +80,48 @@ class AgentRegistryService {
         'Confidential watermark governance'
       ],
       description: 'Compiles multi-agent analytical outputs into structured, watermarked executive reports.'
+    });
+
+    const hardwareManual = new HardwareManualAgent();
+    this.register('HARDWARE_MANUAL', hardwareManual, {
+      id: 'HARDWARE_MANUAL',
+      name: 'Hardware Manual Agent',
+      category: 'Image Model Team',
+      defaultModel: hardwareManual.defaultModel,
+      capabilities: [
+        'Retrieve Admin-trained hardware manuals',
+        'Match labeled training images',
+        'Return catalog-backed part specifications'
+      ],
+      description: 'Searches the image-model catalog of company hardware manuals and labeled images.'
+    });
+
+    const imageAnalysis = new ImageAnalysisAgent();
+    this.register('IMAGE_ANALYSIS', imageAnalysis, {
+      id: 'IMAGE_ANALYSIS',
+      name: 'Image Analysis Agent',
+      category: 'Image Model Team',
+      defaultModel: imageAnalysis.defaultModel,
+      capabilities: [
+        'Local image OCR and metadata inspection',
+        'Structured feature cards (category, metal, lifespan)',
+        'Evidence-first findings with empty unknown fields'
+      ],
+      description: 'Processes a camera or gallery image into key hardware findings.'
+    });
+
+    const imageCompare = new ComparisonPredictionAgent();
+    this.register('IMAGE_COMPARE', imageCompare, {
+      id: 'IMAGE_COMPARE',
+      name: 'Comparison & Prediction Agent',
+      category: 'Image Model Team',
+      defaultModel: imageCompare.defaultModel,
+      capabilities: [
+        'Compare image findings with catalog matches',
+        'Rank predictions for the user query',
+        'Report disagreements instead of fabricating specs'
+      ],
+      description: 'Compares vision findings with trained manuals and answers the user query.'
     });
   }
 

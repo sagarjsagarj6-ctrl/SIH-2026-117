@@ -106,9 +106,15 @@ async function runCategoryBTests() {
   assert(Boolean(visionAgent), 'VISION agent must be registered');
   const reportAgent = AgentRegistry.getAgent('REPORTING');
   assert(Boolean(reportAgent), 'REPORTING agent must be registered');
+  const hardwareManualAgent = AgentRegistry.getAgent('HARDWARE_MANUAL');
+  assert(Boolean(hardwareManualAgent), 'HARDWARE_MANUAL agent must be registered');
+  const imageAnalysisAgent = AgentRegistry.getAgent('IMAGE_ANALYSIS');
+  assert(Boolean(imageAnalysisAgent), 'IMAGE_ANALYSIS agent must be registered');
+  const imageCompareAgent = AgentRegistry.getAgent('IMAGE_COMPARE');
+  assert(Boolean(imageCompareAgent), 'IMAGE_COMPARE agent must be registered');
   const list = AgentRegistry.listAgents();
-  assert(list.length === 4, 'Registry should list exactly 4 specialist agents');
-  console.log(`✓ AgentRegistry PASSED (${list.length} specialist agents registered: RAG, DATA_SCIENCE, VISION, REPORTING)`);
+  assert(list.length === 7, 'Registry should list all 7 specialist agents');
+  console.log(`✓ AgentRegistry PASSED (${list.length} specialist agents registered: RAG, DATA_SCIENCE, VISION, REPORTING, HARDWARE_MANUAL, IMAGE_ANALYSIS, IMAGE_COMPARE)`);
 
   const mockUser = {
     name: 'Test Analyst',

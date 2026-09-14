@@ -3,7 +3,7 @@ import { useHardware } from '../context/HardwareContext';
 import { ShieldCheck, Building2, Cpu, LogOut, RefreshCw } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 
-export const Header = ({ onChangeHardware }) => {
+export const Header = ({ onChangeHardware, onNavigate }) => {
   const { user, logout } = useAuth();
   const { activeProfile } = useHardware();
 
@@ -121,7 +121,7 @@ export const Header = ({ onChangeHardware }) => {
           {departmentAgent}
         </div>
 
-        <NotificationBell />
+        <NotificationBell onNavigate={onNavigate} />
 
         {/* User Avatar & Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '4px' }}>

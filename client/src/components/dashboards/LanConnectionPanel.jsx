@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Bell, Check, CheckCircle2, KeyRound, Network, RefreshCw, ShieldCheck, Users, Wifi } from 'lucide-react';
+import { Bell, Check, KeyRound, Network, RefreshCw, ShieldCheck, Users, Wifi } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const LanConnectionPanel = () => {
@@ -78,68 +78,66 @@ export const LanConnectionPanel = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1220px', margin: '0 auto', padding: '22px 14px 40px', color: 'var(--text-main)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap', marginBottom: '24px' }}>
+    <div style={{ maxWidth: '1220px', width: '100%', height: '100%', boxSizing: 'border-box', margin: '0 auto', padding: '14px 14px 18px', color: 'var(--text-main)', overflow: 'auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'start', gap: '12px', marginBottom: '14px' }}>
         <div>
-          <div className="badge badge-cyan" style={{ marginBottom: '10px' }}><Network size={13} /> SECURE NETWORK ACCESS</div>
-          <h1 style={{ fontSize: 'clamp(1.55rem, 3vw, 2.25rem)', margin: '0 0 7px', fontWeight: 800 }}>Connect to LAN</h1>
-          <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '690px', lineHeight: 1.5, fontSize: '0.86rem' }}>
-            Use the token sent by your administrator to join an approved private LAN. Your device will appear in the admin connectivity dashboard after verification.
-          </p>
+          <div className="badge badge-cyan" style={{ marginBottom: '5px', fontSize: '0.6rem', padding: '4px 7px' }}><Network size={12} /> SECURE NETWORK ACCESS</div>
+          <h1 style={{ fontSize: '1.35rem', margin: 0, fontWeight: 800 }}>Connect to LAN</h1>
         </div>
-        <div className="glass-card" style={{ padding: '12px 15px', minWidth: '205px' }}>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>SIGNED-IN IDENTITY</div>
-          <div style={{ fontWeight: 800, marginTop: '4px', fontSize: '0.82rem' }}>{user?.name}</div>
-          <div style={{ color: 'var(--accent-cyan)', fontSize: '0.66rem', marginTop: '3px' }}>{user?.role} · {user?.department}</div>
+        <div className="glass-card" style={{ padding: '9px 12px', minWidth: '180px' }}>
+          <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>SIGNED-IN IDENTITY</div>
+          <div style={{ fontWeight: 800, marginTop: '3px', fontSize: '0.76rem' }}>{user?.name}</div>
+          <div style={{ color: 'var(--accent-cyan)', fontSize: '0.62rem', marginTop: '2px' }}>{user?.role} · {user?.department}</div>
         </div>
       </div>
 
-      {(error || notice) && <div style={{ padding: '11px 13px', borderRadius: '10px', marginBottom: '16px', background: error ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.12)', border: `1px solid ${error ? 'rgba(244,63,94,0.35)' : 'rgba(16,185,129,0.35)'}`, color: error ? '#fb7185' : '#6ee7b7', fontSize: '0.76rem' }}>{error || notice}</div>}
+      {(error || notice) && <div style={{ padding: '8px 10px', borderRadius: '8px', marginBottom: '9px', background: error ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.12)', border: `1px solid ${error ? 'rgba(244,63,94,0.35)' : 'rgba(16,185,129,0.35)'}`, color: error ? '#fb7185' : '#6ee7b7', fontSize: '0.68rem' }}>{error || notice}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 0.85fr) minmax(340px, 1.15fr)', gap: '18px', alignItems: 'start' }}>
-        <form onSubmit={handleJoin} className="glass-panel" style={{ padding: '21px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '17px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '9px', display: 'grid', placeItems: 'center', background: 'rgba(99,102,241,0.14)', color: 'var(--accent-indigo)' }}><KeyRound size={17} /></div>
-            <div><h2 style={{ fontSize: '1.05rem', margin: 0 }}>Enter invitation token</h2><div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '3px' }}>Tokens are case-insensitive and validated locally.</div></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', alignItems: 'stretch' }}>
+        <form onSubmit={handleJoin} className="glass-panel" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '8px', display: 'grid', placeItems: 'center', background: 'rgba(99,102,241,0.14)', color: 'var(--accent-indigo)' }}><KeyRound size={15} /></div>
+            <div><h2 style={{ fontSize: '0.92rem', margin: 0 }}>Enter invitation token</h2></div>
           </div>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            <span style={{ fontSize: '0.73rem', fontWeight: 700, color: 'var(--text-muted)' }}>LAN ACCESS TOKEN</span>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-muted)' }}>LAN ACCESS TOKEN</span>
             <input className="form-input mono" value={tokenInput} onChange={(event) => setTokenInput(event.target.value.toUpperCase())} placeholder="LAN-XXXXX-XXXXX" autoComplete="off" />
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', margin: '13px 0', color: 'var(--text-dim)', fontSize: '0.67rem' }}><span style={{ height: '1px', background: 'var(--border-color)', flex: 1 }} />OR NETWORK ID<span style={{ height: '1px', background: 'var(--border-color)', flex: 1 }} /></div>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            <span style={{ fontSize: '0.73rem', fontWeight: 700, color: 'var(--text-muted)' }}>NETWORK ID <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>(optional)</span></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '9px 0', color: 'var(--text-dim)', fontSize: '0.62rem' }}><span style={{ height: '1px', background: 'var(--border-color)', flex: 1 }} />OR NETWORK ID<span style={{ height: '1px', background: 'var(--border-color)', flex: 1 }} /></div>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-muted)' }}>NETWORK ID <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>(optional)</span></span>
             <input className="form-input mono" value={networkIdInput} onChange={(event) => setNetworkIdInput(event.target.value)} placeholder="lan-xxxxxx" autoComplete="off" />
           </label>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', background: 'rgba(6,182,212,0.06)', borderRadius: '9px', marginTop: '17px', color: 'var(--text-muted)', fontSize: '0.69rem', lineHeight: 1.4 }}><ShieldCheck size={15} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />Only use tokens delivered through the Sovereign AI notification channel. Do not forward tokens outside approved enterprise users.</div>
-          <button className="btn-primary" type="submit" disabled={joining} style={{ width: '100%', marginTop: '17px' }}><Wifi size={16} /> {joining ? 'Verifying connection...' : 'Connect to private LAN'}</button>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', padding: '8px', background: 'rgba(6,182,212,0.06)', borderRadius: '7px', marginTop: '11px', color: 'var(--text-muted)', fontSize: '0.64rem', lineHeight: 1.3 }}><ShieldCheck size={14} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />Only use tokens delivered through the Sovereign AI notification channel. Do not forward tokens outside approved enterprise users.</div>
+          <button className="btn-primary" type="submit" disabled={joining} style={{ width: '100%', marginTop: '11px', padding: '7px 10px', fontSize: '0.72rem' }}><Wifi size={14} /> {joining ? 'Verifying connection...' : 'Connect to private LAN'}</button>
         </form>
 
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-            <div><h2 style={{ margin: 0, fontSize: '1.05rem' }}>Invitations & notices</h2><div style={{ color: 'var(--text-muted)', fontSize: '0.68rem', marginTop: '4px' }}>LAN tokens sent to your role appear here.</div></div>
-            <button className="btn-secondary" type="button" onClick={fetchConnectionData} disabled={loading} title="Refresh invitations" style={{ padding: '7px 9px' }}><RefreshCw size={14} className={loading ? 'spin-animation' : ''} /></button>
+        <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', gap: '10px', height: '100%' }}>
+          <div className="glass-panel" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '9px' }}>
+            <div><h2 style={{ margin: 0, fontSize: '0.92rem' }}>Invitations & notices</h2></div>
+            <button className="btn-secondary" type="button" onClick={fetchConnectionData} disabled={loading} title="Refresh invitations" style={{ padding: '5px 7px' }}><RefreshCw size={13} className={loading ? 'spin-animation' : ''} /></button>
           </div>
           {notifications.length === 0 ? (
-            <div style={{ padding: '26px 14px', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: '10px', color: 'var(--text-muted)', fontSize: '0.74rem', lineHeight: 1.5 }}><Bell size={23} color="var(--accent-cyan)" style={{ marginBottom: '7px' }} /><div>No pending LAN invitations.</div><div>Ask an admin to create or resend access for your team.</div></div>
+            <div style={{ padding: '16px 10px', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '0.68rem' }}><Bell size={19} color="var(--accent-cyan)" style={{ marginBottom: '5px' }} /><div>No pending LAN invitations.</div></div>
           ) : (
-            <div style={{ display: 'grid', gap: '10px', maxHeight: '330px', overflowY: 'auto' }}>
-              {notifications.map((notification) => <div key={notification._id} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${notification.read ? 'var(--border-color)' : 'rgba(6,182,212,0.38)'}`, background: notification.read ? 'rgba(255,255,255,0.02)' : 'rgba(6,182,212,0.06)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '9px', alignItems: 'flex-start' }}><strong style={{ fontSize: '0.76rem' }}>{notification.title}</strong>{!notification.read && <span className="badge badge-cyan" style={{ fontSize: '0.56rem' }}>NEW</span>}</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: 1.4, margin: '7px 0 10px' }}>{notification.message}</div>
-                <button className="btn-secondary" type="button" onClick={() => handleInvitation(notification)} style={{ padding: '6px 9px', fontSize: '0.66rem' }}><KeyRound size={13} /> Use token & connect</button>
+            <div style={{ display: 'grid', gap: '6px', maxHeight: '240px', overflowY: 'auto' }}>
+              {notifications.map((notification) => <div key={notification._id} style={{ padding: '9px', borderRadius: '8px', border: `1px solid ${notification.read ? 'var(--border-color)' : 'rgba(6,182,212,0.38)'}`, background: notification.read ? 'rgba(255,255,255,0.02)' : 'rgba(6,182,212,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '7px', alignItems: 'flex-start' }}><strong style={{ fontSize: '0.68rem' }}>{notification.title}</strong>{!notification.read && <span className="badge badge-cyan" style={{ fontSize: '0.52rem' }}>NEW</span>}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.62rem', lineHeight: 1.3, margin: '5px 0 7px' }}>{notification.message}</div>
+                <button className="btn-secondary" type="button" onClick={() => handleInvitation(notification)} style={{ padding: '5px 7px', fontSize: '0.6rem' }}><KeyRound size={12} /> Use token & connect</button>
               </div>)}
             </div>
           )}
+          </div>
+
+          <div className="glass-panel" style={{ padding: '12px' }}>
+            <div style={{ marginBottom: '8px' }}><h2 style={{ margin: 0, fontSize: '0.92rem' }}>Connected private LANs</h2></div>
+            {networks.length === 0 ? <div style={{ padding: '14px', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '8px', fontSize: '0.68rem' }}>No active LAN connection yet.</div> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '7px' }}>{networks.map((network) => <div key={network.networkId} className="glass-card" style={{ padding: '10px' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: '7px', alignItems: 'center' }}><strong style={{ fontSize: '0.74rem' }}>{network.name}</strong><span className="badge badge-green" style={{ fontSize: '0.52rem' }}><Check size={10} /> CONNECTED</span></div><div style={{ color: 'var(--text-muted)', fontSize: '0.62rem', marginTop: '7px', display: 'grid', gap: '4px' }}><span><Users size={12} style={{ verticalAlign: 'middle' }} /> {network.connectedDevices || network.members?.length || 0} devices connected</span><span><Network size={12} style={{ verticalAlign: 'middle' }} /> {network.subnet} · {network.isolationMode}</span><span><ShieldCheck size={12} style={{ verticalAlign: 'middle' }} /> {network.encryption} · {network.leaseDuration}</span></div></div>)}</div>}
+          </div>
         </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '20px', marginTop: '18px' }}>
-        <div style={{ marginBottom: '13px' }}><h2 style={{ margin: 0, fontSize: '1.05rem' }}>Connected private LANs</h2><div style={{ color: 'var(--text-muted)', fontSize: '0.68rem', marginTop: '4px' }}>Your current device memberships and available capacity.</div></div>
-        {networks.length === 0 ? <div style={{ padding: '22px', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '10px', fontSize: '0.74rem' }}>No active LAN connection yet.</div> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(255px, 1fr))', gap: '11px' }}>{networks.map((network) => <div key={network.networkId} className="glass-card" style={{ padding: '14px' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: '9px', alignItems: 'center' }}><strong style={{ fontSize: '0.82rem' }}>{network.name}</strong><span className="badge badge-green" style={{ fontSize: '0.56rem' }}><Check size={11} /> CONNECTED</span></div><div style={{ color: 'var(--text-muted)', fontSize: '0.68rem', marginTop: '10px', display: 'grid', gap: '6px' }}><span><Users size={13} style={{ verticalAlign: 'middle' }} /> {network.connectedDevices || network.members?.length || 0} devices connected</span><span><Network size={13} style={{ verticalAlign: 'middle' }} /> {network.subnet} · {network.isolationMode}</span><span><ShieldCheck size={13} style={{ verticalAlign: 'middle' }} /> {network.encryption} · {network.leaseDuration}</span></div></div>)}</div>}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', color: 'var(--text-dim)', fontSize: '0.66rem', marginTop: '18px' }}><CheckCircle2 size={14} color="var(--accent-green)" /> Connection events are recorded in the enterprise audit trail.</div>
     </div>
   );
 };

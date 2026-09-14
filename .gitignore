@@ -24,6 +24,7 @@ pnpm-debug.log*
 logs/
 **/logs/
 server/data/training/
+server/data/image-models/
 
 # IDE & OS files
 .vscode/

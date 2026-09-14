@@ -16,6 +16,9 @@ import inferenceRoutes from './routes/inferenceRoutes.js';
 import networkRoutes from './routes/networkRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import workflowRoutes from './routes/workflowRoutes.js';
+import playgroundRoutes from './routes/playgroundRoutes.js';
+import imageModelRoutes from './routes/imageModelRoutes.js';
+import { TriggerManager } from './services/playground/TriggerManager.js';
 import { seedInitialData } from './seed.js';
 import { VectorIndexManager } from './services/knowledge/VectorIndexManager.js';
 import { ensureRAGFixtures } from './services/knowledge/ensureRAGFixtures.js';
@@ -124,6 +127,7 @@ try {
 }
 
 startupState.ready = true;
+TriggerManager.start();
 
 // Health Check & Real-Time Environment Diagnostic
 app.get('/api/health', (req, res) => {
@@ -174,13 +178,15 @@ app.use('/api/inference', inferenceRoutes);
 app.use('/api/networks', networkRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/workflows', workflowRoutes);
+app.use('/api/playground', playgroundRoutes);
+app.use('/api/image-models', imageModelRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
   const requestId = req.requestId || 'unknown';
   const status = err.type === 'entity.too.large' || err.code === 'LIMIT_FILE_SIZE'
     ? 413
-    : err.code === 'UNSUPPORTED_FILE_TYPE' || err.code === 'LIMIT_UNEXPECTED_FILE'
+    : err.code === 'UNSUPPORTED_FILE_TYPE' || err.code === 'IMAGE_REQUIRED' || err.code === 'LIMIT_UNEXPECTED_FILE'
       ? 400
       : err.message === 'CORS origin is not allowed by the server policy.'
         ? 403

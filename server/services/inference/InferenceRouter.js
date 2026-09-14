@@ -34,6 +34,10 @@ export class InferenceRouter {
       vllm: vllm ? 'ONLINE' : 'STOPPED',
       llamacpp: llamacpp ? 'ONLINE' : 'STOPPED',
       primaryBackend: vllm ? 'VLLM' : ollama ? 'Ollama' : llamacpp ? 'LlamaCpp' : 'IntelligentFallback',
+      // Compatibility status used by the diagnostics/test surface. The router
+      // itself is always available; this distinguishes live model service from
+      // the no-model fallback path.
+      sovereignEngine: vllm || ollama || llamacpp ? 'ACTIVE_PRIMARY' : 'FALLBACK_ONLY',
       dataPrivacy: 'VERIFIED_SOVEREIGN',
       externalAPIs: 'NONE'
     };

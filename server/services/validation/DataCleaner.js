@@ -31,7 +31,10 @@ export class DataCleaner {
     CVV: /\b(?:CVV|CVC|CVV2|CID)[:\s#-]*\d{3,4}\b/gi,
     EMAIL: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,24}\b/g,
     PHONE: /\b(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/g,
-    ADDRESS: /\b\d{1,5}[A-Za-z]?\s+[A-Za-z0-9.'-]+(?:\s+[A-Za-z0-9.'-]+){0,4}\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct)\.?(?:\s*,?\s*(?:[A-Za-z.\s]+))?(?:\s+\d{5}(?:-\d{4})?)?\b/gi,
+    // Match the street portion independently of an optional city/postcode.
+    // Keeping the suffix optional avoids losing valid addresses when punctuation
+    // or a non-US postcode follows the street name.
+    ADDRESS: /\b\d{1,5}[A-Za-z]?\s+[A-Za-z0-9.'-]+(?:\s+[A-Za-z0-9.'-]+){0,2}\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct)\b/gi,
     PATIENT_ID: /\b(?:Patient(?:\s*ID)?|PAT(?:IENT)?[-\s]?ID|MRN)[:\s#-]*[A-Z0-9-]{4,20}\b/gi,
     MEDICAL_RECORD: /\b(?:Medical\s+Record(?:\s+Number)?|ICD-10|Diagnosis|Rx)[:\s#-]+[A-Za-z0-9][A-Za-z0-9 ./-]{2,40}\b/gi,
     PERSON_NAME: /\b(?:(?:Mr|Mrs|Ms|Miss|Dr|Prof)\.?\s+)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}\b/g

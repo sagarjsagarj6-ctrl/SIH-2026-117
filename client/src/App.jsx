@@ -8,13 +8,13 @@ import { FloatingThemeSelector } from './components/FloatingThemeSelector';
 import { EmployeeWorkspace } from './components/dashboards/EmployeeWorkspace';
 import { ManagerDashboard } from './components/dashboards/ManagerDashboard';
 import { AdminDashboard } from './components/dashboards/AdminDashboard';
-import { ModelManagementCenter } from './components/dashboards/ModelManagementCenter';
 import { DataFoundationDashboard } from './components/dashboards/DataFoundationDashboard';
 import { IntelligenceDashboard } from './components/dashboards/IntelligenceDashboard';
 import { AuditorDashboard } from './components/dashboards/AuditorDashboard';
 import { AgentCommunicationWorkflow } from './components/agents/AgentCommunicationWorkflow';
 import { LanNetworkSetup } from './components/dashboards/LanNetworkSetup';
 import { LanConnectionPanel } from './components/dashboards/LanConnectionPanel';
+import { CreationPlayground } from './components/playground/CreationPlayground';
 import { useAuth } from './context/AuthContext';
 import { useHardware } from './context/HardwareContext';
 
@@ -27,7 +27,7 @@ export default function App() {
   useEffect(() => {
     if (user) {
       if (user.role === 'Employee') {
-        if (activeTab !== 'workspace' && activeTab !== 'data-foundation' && activeTab !== 'connect-lan') {
+        if (activeTab !== 'workspace' && activeTab !== 'data-foundation' && activeTab !== 'creation-playground' && activeTab !== 'connect-lan') {
           setActiveTab('workspace');
         }
       } else if (user.role === 'Manager' && (activeTab === 'admin-governance' || activeTab === 'lan-setup')) {
@@ -95,6 +95,8 @@ export default function App() {
         return <DataFoundationDashboard />;
       case 'intelligence-layer':
         return <IntelligenceDashboard />;
+      case 'creation-playground':
+        return <CreationPlayground />;
       case 'agent-communication':
         return <AgentCommunicationWorkflow />;
       case 'manager-analytics':
@@ -105,8 +107,6 @@ export default function App() {
         return user.role === 'Admin' ? <LanNetworkSetup /> : <EmployeeWorkspace />;
       case 'connect-lan':
         return (user.role === 'Manager' || user.role === 'Employee') ? <LanConnectionPanel /> : <EmployeeWorkspace />;
-      case 'model-center':
-        return <ModelManagementCenter />;
       case 'auditor-dashboard':
         return user.role === 'Auditor' ? <AuditorDashboard /> : <EmployeeWorkspace />;
       default:
@@ -115,11 +115,11 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
-      <Header onChangeHardware={() => setIsHardwareConfirmed(false)} />
+    <div style={{ height: '100vh', overflow: 'hidden', background: 'var(--bg-primary)', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
+      <Header onChangeHardware={() => setIsHardwareConfirmed(false)} onNavigate={setActiveTab} />
       <div style={{ display: 'flex', flex: 1, height: 'calc(100vh - 56px)', minHeight: 0, overflow: 'hidden' }}>
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main style={{ flex: 1, minWidth: 0, minHeight: 0, boxSizing: 'border-box', padding: '12px 16px', overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-primary)' }}>
+        <main style={{ flex: 1, minWidth: 0, minHeight: 0, boxSizing: 'border-box', padding: '12px 16px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable', scrollbarWidth: 'thin', overscrollBehavior: 'contain', background: 'var(--bg-primary)' }}>
           {renderDashboard()}
         </main>
       </div>

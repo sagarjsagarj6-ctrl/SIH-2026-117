@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 const notificationTone = (type = '') => {
   if (type.includes('REJECTED')) return '#fb7185';
   if (type.includes('ACCEPTED')) return '#86efac';
+  if (type.includes('IMAGE_MODEL')) return '#22c55e';
+  if (type.includes('MODEL_DEPLOYED')) return '#22c55e';
   if (type.includes('LAN')) return '#22d3ee';
   if (type.includes('AI_HANDOFF')) return '#c084fc';
   return '#a5b4fc';
@@ -14,7 +16,7 @@ const fallbackCopyMessage = (notification) => notification.networkKey
   ? `SOVEREIGN AI PRIVATE LAN CONNECTION\nNetwork: ${notification.networkName || 'Private LAN'}\nToken: ${notification.networkKey}\nOpen Connect to LAN and paste this token to join the air-gapped workspace.`
   : notification.copyMessage;
 
-export const NotificationBell = () => {
+export const NotificationBell = ({ onNavigate }) => {
   const { token, API_URL } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -47,13 +49,21 @@ export const NotificationBell = () => {
 
   const unreadCount = useMemo(() => notifications.filter(notification => !notification.read).length, [notifications]);
 
-  const markRead = async (notification) => {
-    if (notification.read) return;
+  const markRead = (notification) => {
+    if (!notification || notification.read) return;
     setNotifications(current => current.map(item => item._id === notification._id ? { ...item, read: true } : item));
     fetch(`${API_URL}/notifications/${notification._id}/read`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` }
     }).catch(() => {});
+  };
+
+  const openNotification = (notification) => {
+    markRead(notification);
+    if (notification.metadata?.openTab && typeof onNavigate === 'function') {
+      onNavigate(notification.metadata.openTab);
+      setIsOpen(false);
+    }
   };
 
   const copyNotification = async (notification) => {
@@ -103,7 +113,7 @@ export const NotificationBell = () => {
           {notifications.length === 0 ? <div style={{ padding: '26px 14px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.7rem' }}><CheckCheck size={21} color="var(--accent-green)" style={{ marginBottom: '6px' }} /><div>No notifications yet.</div></div> : notifications.slice(0, 12).map(notification => {
             const copyMessage = fallbackCopyMessage(notification);
             const tone = notificationTone(notification.type);
-            return <div key={notification._id} onClick={() => markRead(notification)} style={{ padding: '10px', marginBottom: '6px', borderRadius: '9px', border: `1px solid ${notification.read ? 'var(--border-color)' : `${tone}66`}`, background: notification.read ? 'rgba(255,255,255,0.018)' : `${tone}0d`, cursor: 'pointer' }}>
+            return <div key={notification._id} onClick={() => openNotification(notification)} style={{ padding: '10px', marginBottom: '6px', borderRadius: '9px', border: `1px solid ${notification.read ? 'var(--border-color)' : `${tone}66`}`, background: notification.read ? 'rgba(255,255,255,0.018)' : `${tone}0d`, cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}><span style={{ width: '6px', height: '6px', borderRadius: '50%', background: tone, flexShrink: 0 }} /><strong style={{ fontSize: '0.72rem', lineHeight: 1.25 }}>{notification.title}</strong></div>{!notification.read && <span style={{ color: tone, fontSize: '0.54rem', fontWeight: 800 }}>NEW</span>}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.67rem', lineHeight: 1.4, margin: '6px 0 7px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{notification.summary || notification.message}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}><span style={{ color: 'var(--text-dim)', fontSize: '0.58rem' }}>{notification.type?.replaceAll('_', ' ')} · {new Date(notification.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>{copyMessage && <button type="button" onClick={(event) => { event.stopPropagation(); copyNotification(notification); }} title="Copy notification message" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 6px', border: `1px solid ${tone}55`, borderRadius: '6px', background: 'transparent', color: tone, cursor: 'pointer', fontSize: '0.59rem', fontWeight: 700 }}>{copiedId === notification._id ? <Check size={11} /> : notification.type === 'LAN_INVITATION' ? <Copy size={11} /> : <Clipboard size={11} />} {copiedId === notification._id ? 'Copied' : 'Copy'}</button>}</div>

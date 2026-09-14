@@ -96,6 +96,58 @@ const toolDefinitions = [
     requiresHumanApproval: false
   },
   {
+    id: 'agent.query.hardware-manual',
+    name: 'Run hardware manual image-model agent',
+    description: 'Retrieves Admin-trained hardware manuals and labeled image catalog matches.',
+    resourceType: 'agent',
+    action: 'execute',
+    requiredPermission: 'agent.execute',
+    riskLevel: 'MEDIUM',
+    allowedRoles: ['Admin', 'Manager', 'Employee'],
+    inputSchema: baseAgentInput,
+    outputSchema: { matches: 'array', answer: 'string' },
+    requiresHumanApproval: false
+  },
+  {
+    id: 'agent.query.image-analysis',
+    name: 'Run image analysis agent',
+    description: 'Extracts structured hardware findings from a camera or gallery image.',
+    resourceType: 'agent',
+    action: 'execute',
+    requiredPermission: 'agent.execute',
+    riskLevel: 'MEDIUM',
+    allowedRoles: ['Admin', 'Manager', 'Employee'],
+    inputSchema: baseAgentInput,
+    outputSchema: { features: 'object', keyFindings: 'array' },
+    requiresHumanApproval: false
+  },
+  {
+    id: 'agent.query.image-compare',
+    name: 'Run image comparison agent',
+    description: 'Compares image findings with the trained catalog and answers the user query.',
+    resourceType: 'agent',
+    action: 'execute',
+    requiredPermission: 'agent.execute',
+    riskLevel: 'MEDIUM',
+    allowedRoles: ['Admin', 'Manager', 'Employee'],
+    inputSchema: baseAgentInput,
+    outputSchema: { prediction: 'object', answer: 'string' },
+    requiresHumanApproval: false
+  },
+  {
+    id: 'image-model.train',
+    name: 'Train image model',
+    description: 'Admin-only catalog training from hardware manuals and labeled images.',
+    resourceType: 'imageModel',
+    action: 'train',
+    requiredPermission: 'imageModel.train',
+    riskLevel: 'HIGH',
+    allowedRoles: ['Admin'],
+    inputSchema: { type: 'object', required: ['jobName'], properties: { jobName: { type: 'string', maxLength: 120 } } },
+    outputSchema: { jobId: 'string', status: 'string' },
+    requiresHumanApproval: false
+  },
+  {
     id: 'model.finetune.execute',
     name: 'Start model fine-tuning',
     description: 'Creates a local fine-tuning job that can consume approved training data and deploy a model artifact.',
@@ -103,7 +155,7 @@ const toolDefinitions = [
     action: 'execute',
     requiredPermission: 'finetune.execute',
     riskLevel: 'HIGH',
-    allowedRoles: ['Admin', 'Manager'],
+    allowedRoles: ['Admin'],
     inputSchema: { type: 'object', required: ['baseModel', 'datasetId'], properties: {} },
     outputSchema: { jobId: 'string', status: 'string' },
     requiresHumanApproval: true
@@ -116,7 +168,10 @@ const agentToolIds = Object.freeze({
   RAG: 'agent.query.rag',
   DATA_SCIENCE: 'agent.query.data-science',
   VISION: 'agent.query.vision',
-  REPORTING: 'agent.query.reporting'
+  REPORTING: 'agent.query.reporting',
+  HARDWARE_MANUAL: 'agent.query.hardware-manual',
+  IMAGE_ANALYSIS: 'agent.query.image-analysis',
+  IMAGE_COMPARE: 'agent.query.image-compare'
 });
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);

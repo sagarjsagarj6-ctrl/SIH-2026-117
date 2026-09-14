@@ -60,11 +60,7 @@ export class DatasetPreparer {
     });
 
     if (jsonlRows.length === 0) {
-      jsonlRows.push({
-        instruction: `Provide an overview of ${department} operations.`,
-        input: 'General Query',
-        output: `${department} adheres to strict sovereign AI data protection and zero-trust policies.`
-      });
+      throw new Error('No approved confidential documents are available for this department. Upload a real training dataset or authorize departmental source documents before training.');
     }
 
     // Split 90% train / 10% test
@@ -77,7 +73,8 @@ export class DatasetPreparer {
       trainCount: trainSet.length,
       testCount: testSet.length,
       samplePreview: jsonlRows.slice(0, 2),
-      jsonlContent: jsonlRows.map(r => JSON.stringify(r)).join('\n')
+      jsonlContent: jsonlRows.map(r => JSON.stringify(r)).join('\n'),
+      source: 'authorized_documents'
     };
   }
 }

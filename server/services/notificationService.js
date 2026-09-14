@@ -1,5 +1,6 @@
 import { state } from '../config/db.js';
 import { RuntimeStateStore } from './runtime/RuntimeStateStore.js';
+import User from '../models/User.js';
 
 const asString = (value) => String(value || '');
 
@@ -123,3 +124,21 @@ export const deliverQueuedAIHandoffs = (userId) => {
 };
 
 export const userIsConnectedToLan = isConnectedToActiveLan;
+
+export const getNotificationRecipients = async ({ department, roles = ['Manager', 'Employee'] } = {}) => {
+  const departmentFilter = department === 'All'
+    ? {}
+    : { department: { $in: [department, 'All'] } };
+  if (state.isMongooseConnected) {
+    return User.find({
+      role: { $in: roles },
+      ...departmentFilter,
+      status: { $ne: 'Inactive' }
+    }).select('_id name email role department').lean();
+  }
+  return (state.memoryDb.users || []).filter((user) => (
+    roles.includes(user.role)
+    && (department === 'All' || user.department === department || user.department === 'All')
+    && user.status !== 'Inactive'
+  ));
+};

@@ -18,15 +18,11 @@ const BUSINESS_AGENTS = [
   {
     id: 'employee-agent',
     name: 'Employee AI Agent',
-    role: 'Employee Intent Review',
-    summary: 'Reads business files, extracts key issues, and proposes corrective action.',
     color: '#818cf8',
   },
   {
     id: 'manager-agent',
     name: 'Manager AI Agent',
-    role: 'Validation Review',
-    summary: 'Validates the employee AI summary and confirms the final business decision.',
     color: '#22c55e',
   }
 ];
@@ -218,6 +214,11 @@ export const AgentCommunicationWorkflow = () => {
     return () => window.clearTimeout(timer);
   }, [fetchWorkflows]);
 
+  useEffect(() => {
+    if (user?.role === 'Manager') setSelectedAgentId('manager-agent');
+    if (user?.role === 'Employee') setSelectedAgentId('employee-agent');
+  }, [user?.role]);
+
   const selectedAgent = useMemo(
     () => BUSINESS_AGENTS.find(agent => agent.id === selectedAgentId) || BUSINESS_AGENTS[0],
     [selectedAgentId]
@@ -390,27 +391,31 @@ export const AgentCommunicationWorkflow = () => {
   const isEmployee = user?.role === 'Employee';
   const isManager = user?.role === 'Manager';
   const isManagerActionAllowed = isManager && !isAdmin;
+  const visibleAgents = isEmployee
+    ? BUSINESS_AGENTS.filter(agent => agent.id === 'employee-agent')
+    : isManager
+      ? BUSINESS_AGENTS.filter(agent => agent.id === 'manager-agent')
+      : BUSINESS_AGENTS;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div className="glass-card" style={{ padding: '22px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <Bot size={18} color="#818cf8" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '100%', overflow: 'auto' }}>
+      <div className="glass-card" style={{ padding: '14px', borderRadius: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <div style={{ padding: '7px', borderRadius: '8px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
+              <Bot size={16} color="#818cf8" />
             </div>
             <div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 800 }}>AI Agent Communication Workflow</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>Employee AI agent → manager AI agent → employee human approval → manager human approval</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>AI Agent Communication Workflow</div>
             </div>
           </div>
-          <div className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>ADMIN-TRAINED MODELS · PRIVATE LAN</div>
+          
         </div>
 
-        {(workflowError || workflowLoading) && <div style={{ padding: '9px 11px', borderRadius: '8px', marginBottom: '14px', background: workflowError ? 'rgba(244,63,94,0.11)' : 'rgba(6,182,212,0.08)', border: `1px solid ${workflowError ? 'rgba(244,63,94,0.3)' : 'rgba(6,182,212,0.25)'}`, color: workflowError ? '#fb7185' : 'var(--accent-cyan)', fontSize: '0.7rem' }}>{workflowError || 'Synchronizing workflow state across Admin, Manager, Employee, and AI handoff channels...'}</div>}
+        {(workflowError || workflowLoading) && <div style={{ padding: '7px 9px', borderRadius: '7px', marginBottom: '9px', background: workflowError ? 'rgba(244,63,94,0.11)' : 'rgba(6,182,212,0.08)', border: `1px solid ${workflowError ? 'rgba(244,63,94,0.3)' : 'rgba(6,182,212,0.25)'}`, color: workflowError ? '#fb7185' : 'var(--accent-cyan)', fontSize: '0.66rem' }}>{workflowError || 'Synchronizing workflow state across Admin, Manager, Employee, and AI handoff channels...'}</div>}
 
-        {!isAdmin && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '18px' }}>
-          {BUSINESS_AGENTS.map(agent => (
+        {!isAdmin && <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visibleAgents.length}, minmax(0, 1fr))`, gap: '8px', marginBottom: '10px' }}>
+          {visibleAgents.map(agent => (
             <button
               key={agent.id}
               type="button"
@@ -418,90 +423,92 @@ export const AgentCommunicationWorkflow = () => {
               style={{
                 border: selectedAgentId === agent.id ? `1px solid ${agent.color}` : '1px solid var(--border-color)',
                 background: selectedAgentId === agent.id ? `${agent.color}18` : 'rgba(255,255,255,0.02)',
-                borderRadius: '12px',
-                padding: '14px 12px',
+                borderRadius: '9px',
+                padding: '9px 10px',
                 textAlign: 'left',
                 color: 'var(--text-main)',
                 cursor: 'pointer'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: agent.color }} />
-                <div style={{ fontWeight: 800 }}>{agent.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: agent.color }} />
+                <div style={{ fontWeight: 800, fontSize: '0.78rem' }}>{agent.name}</div>
               </div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>{agent.role}</div>
-              <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: '8px' }}>{agent.summary}</div>
             </button>
           ))}
         </div>}
 
         {!isAdmin ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: '18px' }}>
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                <Gauge size={16} /> MODEL SELECTION
+          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: '10px', alignItems: 'start' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '9px', padding: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem' }}>
+                <Gauge size={14} /> MODEL SELECTION
               </div>
 
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Employee AI model</label>
-                  <select
-                    value={employeeModelId}
-                    onChange={(e) => setEmployeeModelId(e.target.value)}
-                    style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', padding: '10px 12px' }}
-                  >
-                    {ADMIN_MODELS.filter(m => m.type === 'Employee AI Model').map(m => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
-                </div>
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {isEmployee && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)', marginBottom: '3px' }}>Employee AI model</label>
+                    <select
+                      value={employeeModelId}
+                      onChange={(e) => setEmployeeModelId(e.target.value)}
+                      style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-main)', padding: '7px 9px', fontSize: '0.74rem' }}
+                    >
+                      {ADMIN_MODELS.filter(m => m.type === 'Employee AI Model').map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Manager AI model</label>
-                  <select
-                    value={managerModelId}
-                    onChange={(e) => setManagerModelId(e.target.value)}
-                    style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', padding: '10px 12px' }}
-                  >
-                    {ADMIN_MODELS.filter(m => m.type === 'Manager AI Model').map(m => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {isManager && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)', marginBottom: '3px' }}>Manager AI model</label>
+                    <select
+                      value={managerModelId}
+                      onChange={(e) => setManagerModelId(e.target.value)}
+                      style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-main)', padding: '7px 9px', fontSize: '0.74rem' }}
+                    >
+                      {ADMIN_MODELS.filter(m => m.type === 'Manager AI Model').map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
-              <div style={{ marginTop: '18px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                <UploadCloud size={16} /> {selectedAgent.name} FILE INPUT
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem' }}>
+                <UploadCloud size={14} /> {selectedAgent.name} FILE INPUT
               </div>
               <input
                 type="file"
                 onChange={handleFileUpload}
-                style={{ width: '100%', background: 'var(--bg-primary)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', marginTop: '10px' }}
+                style={{ width: '100%', background: 'var(--bg-primary)', padding: '7px', borderRadius: '6px', border: '1px solid var(--border-color)', color: 'var(--text-main)', marginTop: '7px', fontSize: '0.72rem' }}
               />
 
               {selectedFile && (
-                <div style={{ marginTop: '14px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <div style={{ marginTop: '9px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                     <FileText size={14} /> Selected file: {selectedFile.name}
                   </div>
-                  <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '8px', padding: '12px' }}>
-                    <div style={{ fontWeight: 700, marginBottom: '6px', color: '#a5b4fc' }}>AI summary</div>
+                  <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '7px', padding: '9px' }}>
+                    <div style={{ fontWeight: 700, marginBottom: '4px', color: '#a5b4fc' }}>AI summary</div>
                     <div>{report?.recommendedAction || 'Waiting for the selected agent to analyze the uploaded business file.'}</div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                <BriefcaseBusiness size={16} /> {selectedAgent.name} REPORT SUMMARY
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '9px', padding: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem' }}>
+                <BriefcaseBusiness size={14} /> {selectedAgent.name} REPORT SUMMARY
               </div>
 
               {report ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '0.72rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Key takeaways</div>
-                    <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-main)', lineHeight: 1.7 }}>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginBottom: '3px' }}>Key takeaways</div>
+                    <ul style={{ margin: 0, paddingLeft: '16px', color: 'var(--text-main)', lineHeight: 1.35 }}>
                       {report.keyTakeaways.map((item, index) => (
                         <li key={`${item}-${index}`}>{item}</li>
                       ))}
@@ -509,16 +516,16 @@ export const AgentCommunicationWorkflow = () => {
                   </div>
 
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Proposed solutions</div>
-                    <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-main)', lineHeight: 1.7 }}>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginBottom: '3px' }}>Proposed solutions</div>
+                    <ul style={{ margin: 0, paddingLeft: '16px', color: 'var(--text-main)', lineHeight: 1.35 }}>
                       {report.proposedSolutions.map((item, index) => (
                         <li key={`${item}-${index}`}>{item}</li>
                       ))}
                     </ul>
                   </div>
 
-                  <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '8px', padding: '10px', color: 'var(--text-main)', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontWeight: 700, color: '#86efac' }}>
+                  <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '7px', padding: '8px', color: 'var(--text-main)', fontSize: '0.7rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 700, color: '#86efac' }}>
                       <Sparkles size={14} /> Recommended next step
                     </div>
                     {report.draftSummary}
@@ -531,7 +538,7 @@ export const AgentCommunicationWorkflow = () => {
                     style={{
                       marginTop: '4px',
                       width: '100%',
-                      padding: '10px 12px',
+                      padding: '7px 10px',
                       background: selectedFile && report ? 'linear-gradient(135deg, #6366f1, #16a34a)' : 'rgba(255,255,255,0.05)',
                       color: '#fff',
                       border: 'none',
@@ -544,11 +551,7 @@ export const AgentCommunicationWorkflow = () => {
                     {workflowLoading ? 'Routing proposal...' : 'Send summary for employee approval'}
                   </button>
                 </div>
-              ) : (
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-                  Upload a file and select the appropriate AI model to generate the employee-agent summary.
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         ) : (
@@ -574,22 +577,22 @@ export const AgentCommunicationWorkflow = () => {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontWeight: 800, color: 'var(--text-muted)' }}>
-            <Users size={16} /> AI Communication Queue
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '10px', alignItems: 'start' }}>
+        <div className="glass-card" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: 800, color: 'var(--text-muted)', fontSize: '0.76rem' }}>
+            <Users size={14} /> AI Communication Queue
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
             {managerQueue.map(req => (
-              <div key={req._id || req.id} style={{ padding: '14px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
+              <div key={req._id || req.id} style={{ padding: '9px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <div style={{ fontWeight: 800 }}>{req.employeeModel}</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.76rem' }}>{req.employeeModel}</div>
                   <span
                     style={{
                       padding: '4px 8px',
                       borderRadius: '999px',
-                      fontSize: '0.68rem',
+                      fontSize: '0.62rem',
                       color: statusTone[req.status] || '#fff',
                       background: `${statusTone[req.status] || '#fff'}20`,
                       border: `1px solid ${statusTone[req.status] || '#fff'}50`,
@@ -600,24 +603,24 @@ export const AgentCommunicationWorkflow = () => {
                   </span>
                 </div>
 
-                <div style={{ marginTop: '8px', fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                <div style={{ marginTop: '6px', fontSize: '0.66rem', color: 'var(--text-muted)' }}>
                   Employee: {req.employeeName} · Manager AI: {req.managerModel} · Human manager: {req.managerName || 'Pending'}
                 </div>
-                <div style={{ marginTop: '10px', fontSize: '0.8rem', lineHeight: 1.5 }}>{req.summary}</div>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                <div style={{ marginTop: '7px', fontSize: '0.7rem', lineHeight: 1.35 }}>{req.summary}</div>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={() => setSelectedRequestId(req._id || req.id)}
-                    style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid rgba(129,140,248,0.35)', background: 'rgba(129,140,248,0.12)', color: '#a5b4fc', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid rgba(129,140,248,0.35)', background: 'rgba(129,140,248,0.12)', color: '#a5b4fc', fontSize: '0.64rem', fontWeight: 700, cursor: 'pointer' }}
                   >
                     Open communication log
                   </button>
-                  <span style={{ padding: '6px 10px', borderRadius: '7px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', fontSize: '0.7rem' }}>
+                  <span style={{ padding: '5px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', fontSize: '0.64rem' }}>
                     {(req.events || req.transitions || []).length} timeline events · {(req.messages || []).length} messages
                   </span>
                 </div>
 
-                <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {req.status === 'awaiting employee approval' && isEmployee && (
                     <button type="button" onClick={() => updateRequestState(req._id || req.id, 'sent to manager-ai')} style={{ ...buttonStyle, background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)' }}>
                       <Send size={12} style={{ marginRight: 6 }} /> Employee approves & send to manager AI
@@ -652,41 +655,41 @@ export const AgentCommunicationWorkflow = () => {
           </div>
 
           {focusedRequest && (
-            <div style={{ marginTop: '16px', padding: '16px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid rgba(6,182,212,0.3)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                <div style={{ fontWeight: 800, color: '#67e8f9' }}>Live communication log · {focusedRequest._id || focusedRequest.id}</div>
+            <div style={{ marginTop: '10px', padding: '10px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid rgba(6,182,212,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <div style={{ fontWeight: 800, color: '#67e8f9', fontSize: '0.72rem' }}>Live communication log · {focusedRequest._id || focusedRequest.id}</div>
                 <button
                   type="button"
                   onClick={reanalyzeWorkflow}
                   disabled={messageLoading}
-                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1px solid rgba(6,182,212,0.35)', background: 'rgba(6,182,212,0.12)', color: '#67e8f9', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.35)', background: 'rgba(6,182,212,0.12)', color: '#67e8f9', fontSize: '0.64rem', fontWeight: 700, cursor: 'pointer' }}
                 >
                   {messageLoading ? 'Re-analyzing…' : 'Re-analyze with feedback'}
                 </button>
               </div>
-              <div style={{ maxHeight: '190px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
                 {[...(focusedRequest.events || [])].reverse().slice(0, 12).map(event => (
-                  <div key={event.id || `${event.type}-${event.createdAt}`} style={{ padding: '8px 10px', borderLeft: '2px solid #06b6d4', background: 'rgba(6,182,212,0.06)', fontSize: '0.72rem' }}>
+                  <div key={event.id || `${event.type}-${event.createdAt}`} style={{ padding: '6px 8px', borderLeft: '2px solid #06b6d4', background: 'rgba(6,182,212,0.06)', fontSize: '0.66rem' }}>
                     <div style={{ color: '#67e8f9', fontWeight: 700 }}>{event.type} · {event.actorName}</div>
                     <div style={{ color: 'var(--text-muted)', marginTop: '3px' }}>{event.message}</div>
                   </div>
                 ))}
                 {(!focusedRequest.events || focusedRequest.events.length === 0) && <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>No event records yet.</div>}
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
                 <textarea
                   value={messageDraft}
                   onChange={event => setMessageDraft(event.target.value)}
                   placeholder={user?.role === 'Admin' ? 'Admin ledger access is read-only.' : 'Add context, feedback, or a question for the next agent handoff…'}
                   disabled={user?.role === 'Admin' || messageLoading}
                   rows={2}
-                  style={{ flex: 1, resize: 'vertical', background: 'var(--bg-primary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '7px', padding: '8px', fontSize: '0.75rem' }}
+                  style={{ flex: 1, resize: 'vertical', background: 'var(--bg-primary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '6px', fontSize: '0.68rem' }}
                 />
                 <button
                   type="button"
                   onClick={sendWorkflowMessage}
                   disabled={user?.role === 'Admin' || !messageDraft.trim() || messageLoading}
-                  style={{ padding: '9px 12px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #6366f1, #06b6d4)', color: '#fff', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
+                  style={{ padding: '7px 9px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #6366f1, #06b6d4)', color: '#fff', fontWeight: 700, fontSize: '0.68rem', cursor: 'pointer' }}
                 >
                   <Send size={13} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Send
                 </button>
@@ -695,20 +698,20 @@ export const AgentCommunicationWorkflow = () => {
           )}
         </div>
 
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontWeight: 800, color: 'var(--text-muted)' }}>
-            <ShieldCheck size={16} /> {isAdmin ? 'Admin State Audit' : 'Transition Trace'}
+        <div className="glass-card" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontWeight: 800, color: 'var(--text-muted)', fontSize: '0.76rem' }}>
+            <ShieldCheck size={14} /> {isAdmin ? 'Admin State Audit' : 'Transition Trace'}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {requests.map(req => (
-              <div key={req._id || req.id} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)' }}>
+              <div key={req._id || req.id} style={{ padding: '9px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <div style={{ fontWeight: 700 }}>{req.employeeName}</div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{req._id || req.id}</span>
+                  <div style={{ fontWeight: 700, fontSize: '0.74rem' }}>{req.employeeName}</div>
+                  <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>{req._id || req.id}</span>
                 </div>
                 {!isAdmin && (
-                  <div style={{ marginTop: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  <div style={{ marginTop: '5px', fontSize: '0.64rem', color: 'var(--text-muted)' }}>
                     Employee AI: {req.employeeModel} · Manager AI: {req.managerModel}
                   </div>
                 )}
@@ -717,7 +720,7 @@ export const AgentCommunicationWorkflow = () => {
                     {req.employeeModel} → {req.managerModel}
                   </div>
                 )}
-                <div style={{ marginTop: '8px', color: 'var(--text-muted)', fontSize: '0.74rem' }}>
+                  <div style={{ marginTop: '6px', color: 'var(--text-muted)', fontSize: '0.66rem' }}>
                   {req.transitions.map((t, index) => (
                     <div key={`${req._id || req.id}-${index}`} style={{ marginBottom: '3px' }}>
                       <ArrowRight size={10} style={{ marginRight: 6, verticalAlign: 'middle' }} />

@@ -104,25 +104,23 @@ export const ModelComparisonView = () => {
   const hasResults = Object.keys(results).length > 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '100%' }}>
       <div>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, background: 'linear-gradient(135deg, #06b6d4, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, background: 'linear-gradient(135deg, #06b6d4, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Model Comparison Studio
         </h2>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: 4 }}>
-          Live InferenceRouter benchmarks — latency · tokens · backend health (FALLBACK when Ollama/vLLM offline)
-        </div>
+        
       </div>
 
       {error && (
-        <div className="glass-card" style={{ padding: 12, color: '#ef4444', fontSize: '0.85rem' }}>
+        <div className="glass-card" style={{ padding: 8, color: '#ef4444', fontSize: '0.72rem' }}>
           <AlertCircle size={14} style={{ display: 'inline', marginRight: 6 }} />{error}
         </div>
       )}
 
-      <div className="glass-card" style={{ padding: 20 }}>
-        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 14 }}>SELECT MODELS (2–3)</div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      <div className="glass-card" style={{ padding: 12 }}>
+        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>SELECT MODELS (2–3)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {COMPARE_MODELS.map((m) => {
             const isSelected = selectedModels.includes(m.id);
             return (
@@ -132,7 +130,7 @@ export const ModelComparisonView = () => {
                 onClick={() => toggleModel(m.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 18px', borderRadius: 10,
+                  padding: '7px 12px', borderRadius: 8,
                   border: `1.5px solid ${isSelected ? m.color : 'var(--border-color)'}`,
                   background: isSelected ? `${m.color}18` : 'var(--bg-primary)',
                   color: isSelected ? m.color : 'var(--text-muted)',
@@ -145,14 +143,14 @@ export const ModelComparisonView = () => {
             );
           })}
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
           {PRESET_PROMPTS.map((p, i) => (
             <button
               key={i}
               type="button"
               onClick={() => { setPrompt(p); setActivePreset(i); }}
               style={{
-                fontSize: '0.72rem', padding: '6px 10px', borderRadius: 8, cursor: 'pointer',
+                fontSize: '0.62rem', padding: '4px 7px', borderRadius: 6, cursor: 'pointer',
                 border: activePreset === i ? '1px solid #818cf8' : '1px solid var(--border-color)',
                 background: activePreset === i ? 'rgba(129,140,248,0.15)' : 'transparent',
                 color: 'var(--text-muted)'
@@ -164,21 +162,21 @@ export const ModelComparisonView = () => {
         </div>
       </div>
 
-      <div className="glass-card" style={{ padding: 20 }}>
-        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12 }}>BENCHMARK PROMPT</div>
-        <div style={{ display: 'flex', gap: 12 }}>
+      <div className="glass-card" style={{ padding: 12 }}>
+        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 7 }}>BENCHMARK PROMPT</div>
+        <div style={{ display: 'flex', gap: 8 }}>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Enter a prompt to compare across selected models…"
-            rows={3}
-            style={{ flex: 1, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-main)', padding: '12px 16px', fontSize: '0.88rem', resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+            rows={2}
+            style={{ flex: 1, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', padding: '8px 10px', fontSize: '0.76rem', resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
           />
           <button
             type="button"
             onClick={runComparison}
             disabled={loading || !prompt.trim() || selectedModels.length < 2}
-            style={{ padding: '0 24px', background: 'linear-gradient(135deg, #6366f1, #06b6d4)', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 700, cursor: loading || !prompt.trim() ? 'not-allowed' : 'pointer', opacity: loading || !prompt.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.88rem' }}
+            style={{ padding: '0 14px', background: 'linear-gradient(135deg, #6366f1, #06b6d4)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: loading || !prompt.trim() ? 'not-allowed' : 'pointer', opacity: loading || !prompt.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.74rem' }}
           >
             {loading ? <RefreshCw size={16} className="spin" /> : <Zap size={16} />}
             {loading ? 'Running…' : 'Compare'}
@@ -187,43 +185,43 @@ export const ModelComparisonView = () => {
       </div>
 
       {hasResults && (
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${selectedModels.length}, 1fr)`, gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${selectedModels.length}, minmax(0, 1fr))`, gap: 10 }}>
           {selectedModels.filter((m) => results[m]).map((modelId) => {
             const model = COMPARE_MODELS.find((m) => m.id === modelId);
             const r = results[modelId];
             const isWinner = modelId === winnerKey;
             return (
-              <div key={modelId} className="glass-card" style={{ padding: 20, border: isWinner ? `1.5px solid ${model.color}` : '1px solid var(--border-color)', position: 'relative' }}>
+              <div key={modelId} className="glass-card" style={{ padding: 12, border: isWinner ? `1.5px solid ${model.color}` : '1px solid var(--border-color)', position: 'relative' }}>
                 {isWinner && (
                   <div style={{ position: 'absolute', top: -10, right: 12, background: model.color, color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '3px 10px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Star size={10} /> WINNER
                   </div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 9, flexWrap: 'wrap' }}>
                   <Cpu size={16} color={model.color} />
-                  <span style={{ fontWeight: 700, fontSize: '0.88rem', color: model.color }}>{model.label}</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.76rem', color: model.color }}>{model.label}</span>
                   <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 8, background: `${model.color}22`, color: model.color }}>{r.backend || model.backend}</span>
                   {r.usedFallback && (
                     <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 8, background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>FALLBACK</span>
                   )}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 10 }}>
                   <MetricBar label="Throughput (t/s)" value={r.tps} max={50} color={model.color} suffix=" t/s" />
                   <MetricBar label="Latency" value={r.latency} max={2000} color="#f59e0b" suffix=" ms" />
                   <MetricBar label="Output Tokens" value={r.tokens} max={300} color="#22c55e" />
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: `${model.color}18`, color: model.color, fontSize: '0.72rem', fontWeight: 600 }}>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 7px', borderRadius: 6, background: `${model.color}18`, color: model.color, fontSize: '0.62rem', fontWeight: 600 }}>
                     <Zap size={11} /> {r.tps} t/s
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: '0.72rem', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 7px', borderRadius: 6, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: '0.62rem', fontWeight: 600 }}>
                     <Clock size={11} /> {r.latency}ms
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontSize: '0.72rem', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 7px', borderRadius: 6, background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontSize: '0.62rem', fontWeight: 600 }}>
                     <BarChart2 size={11} /> {r.tokens} tokens
                   </div>
                 </div>
-                <div style={{ background: 'var(--bg-primary)', borderRadius: 8, padding: 12, fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6, maxHeight: 140, overflowY: 'auto' }}>
+                <div style={{ background: 'var(--bg-primary)', borderRadius: 7, padding: 9, fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: 1.45, maxHeight: 105, overflowY: 'auto' }}>
                   {r.text}
                 </div>
               </div>
@@ -233,12 +231,12 @@ export const ModelComparisonView = () => {
       )}
 
       {benchmarkRuns.length > 0 && (
-        <div className="glass-card" style={{ padding: 16 }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="glass-card" style={{ padding: 10 }}>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
             <TrendingUp size={14} /> Recent runs
           </div>
           {benchmarkRuns.map((run, i) => (
-            <div key={i} style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+            <div key={i} style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginBottom: 4 }}>
               <ChevronRight size={10} style={{ display: 'inline' }} /> [{run.ts}] {run.prompt} → {run.winner}
             </div>
           ))}

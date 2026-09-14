@@ -37,6 +37,7 @@ export class FineTuneOrchestrator {
     jobName,
     baseModel,
     department,
+    trainingFamily = 'LLM_FINE_TUNING',
     method = 'QLoRA',
     epochs = 3,
     learningRate = '2e-4',
@@ -51,6 +52,15 @@ export class FineTuneOrchestrator {
     extra = {}
   }) {
     return (async () => {
+      const normalizedFamily = String(trainingFamily || 'LLM_FINE_TUNING').toUpperCase();
+      const normalizedMethod = String(method || 'QLoRA');
+      const supportedMethods = ['LoRA', 'QLoRA', 'Full Parameter'];
+      if (normalizedFamily !== 'LLM_FINE_TUNING' || !supportedMethods.includes(normalizedMethod)) {
+        const error = new Error('Classical ML trainers are not enabled in this runtime yet. Use LoRA, QLoRA, or Full Parameter with the local LLM trainer.');
+        error.status = 409;
+        throw error;
+      }
+
       let docs = [];
       if (state.isMongooseConnected) {
         docs = await KnowledgeDoc.find({ $or: [{ department }, { department: 'All' }] });
@@ -66,6 +76,11 @@ export class FineTuneOrchestrator {
         dataset = await DatasetPreparer.prepareUploadedDataset({ filePath: trainDataFilePath, department });
       } else {
         dataset = DatasetPreparer.prepareInstructionDataset({ documents: docs, department });
+      }
+      if (dataset.testCount < 1) {
+        const error = new Error('At least two confidential examples are required so one example can remain held out for evaluation.');
+        error.status = 422;
+        throw error;
       }
       const capabilities = await TrainingRuntime.getCapabilities();
       const requested = String(requestedExecutionMode || 'AUTO').toUpperCase();
@@ -95,7 +110,8 @@ export class FineTuneOrchestrator {
         baseModel,
         department,
         datasetName: `${department}_Instruction_Tuning_v1.jsonl`,
-        method,
+        trainingFamily: normalizedFamily,
+        method: normalizedMethod,
         epochs: normalizedEpochs,
         learningRate: normalizedConfig.learningRate,
         status: 'Queued',
@@ -110,6 +126,9 @@ export class FineTuneOrchestrator {
         testCount: dataset.testCount,
         trainingConfig: normalizedConfig,
         datasetPath: datasetFiles.datasetPath,
+        validation: null,
+        evaluationStatus: 'NOT_RUN',
+        deploymentStatus: 'NOT_DEPLOYED',
         createdBy,
         ownerRole,
         ownerId,
@@ -213,6 +232,7 @@ export class FineTuneOrchestrator {
         status: 'Completed',
         progressPercent: 100,
         validation,
+        evaluationStatus: validation.status === 'PASSED' ? 'PASSED' : 'REVIEW_REQUIRED',
         currentLoss: runtimeJob.executionMode === 'LIVE' ? runtimeJob.currentLoss : 0.38
       });
       return this.getJob(jobId);
@@ -239,7 +259,10 @@ export class FineTuneOrchestrator {
       simulation: job.executionMode !== 'LIVE',
       executionMode: job.executionMode
     });
-    await this.updateJob(jobId, { validation });
+    await this.updateJob(jobId, {
+      validation,
+      evaluationStatus: validation.status === 'PASSED' ? 'PASSED' : 'REVIEW_REQUIRED'
+    });
     return { job: await this.getJob(jobId), validation };
   }
 }

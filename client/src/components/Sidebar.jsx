@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { 
-  Bot, BarChart3, Shield, Cpu, Database, Sparkles, Brain, ClipboardCheck, MessageSquareText,
-  Network, PlugZap
+  Bot, BarChart3, Shield, Database, Sparkles, Brain, ClipboardCheck, MessageSquareText,
+  Network, PlugZap, Workflow
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -29,6 +29,13 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: <Brain size={18} />,
       roles: ['Employee', 'Manager', 'Admin'],
       badge: 'Category B'
+    },
+    {
+      id: 'creation-playground',
+      label: 'Creation Playground',
+      icon: <Workflow size={18} />,
+      roles: ['Employee', 'Manager', 'Admin'],
+      badge: 'NEW'
     },
     {
       id: 'agent-communication',
@@ -72,13 +79,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       roles: ['Admin'],
       badge: 'Control'
     },
-    {
-      id: 'model-center',
-      label: 'Agent Studio & Fine-Tuning Lab',
-      icon: <Cpu size={18} />,
-      roles: ['Employee', 'Manager', 'Admin'],
-      badge: 'Agents'
-    }
   ];
 
   const allowedNav = navItems.filter(item => item.roles.includes(user.role));
@@ -95,10 +95,11 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       height: '100%',
       minHeight: 0,
       boxSizing: 'border-box',
-      overflowY: 'auto',
+      overflow: 'hidden',
+      position: 'relative',
       flexShrink: 0
     }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable', scrollbarWidth: 'thin', overscrollBehavior: 'contain' }}>
         <div style={{ fontSize: '0.64rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', paddingLeft: '8px', letterSpacing: '0.05em' }}>
           NAVIGATION MODULES ({user.role.toUpperCase()})
         </div>

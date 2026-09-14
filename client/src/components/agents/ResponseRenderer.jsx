@@ -6,6 +6,10 @@ export const ResponseRenderer = ({ responseData, userDepartment }) => {
   if (!responseData) return null;
 
   const { result, citations, mode, pipelineOutputs } = responseData;
+  const dataScienceResult = result?.charts ? result : pipelineOutputs?.dataScience;
+  const trendData = dataScienceResult?.charts?.trendLine?.datasets?.[0]?.data || [];
+  const statistics = dataScienceResult?.statistics || {};
+  const anomalyCount = dataScienceResult?.anomalies?.iqr?.outliers?.length;
 
   const handleExportReport = () => {
     const content = result?.markdown || JSON.stringify(result, null, 2);
@@ -137,7 +141,7 @@ export const ResponseRenderer = ({ responseData, userDepartment }) => {
         )}
 
         {/* Data Science Charts & Statistics (if DataScienceAgent ran) */}
-        {(result?.charts || pipelineOutputs?.dataScience?.charts) && (
+        {trendData.length > 0 && (
           <div style={{ marginTop: '16px' }}>
             <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--accent-indigo)', marginBottom: '10px' }}>
               Quantitative Anomaly & Trend Visualizer
@@ -151,10 +155,10 @@ export const ResponseRenderer = ({ responseData, userDepartment }) => {
                   Operational Trajectory (Measured vs Trend)
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px', paddingTop: '10px' }}>
-                  {(result?.charts?.trendLine?.datasets[0]?.data || [120, 142, 138, 155, 148, 162, 159, 210, 165, 172]).map((val, idx) => {
-                    const max = 220;
+                  {trendData.map((val, idx) => {
+                    const max = Math.max(...trendData, 1);
                     const h = Math.round((val / max) * 100);
-                    const isOutlier = val > 190;
+                    const isOutlier = Boolean(dataScienceResult?.anomalies?.iqr?.outliers?.includes(val));
                     return (
                       <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
                         <span style={{ fontSize: '0.62rem', color: isOutlier ? 'var(--accent-rose)' : 'var(--text-muted)', marginBottom: '2px' }}>{val}</span>
@@ -181,25 +185,25 @@ export const ResponseRenderer = ({ responseData, userDepartment }) => {
                   <div style={{ padding: '8px', background: 'var(--bg-card)', borderRadius: '6px' }}>
                     <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Sample Mean</div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
-                      {result?.statistics?.mean || pipelineOutputs?.dataScience?.statistics?.mean || '157.5'}
+                      {statistics.mean ?? 'N/A'}
                     </div>
                   </div>
                   <div style={{ padding: '8px', background: 'var(--bg-card)', borderRadius: '6px' }}>
                     <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Standard Dev</div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-purple)' }}>
-                      {result?.statistics?.stdDev || pipelineOutputs?.dataScience?.statistics?.stdDev || '22.8'}
+                      {statistics.stdDev ?? 'N/A'}
                     </div>
                   </div>
                   <div style={{ padding: '8px', background: 'var(--bg-card)', borderRadius: '6px' }}>
                     <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Anomalies Flagged</div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-rose)' }}>
-                      {result?.anomalies?.iqr?.outliers?.length || pipelineOutputs?.dataScience?.anomalies?.iqr?.outliers?.length || '1 Outlier'}
+                      {anomalyCount ?? 'N/A'}
                     </div>
                   </div>
                   <div style={{ padding: '8px', background: 'var(--bg-card)', borderRadius: '6px' }}>
                     <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Trend Trajectory</div>
                     <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-green)' }}>
-                      {result?.regression?.trendDirection || pipelineOutputs?.dataScience?.regression?.trendDirection || 'UPWARD (+12%)'}
+                      {dataScienceResult?.regression?.trendDirection || 'N/A'}
                     </div>
                   </div>
                 </div>

@@ -14,7 +14,8 @@
     "test:b": "node test/categoryB.test.js",
     "test:c": "node test/categoryC.test.js",
     "test:d": "node test/categoryD.test.js",
-    "test:e": "node test/categoryE.test.js"
+    "test:e": "node test/categoryE.test.js",
+    "test:image-model": "node test/imageModel.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

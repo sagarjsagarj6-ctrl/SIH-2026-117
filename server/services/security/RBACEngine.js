@@ -4,6 +4,7 @@ const permissions = {
     agent: ['execute'],
     model: ['read', 'write'],
     finetune: ['execute'],
+    imageModel: ['train', 'deploy', 'analyze'],
     user: ['read', 'write'],
     audit: ['read', 'export'],
     config: ['read', 'write']
@@ -12,11 +13,12 @@ const permissions = {
     data: ['read', 'write', 'export'],
     agent: ['execute'],
     model: ['read'],
-    finetune: ['execute'],
+    finetune: [],
+    imageModel: ['analyze'],
     user: ['read', 'write'],
     audit: ['read']
   },
-  Employee: { data: ['read'], agent: ['execute'] },
+  Employee: { data: ['read'], agent: ['execute'], imageModel: ['analyze'] },
   Auditor: { data: ['read'], model: ['read'], audit: ['read', 'export'] },
   Guest: {}
 };

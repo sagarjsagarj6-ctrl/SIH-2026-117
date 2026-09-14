@@ -8,6 +8,7 @@ import { FineTuneOrchestrator } from '../services/finetune/FineTuneOrchestrator.
 import { TrainingRuntime } from '../services/finetune/TrainingRuntime.js';
 import { MAX_UPLOAD_BYTES, uploadFileFilter } from '../services/ingestion/uploadPolicy.js';
 import { authenticateToken, requireRole, createAuditEntry } from '../middleware/auth.js';
+import { pushNotifications, getNotificationRecipients } from '../services/notificationService.js';
 
 const router = express.Router();
 const trainingDatasetUpload = multer({
@@ -15,11 +16,6 @@ const trainingDatasetUpload = multer({
   fileFilter: uploadFileFilter,
   limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 }
 });
-
-const isOwnedByUser = (job, user) => {
-  const ownerId = job.ownerId || job.createdBy || '';
-  return user.role === 'Admin' || String(ownerId) === String(user._id || user.id) || job.createdBy === user.name;
-};
 
 const getUserNetworkKeys = (user) => {
   if (!state.memoryDb || !Array.isArray(state.memoryDb.networks)) return [];
@@ -32,6 +28,33 @@ const getUserNetworkKeys = (user) => {
     })
     .map(network => network.networkKey)
     .filter(Boolean);
+};
+
+const loadFineTuneJobs = async () => {
+  if (state.isMongooseConnected) return FineTuneJob.find().sort({ createdAt: -1 });
+  return [...(state.memoryDb.fineTuneJobs || [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+};
+
+const canViewDeployedJob = (job, user) => {
+  if (user?.role === 'Admin') return true;
+  if (!job?.isDeployed || job.status !== 'Completed') return false;
+  const accessRoles = Array.isArray(job.accessRoles) && job.accessRoles.length
+    ? job.accessRoles
+    : ['Manager', 'Employee'];
+  if (!accessRoles.includes(user?.role)) return false;
+  const departmentMatches = job.department === user.department || job.department === 'All';
+  const networkKeys = getUserNetworkKeys(user);
+  return departmentMatches && Boolean(job.networkKey && networkKeys.includes(job.networkKey));
+};
+
+const getActiveNetwork = ({ networkId = '', networkKey = '' } = {}) => {
+  const networks = Array.isArray(state.memoryDb.networks) ? state.memoryDb.networks : [];
+  if (!networkId && !networkKey) return null;
+  return networks.find(network => (
+    network.status === 'Active'
+    && ((!networkId || network._id === networkId || network.networkId === networkId)
+      && (!networkKey || network.networkKey === networkKey || network.accessToken === networkKey))
+  )) || null;
 };
 
 // GET /api/models (Admin & Managers)
@@ -136,24 +159,11 @@ router.get('/training/capabilities', authenticateToken, async (req, res) => {
 // GET /api/models/fine-tune
 router.get('/fine-tune', authenticateToken, async (req, res) => {
   try {
-    let jobs = [];
-    if (state.isMongooseConnected) {
-      jobs = await FineTuneJob.find().sort({ createdAt: -1 });
-    } else {
-      jobs = [...state.memoryDb.fineTuneJobs];
-    }
-
+    const jobs = await loadFineTuneJobs();
     const user = req.user;
-    const userNetworkKeys = getUserNetworkKeys(user);
     const visibleJobs = user.role === 'Admin'
       ? jobs
-      : jobs.filter(job => {
-          const deptMatch = job.department === user.department || job.department === 'All';
-          const globalMatch = job.isGlobal === true || job.isDeployed === true;
-          const ownerMatch = isOwnedByUser(job, user);
-          const networkMatch = Boolean(job.networkKey && userNetworkKeys.includes(job.networkKey));
-          return deptMatch && (globalMatch || ownerMatch || networkMatch);
-        });
+      : jobs.filter(job => canViewDeployedJob(job, user));
 
     res.json(visibleJobs);
   } catch (err) {
@@ -161,8 +171,8 @@ router.get('/fine-tune', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/models/fine-tune
-router.post('/fine-tune/dataset', authenticateToken, trainingDatasetUpload.single('file'), async (req, res) => {
+// Only Admins may stage confidential data for training.
+router.post('/fine-tune/dataset', authenticateToken, requireRole('Admin'), trainingDatasetUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Upload a JSON or JSONL training dataset.' });
     const saved = await TrainingRuntime.saveUploadedDataset({
@@ -175,13 +185,14 @@ router.post('/fine-tune/dataset', authenticateToken, trainingDatasetUpload.singl
   }
 });
 
-router.post('/fine-tune', authenticateToken, async (req, res) => {
+router.post('/fine-tune', authenticateToken, requireRole('Admin'), async (req, res) => {
   try {
     const user = req.user;
     const {
       jobName,
       baseModel,
       department,
+      trainingFamily,
       method,
       epochs,
       learningRate,
@@ -190,28 +201,18 @@ router.post('/fine-tune', authenticateToken, async (req, res) => {
       trainDataFile,
       testDataFile,
       trainDataFilePath,
-      isDeployed,
-      accessRoles,
-      networkId,
-      networkName,
-      networkKey
     } = req.body;
 
     if (!jobName || !baseModel || !(department || user.department)) {
       return res.status(400).json({ error: 'Job name, base model, and target department are required.' });
     }
 
-    if (user.role !== 'Admin' && Boolean(isDeployed)) {
-      return res.status(403).json({ error: 'Only the system admin can deploy agents network-wide.' });
-    }
-
     const targetDepartment = department || user.department;
-    const deploy = user.role === 'Admin' && Boolean(isDeployed);
-    const deploymentKey = deploy ? `LAN-${Math.random().toString(36).slice(2, 8).toUpperCase()}` : (networkKey || '');
     const result = await FineTuneOrchestrator.startJob({
       jobName,
       baseModel,
       department: targetDepartment,
+      trainingFamily: trainingFamily || 'LLM_FINE_TUNING',
       method: method || 'QLoRA',
       epochs,
       learningRate: learningRate || '2e-4',
@@ -224,13 +225,10 @@ router.post('/fine-tune', authenticateToken, async (req, res) => {
       testDataFile: testDataFile || '',
       trainDataFilePath: trainDataFilePath || '',
       extra: {
-        networkId: networkId || '',
-        networkName: networkName || '',
-        networkKey: networkKey || '',
-        isDeployed: deploy,
-        isGlobal: deploy,
-        accessRoles: Array.isArray(accessRoles) && accessRoles.length ? accessRoles : (deploy ? ['Employee', 'Manager', 'Admin'] : [user.role]),
-        deploymentKey
+        isDeployed: false,
+        isGlobal: false,
+        accessRoles: ['Employee', 'Manager'],
+        deploymentStatus: 'NOT_DEPLOYED'
       }
     });
     const newJob = result.job;
@@ -243,7 +241,7 @@ router.post('/fine-tune', authenticateToken, async (req, res) => {
       department: req.user.department,
       action: 'FINE_TUNE_JOB_STARTED',
       resource: '/api/models/fine-tune',
-      details: `${user.role} initiated ${newJob.method} fine-tuning job "${jobName}" on ${baseModel}${deploy ? ' and deployed network-wide' : ''}`
+      details: `Admin initiated ${newJob.method} fine-tuning job "${jobName}" on ${baseModel} for ${targetDepartment}`
     });
 
     res.status(201).json({
@@ -258,11 +256,24 @@ router.post('/fine-tune', authenticateToken, async (req, res) => {
   }
 });
 
+// Deployed model catalog for Manager/Employee agent surfaces.
+router.get('/fine-tune/deployed', authenticateToken, async (req, res) => {
+  try {
+    const jobs = await loadFineTuneJobs();
+    const visibleJobs = req.user.role === 'Admin'
+      ? jobs.filter(job => job.isDeployed && job.status === 'Completed')
+      : jobs.filter(job => canViewDeployedJob(job, req.user));
+    res.json(visibleJobs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch deployed models.' });
+  }
+});
+
 router.get('/fine-tune/:id', authenticateToken, async (req, res) => {
   try {
     const job = await FineTuneOrchestrator.getJob(req.params.id);
     if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
-    if (!isOwnedByUser(job, req.user) && req.user.role !== 'Admin') {
+    if (!canViewDeployedJob(job, req.user)) {
       return res.status(403).json({ error: 'You are not allowed to view this training job.' });
     }
     res.json(job);
@@ -271,13 +282,10 @@ router.get('/fine-tune/:id', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/fine-tune/:id/cancel', authenticateToken, async (req, res) => {
+router.post('/fine-tune/:id/cancel', authenticateToken, requireRole('Admin'), async (req, res) => {
   try {
     const job = await FineTuneOrchestrator.getJob(req.params.id);
     if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
-    if (!isOwnedByUser(job, req.user) && req.user.role !== 'Admin') {
-      return res.status(403).json({ error: 'Only the job owner or an administrator can cancel training.' });
-    }
     const updated = await FineTuneOrchestrator.cancelJob(req.params.id);
     res.json({ message: 'Cancellation requested.', job: updated });
   } catch (err) {
@@ -285,13 +293,10 @@ router.post('/fine-tune/:id/cancel', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/fine-tune/:id/validate', authenticateToken, async (req, res) => {
+router.post('/fine-tune/:id/validate', authenticateToken, requireRole('Admin'), async (req, res) => {
   try {
     const job = await FineTuneOrchestrator.getJob(req.params.id);
     if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
-    if (!isOwnedByUser(job, req.user) && req.user.role !== 'Admin') {
-      return res.status(403).json({ error: 'Only the job owner or an administrator can validate training.' });
-    }
     const result = await FineTuneOrchestrator.validateJob(req.params.id);
     res.json(result);
   } catch (err) {
@@ -299,10 +304,9 @@ router.post('/fine-tune/:id/validate', authenticateToken, async (req, res) => {
   }
 });
 
-router.delete('/fine-tune/:id', authenticateToken, async (req, res) => {
+router.delete('/fine-tune/:id', authenticateToken, requireRole('Admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const user = req.user;
     let jobs = [];
     if (state.isMongooseConnected) {
       jobs = await FineTuneJob.find().sort({ createdAt: -1 });
@@ -312,13 +316,6 @@ router.delete('/fine-tune/:id', authenticateToken, async (req, res) => {
 
     const job = jobs.find(j => String(j._id) === String(id));
     if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
-    if (user.role !== 'Admin' && !isOwnedByUser(job, user)) {
-      return res.status(403).json({ error: 'You can only remove your own training jobs.' });
-    }
-    if (user.role !== 'Admin' && job.isDeployed) {
-      return res.status(403).json({ error: 'Only the admin can remove a deployed network agent.' });
-    }
-
     if (state.isMongooseConnected) {
       await FineTuneJob.deleteOne({ _id: job._id });
     } else {
@@ -334,35 +331,88 @@ router.delete('/fine-tune/:id', authenticateToken, async (req, res) => {
 router.post('/fine-tune/:id/deploy', authenticateToken, requireRole('Admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { networkKey, networkName, networkId } = req.body || {};
+    const { networkId, networkKey } = req.body || {};
     let job;
-    const generatedKey = networkKey || `LAN-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     if (state.isMongooseConnected) {
       job = await FineTuneJob.findById(id);
       if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
-      job.isDeployed = true;
-      job.isGlobal = true;
-      job.accessRoles = ['Employee', 'Manager', 'Admin'];
-      job.networkKey = generatedKey;
-      job.networkName = networkName || job.networkName || 'Primary Enterprise LAN';
-      job.networkId = networkId || job.networkId || 'lan-primary';
-      job.deploymentKey = job.deploymentKey || generatedKey;
-      await job.save();
     } else {
       job = state.memoryDb.fineTuneJobs.find(j => String(j._id) === String(id));
       if (!job) return res.status(404).json({ error: 'Fine-tune job not found.' });
-      job.isDeployed = true;
-      job.isGlobal = true;
-      job.accessRoles = ['Employee', 'Manager', 'Admin'];
-      job.networkKey = generatedKey;
-      job.networkName = networkName || job.networkName || 'Primary Enterprise LAN';
-      job.networkId = networkId || job.networkId || 'lan-primary';
-      job.deploymentKey = job.deploymentKey || generatedKey;
     }
 
-    res.json({ message: 'Agent deployed across the LAN network.', job });
+    if (job.status !== 'Completed') {
+      return res.status(409).json({ error: `Model cannot be deployed while the job status is ${job.status}.` });
+    }
+    if (job.validation?.status !== 'PASSED' || job.evaluationStatus !== 'PASSED') {
+      return res.status(409).json({
+        error: 'Model deployment is blocked until a held-out evaluation is completed and marked PASSED.',
+        evaluationStatus: job.evaluationStatus || 'REVIEW_REQUIRED',
+        validation: job.validation || null
+      });
+    }
+
+    const network = getActiveNetwork({ networkId: networkId || job.networkId, networkKey: networkKey || job.networkKey });
+    if (!network || !network.networkKey) {
+      return res.status(409).json({ error: 'Select an active private LAN with a valid access token before deploying the model.' });
+    }
+
+    const deployedAt = new Date();
+    const deploymentPatch = {
+      isDeployed: true,
+      isGlobal: true,
+      accessRoles: ['Employee', 'Manager'],
+      networkKey: network.networkKey,
+      networkName: network.name,
+      networkId: network.networkId || network._id,
+      deploymentKey: job.deploymentKey || network.networkKey,
+      deploymentStatus: 'DEPLOYED',
+      deployedAt,
+      deployedBy: String(req.user._id || req.user.id || req.user.name || '')
+    };
+
+    if (state.isMongooseConnected) {
+      job = await FineTuneJob.findByIdAndUpdate(id, { $set: deploymentPatch }, { new: true, runValidators: true });
+    } else {
+      Object.assign(job, deploymentPatch, { updatedAt: deployedAt });
+    }
+
+    const recipients = await getNotificationRecipients({ department: job.department, roles: ['Manager', 'Employee'] });
+    const notifications = pushNotifications({
+      recipientUserIds: recipients.map(recipient => String(recipient._id || recipient.id || '')),
+      type: 'MODEL_DEPLOYED',
+      title: `Model deployed to ${network.name}`,
+      message: `${job.jobName} is available for your ${job.department} agent workflow after joining the private LAN.`,
+      summary: `${job.baseModel} · ${job.method} · ${job.department}`,
+      networkId: network.networkId || network._id,
+      networkName: network.name,
+      networkKey: network.networkKey,
+      metadata: {
+        jobId: String(job._id || job.id),
+        jobName: job.jobName,
+        baseModel: job.baseModel,
+        trainingFamily: job.trainingFamily || 'LLM_FINE_TUNING',
+        method: job.method,
+        requiresLanMembership: true,
+        deployedAt: deployedAt.toISOString()
+      }
+    });
+
+    createAuditEntry({
+      userId: req.user._id || req.user.id,
+      userName: req.user.name,
+      role: req.user.role,
+      department: req.user.department,
+      action: 'FINE_TUNE_JOB_DEPLOYED',
+      resource: `/api/models/fine-tune/${id}/deploy`,
+      status: 'SUCCESS',
+      details: `Admin deployed ${job.jobName} to active private LAN ${network.name}; notified ${notifications.length} manager/employee recipient(s)`
+    });
+
+    res.json({ message: 'Model deployed to the active private LAN.', job, notificationCount: notifications.length });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to deploy fine-tune job.' });
+    const status = Number.isInteger(err.status) ? err.status : 500;
+    res.status(status).json({ error: status === 500 ? 'Failed to deploy fine-tune job.' : err.message });
   }
 });
 

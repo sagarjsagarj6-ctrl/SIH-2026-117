@@ -90,90 +90,86 @@ export const AdminDashboard = () => {
   const { hardwareUtilization } = telemetry;
 
   return (
-    <div style={{ padding: '32px', color: 'var(--text-main)', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ padding: '14px 18px 18px', color: 'var(--text-main)', maxWidth: '1400px', width: '100%', height: '100%', boxSizing: 'border-box', margin: '0 auto', overflow: 'auto' }}>
       {/* Admin Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
         <div>
-          <div className="badge badge-rose" style={{ marginBottom: '8px' }}>SYSTEM GOVERNANCE & TELEMETRY</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Admin Platform Control Center</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Air-gapped server telemetry, user governance matrix, and security audit trail</p>
+         
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>Admin Control</h1>
+          
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-secondary" onClick={fetchAdminData} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-            <RefreshCw size={16} /> Sync Telemetry
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button className="btn-secondary" onClick={fetchAdminData} style={{ padding: '6px 10px', fontSize: '0.72rem' }}>
+            <RefreshCw size={14} /> Sync Telemetry
           </button>
-          <button className="btn-secondary" onClick={handleRemoveDemoData} disabled={cleaningDemoData} style={{ padding: '8px 16px', fontSize: '0.85rem', color: 'var(--accent-rose)' }}>
-            <AlertOctagon size={16} /> {cleaningDemoData ? 'Removing Demo Data...' : 'Remove Demo Data'}
+          <button className="btn-secondary" onClick={handleRemoveDemoData} disabled={cleaningDemoData} style={{ padding: '6px 10px', fontSize: '0.72rem', color: 'var(--accent-rose)' }}>
+            <AlertOctagon size={14} /> {cleaningDemoData ? 'Removing Demo Data...' : 'Remove Demo Data'}
           </button>
         </div>
       </div>
 
       {/* Overview Metric Widgets */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>AIR-GAP NETWORK</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-green)' }}>{telemetry.lanStatus}</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>Score: {telemetry.airGapSecurityScore}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', marginBottom: '14px' }}>
+        
+
+        <div className="glass-card" style={{ padding: '12px 14px' }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '5px' }}>REGISTERED USERS</div>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, lineHeight: 1.1 }}>{telemetry.registeredUsers}</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--accent-cyan)', marginTop: '3px' }}>{telemetry.activeSessions} Active Sessions</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>REGISTERED USERS</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{telemetry.registeredUsers}</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', marginTop: '4px' }}>{telemetry.activeSessions} Active Sessions</div>
+        <div className="glass-card" style={{ padding: '12px 14px' }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '5px' }}>LOCAL MODELS DEPLOYED</div>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, lineHeight: 1.1 }}>{telemetry.activeModelsCount} / {telemetry.totalModelsDeployed}</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--accent-purple)', marginTop: '3px' }}>vLLM & Ollama Acceleration</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>LOCAL MODELS DEPLOYED</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{telemetry.activeModelsCount} / {telemetry.totalModelsDeployed}</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--accent-purple)', marginTop: '4px' }}>vLLM & Ollama Acceleration</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>TOTAL AUDIT ENTRIES</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{telemetry.totalAuditLogsRecorded}</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--accent-green)', marginTop: '4px' }}>100% Tamper-Proof Audit</div>
+        <div className="glass-card" style={{ padding: '12px 14px' }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '5px' }}>TOTAL AUDIT ENTRIES</div>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, lineHeight: 1.1 }}>{telemetry.totalAuditLogsRecorded}</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--accent-green)', marginTop: '3px' }}>100% Tamper-Proof Audit</div>
         </div>
       </div>
 
       {/* Hardware Utilization Matrix */}
-      <div className="glass-panel" style={{ padding: '24px', marginBottom: '32px', border: '1px solid var(--border-highlight)' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Cpu size={18} color="var(--accent-cyan)" /> Real-Time Local Server Hardware Pressure
+      <div className="glass-panel" style={{ padding: '14px', marginBottom: '14px', border: '1px solid var(--border-highlight)' }}>
+        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Cpu size={16} color="var(--accent-cyan)" /> Real-Time Local Server Hardware Pressure
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '12px' }}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px' }}>
               <span>CPU Utilization</span>
               <strong>{hardwareUtilization.cpuPct}%</strong>
             </div>
-            <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+            <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
               <div style={{ height: '100%', width: `${hardwareUtilization.cpuPct}%`, background: 'var(--accent-cyan)', borderRadius: '4px' }} />
             </div>
           </div>
 
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px' }}>
               <span>System RAM ({hardwareUtilization.ramUsedGB} / {hardwareUtilization.ramTotalGB} GB)</span>
               <strong>{Math.round((hardwareUtilization.ramUsedGB / hardwareUtilization.ramTotalGB)*100)}%</strong>
             </div>
-            <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+            <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
               <div style={{ height: '100%', width: `${(hardwareUtilization.ramUsedGB / hardwareUtilization.ramTotalGB)*100}%`, background: 'var(--accent-indigo)', borderRadius: '4px' }} />
             </div>
           </div>
 
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px' }}>
               <span>GPU VRAM ({hardwareUtilization.vramUsedGB} / {hardwareUtilization.vramTotalGB} GB)</span>
               <strong>{Math.round((hardwareUtilization.vramUsedGB / hardwareUtilization.vramTotalGB)*100)}%</strong>
             </div>
-            <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+            <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
               <div style={{ height: '100%', width: `${(hardwareUtilization.vramUsedGB / hardwareUtilization.vramTotalGB)*100}%`, background: 'var(--accent-purple)', borderRadius: '4px' }} />
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Thermal Load Status</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-green)', marginTop: '4px' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Thermal Load Status</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-green)', marginTop: '3px' }}>
               {hardwareUtilization.tempCelsius}°C (Optimal Cooling)
             </div>
           </div>
@@ -181,24 +177,24 @@ export const AdminDashboard = () => {
       </div>
 
       {/* User Governance Table */}
-      <div className="glass-card" style={{ padding: '28px', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="glass-card" style={{ padding: '14px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Enterprise User Access Governance Matrix</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage user roles, department access boundaries, and account status</p>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Enterprise User Access Governance Matrix</h3>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '3px 0 0' }}>Manage user roles, department access boundaries, and account status</p>
           </div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.75rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '12px' }}>Name & Email</th>
-                <th style={{ padding: '12px' }}>Role</th>
-                <th style={{ padding: '12px' }}>Department</th>
-                <th style={{ padding: '12px' }}>AI Profile</th>
-                <th style={{ padding: '12px' }}>Status</th>
-                <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                <th style={{ padding: '7px 8px' }}>Name & Email</th>
+                <th style={{ padding: '7px 8px' }}>Role</th>
+                <th style={{ padding: '7px 8px' }}>Department</th>
+                <th style={{ padding: '7px 8px' }}>AI Profile</th>
+                <th style={{ padding: '7px 8px' }}>Status</th>
+                <th style={{ padding: '7px 8px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -207,12 +203,12 @@ export const AdminDashboard = () => {
                 const isEditing = editingUser?.id === uId;
                 return (
                   <tr key={uId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '14px 12px' }}>
+                    <td style={{ padding: '8px' }}>
                       <div style={{ fontWeight: 700 }}>{u.name}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                      <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>{u.email}</div>
                     </td>
 
-                    <td style={{ padding: '12px' }}>
+                    <td style={{ padding: '8px' }}>
                       {isEditing ? (
                         <select 
                           value={editingUser.role} 
@@ -231,7 +227,7 @@ export const AdminDashboard = () => {
                       )}
                     </td>
 
-                    <td style={{ padding: '12px' }}>
+                    <td style={{ padding: '8px' }}>
                       {isEditing ? (
                         <select 
                           value={editingUser.department} 
@@ -249,17 +245,17 @@ export const AdminDashboard = () => {
                       )}
                     </td>
 
-                    <td style={{ padding: '12px' }}>
-                      <span className="mono" style={{ color: 'var(--accent-indigo)', fontSize: '0.8rem' }}>
+                    <td style={{ padding: '8px' }}>
+                      <span className="mono" style={{ color: 'var(--accent-indigo)', fontSize: '0.7rem' }}>
                         {u.assignedAIProfile || 'Balanced'}
                       </span>
                     </td>
 
-                    <td style={{ padding: '12px' }}>
+                    <td style={{ padding: '8px' }}>
                       <span className="badge badge-green">Active</span>
                     </td>
 
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>
                       {isEditing ? (
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                           <button 
