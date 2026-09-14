@@ -40,7 +40,7 @@
         "sameMeans": false
       },
       "orchAutoMode": "SEQUENTIAL",
-      "inferenceBackend": "Ollama Engine (Air-Gapped Sovereign Fallback)"
+      "inferenceBackend": "Ollama (Live Local Daemon)"
     }
   ]
 }

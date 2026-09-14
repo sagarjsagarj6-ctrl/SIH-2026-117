@@ -10,8 +10,8 @@
     },
     "ram": {
       "totalGB": 7.3,
-      "availableGB": 0.4,
-      "usedGB": 6.9,
+      "availableGB": 0.7,
+      "usedGB": 6.6,
       "type": "Dynamic local system memory"
     },
     "gpu": {
@@ -26,7 +26,7 @@
     "storage": {
       "type": "Local NVMe / SSD Storage",
       "readSpeedMBs": 780,
-      "freeGB": 20.3
+      "freeGB": 20.6
     },
     "network": {
       "status": "Isolated LAN / Air-Gapped",

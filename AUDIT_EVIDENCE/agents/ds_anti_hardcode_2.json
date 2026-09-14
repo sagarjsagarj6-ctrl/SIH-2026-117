@@ -11,17 +11,20 @@
       "dataSource": "query_numbers",
       "inference": {
         "used": true,
-        "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
-        "usedFallback": true,
+        "live": true,
+        "backend": "Ollama (Live Local Daemon)",
+        "usedFallback": false,
+        "modelUsed": "qwen2.5-coder:1.5b",
         "metrics": {
           "inputTokens": 191,
-          "tokensGenerated": 95,
-          "totalTokens": 286,
-          "latencyMs": 12,
-          "tokensPerSecond": 7916.7
-        }
+          "tokensGenerated": 438,
+          "totalTokens": 629,
+          "latencyMs": 33844,
+          "tokensPerSecond": 12.9
+        },
+        "error": null
       },
-      "modelNarrative": "",
+      "modelNarrative": "Here are the key findings based on the provided metrics:\n\n**Statistics:**\n- **Count:** 3\n- **Sum:** 60\n- **Mean:** 20\n- **Median:** 20\n- **Min:** 10\n- **Max:** 30\n- **Variance:** 66.67\n- **Std Dev:** 8.16\n\nThese statistics provide a snapshot of the data distribution:\n- The mean and median are both 20, indicating that the data is centered around this value.\n- The min and max values are 10 and 30, respectively, showing the spread of the data.\n- The variance (66.67) indicates that the data points are relatively close to each other, suggesting a normal distribution.\n\n**Anomalies:**\nNo outliers were identified as there is no indication in the statistics or anomalies section. The \"hasAnomalies\" flag remains false, indicating that no significant deviations from the norm were detected in this set of numbers.\n\n**Regression Analysis:**\n- **Slope:** 10\n- **Intercept:** 0\n- **R2:** 1\n- **Trend Direction:** UPWARD\n- **Forecast Next:** 40\n\nThe regression analysis indicates that there is a perfect linear relationship between the data points and the y-axis (no intercept), with the slope being consistently positive and equal to 10. This suggests an upward trend in the data.\n\n**Actionable Insights:**\nGiven that no anomalies were detected, this implies that the current performance of the department's strategy seems stable or slightly improving. The upward trend in the regression analysis indicates a consistent growth direction, which is encouraging. However, as the numbers stabilize, the slope would need to increase further if the trend continues.\n\nIn summary:\n- The mean and median values are consistent with the data.\n- No significant deviations from normality were observed.\n- There appears to be an upward trend in performance based on the regression analysis.\n- To maintain or potentially improve this trend, the strategy should focus on continued positive growth without sudden fluctuations.",
       "series": [
         10,
         20,
@@ -145,8 +148,8 @@
     "citations": [],
     "confidence": 0.95,
     "trace": {
-      "traceId": "trace_8097a2d4",
-      "queryId": "query_1789148691293",
+      "traceId": "trace_a3734e7d",
+      "queryId": "query_1789411093763",
       "userQuery": "series 10 20 30 total",
       "orchestrationMode": "SINGLE",
       "agentChain": [
@@ -160,17 +163,17 @@
           "reasoning": "Selected based on query intent classification (DATA_SCIENCE)",
           "confidence": 0.95,
           "sourcesUsed": [],
-          "latencyMs": 29,
+          "latencyMs": 33852,
           "tokensUsed": 172,
-          "timestamp": "2026-09-11T17:44:51.322Z"
+          "timestamp": "2026-09-14T18:38:47.615Z"
         }
       ],
       "aggregateMetrics": {
         "totalTokens": 172,
-        "totalLatencyMs": 29,
+        "totalLatencyMs": 33852,
         "averageConfidence": 0.95
       },
-      "completedAt": "2026-09-11T17:44:51.322Z"
+      "completedAt": "2026-09-14T18:38:47.615Z"
     }
   }
 }

@@ -5,9 +5,15 @@
  */
 
 import 'dotenv/config';
+import mongoose from 'mongoose';
+import { connectDB } from './config/db.js';
 import { EnvChecker } from './services/config/EnvChecker.js';
 
 async function runDiagnostics() {
+  // The CLI runs outside the main server process, so establish the same
+  // database connection before asking EnvChecker for database readiness.
+  await connectDB();
+
   console.log('\n======================================================================');
   console.log('  SOVEREIGN AI ENTERPRISE WORKBENCH — ENVIRONMENT & CAPABILITY AUDIT  ');
   console.log('======================================================================\n');
@@ -49,6 +55,7 @@ async function runDiagnostics() {
     console.log('\nAll core configuration checks passed with optimal settings.');
   }
   console.log('\nAudit complete.\n');
+  await mongoose.disconnect();
 }
 
 runDiagnostics().catch(console.error);

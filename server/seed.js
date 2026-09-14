@@ -350,6 +350,23 @@ export const seedInitialData = async () => {
         await DataQualityReport.insertMany(seedQualityReports);
         console.log('[Seed] MongoDB successfully populated with enterprise seed datasets!');
       } else {
+        // Preserve existing accounts, but restore any missing built-in demo
+        // identities. A partially initialized MongoDB must not silently lose
+        // the Manager/Employee roles required by LAN and communication flows.
+        const existingUserEmails = new Set((await User.find().select('email')).map(user => user.email));
+        const missingUsers = seedUsers.filter(user => !existingUserEmails.has(user.email));
+        if (missingUsers.length > 0) {
+          await User.insertMany(missingUsers);
+          console.log(`[Seed] Restored ${missingUsers.length} missing demo user account(s).`);
+        }
+
+        const existingDepartmentCodes = new Set((await Department.find().select('code')).map(department => department.code));
+        const missingDepartments = seedDepartments.filter(department => !existingDepartmentCodes.has(department.code));
+        if (missingDepartments.length > 0) {
+          await Department.insertMany(missingDepartments);
+          console.log(`[Seed] Restored ${missingDepartments.length} missing department record(s).`);
+        }
+
         const existingModelNames = new Set((await Model.find().select('name')).map(model => model.name));
         const missingModels = seedModels.filter(model => !existingModelNames.has(model.name));
         if (missingModels.length > 0) {
@@ -373,6 +390,18 @@ export const seedInitialData = async () => {
         state.memoryDb.auditLogs = seedAuditLogs.map((a, i) => ({ _id: `audit_seed_${i+1}`, timestamp: new Date(), ...a }));
         state.memoryDb.dataQualityReports = seedQualityReports.map((q, i) => ({ _id: `quality_seed_${i+1}`, createdAt: new Date(), ...q }));
         console.log('[Seed] In-Memory DB populated with enterprise demo accounts and data!');
+      } else {
+        const existingUserEmails = new Set(state.memoryDb.users.map(user => user.email));
+        const missingUsers = seedUsers
+          .filter(user => !existingUserEmails.has(user.email))
+          .map((user, index) => ({ _id: `usr_seed_restored_${Date.now()}_${index}`, ...user }));
+        if (missingUsers.length > 0) state.memoryDb.users.push(...missingUsers);
+
+        const existingDepartmentCodes = new Set(state.memoryDb.departments.map(department => department.code));
+        const missingDepartments = seedDepartments
+          .filter(department => !existingDepartmentCodes.has(department.code))
+          .map((department, index) => ({ _id: `dept_seed_restored_${Date.now()}_${index}`, ...department }));
+        if (missingDepartments.length > 0) state.memoryDb.departments.push(...missingDepartments);
       }
     }
   } catch (err) {

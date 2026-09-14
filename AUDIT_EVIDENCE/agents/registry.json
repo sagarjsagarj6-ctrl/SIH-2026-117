@@ -54,6 +54,42 @@
           "Confidential watermark governance"
         ],
         "description": "Compiles multi-agent analytical outputs into structured, watermarked executive reports."
+      },
+      {
+        "id": "HARDWARE_MANUAL",
+        "name": "Hardware Manual Agent",
+        "category": "Image Model Team",
+        "defaultModel": "Hardware-Manual-Catalog",
+        "capabilities": [
+          "Retrieve Admin-trained hardware manuals",
+          "Match labeled training images",
+          "Return catalog-backed part specifications"
+        ],
+        "description": "Searches the image-model catalog of company hardware manuals and labeled images."
+      },
+      {
+        "id": "IMAGE_ANALYSIS",
+        "name": "Image Analysis Agent",
+        "category": "Image Model Team",
+        "defaultModel": "Qwen2-VL-7B-Instruct",
+        "capabilities": [
+          "Local image OCR and metadata inspection",
+          "Structured feature cards (category, metal, lifespan)",
+          "Evidence-first findings with empty unknown fields"
+        ],
+        "description": "Processes a camera or gallery image into key hardware findings."
+      },
+      {
+        "id": "IMAGE_COMPARE",
+        "name": "Comparison & Prediction Agent",
+        "category": "Image Model Team",
+        "defaultModel": "Hardware-Compare-Ranker",
+        "capabilities": [
+          "Compare image findings with catalog matches",
+          "Rank predictions for the user query",
+          "Report disagreements instead of fabricating specs"
+        ],
+        "description": "Compares vision findings with trained manuals and answers the user query."
       }
     ]
   }

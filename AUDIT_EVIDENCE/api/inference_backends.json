@@ -3,10 +3,13 @@
   "ok": true,
   "json": {
     "backends": {
-      "ollama": "AIR_GAP_MODE",
-      "vllm": "AIR_GAP_MODE",
-      "llamacpp": "AIR_GAP_MODE",
-      "sovereignEngine": "ACTIVE_PRIMARY"
+      "ollama": "ONLINE",
+      "vllm": "STOPPED",
+      "llamacpp": "STOPPED",
+      "primaryBackend": "Ollama",
+      "sovereignEngine": "ACTIVE_PRIMARY",
+      "dataPrivacy": "VERIFIED_SOVEREIGN",
+      "externalAPIs": "NONE"
     }
   }
 }

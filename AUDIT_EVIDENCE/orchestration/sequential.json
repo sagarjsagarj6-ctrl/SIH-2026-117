@@ -9,195 +9,51 @@
       "dataScience": {
         "agent": "DataScienceAgent",
         "query": "Retrieve knowledge then analyze statistics and write report",
-        "summary": "No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93.",
-        "dataSource": "department_sample_fallback",
+        "summary": "No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.",
+        "dataSource": "no_numeric_input",
         "inference": {
-          "used": true,
-          "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
-          "usedFallback": true,
-          "metrics": {
-            "inputTokens": 219,
-            "tokensGenerated": 95,
-            "totalTokens": 314,
-            "latencyMs": 13,
-            "tokensPerSecond": 7307.7
-          }
+          "used": false,
+          "live": false,
+          "usedFallback": false,
+          "backend": null
         },
         "modelNarrative": "",
-        "series": [
-          120,
-          142,
-          138,
-          155,
-          148,
-          162,
-          159,
-          210,
-          165,
-          172
-        ],
+        "series": [],
         "statistics": {
-          "count": 10,
-          "sum": 1571,
-          "mean": 157.1,
-          "median": 157,
-          "min": 120,
-          "max": 210,
-          "variance": 516.69,
-          "stdDev": 22.73
+          "count": 0,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "max": null,
+          "stdDev": null
         },
         "anomalies": {
           "iqr": {
-            "q1": 142,
-            "q3": 165,
-            "iqr": 23,
-            "lowerBound": 107.5,
-            "upperBound": 199.5,
-            "outliers": [
-              210
-            ],
-            "hasAnomalies": true
+            "outliers": []
           },
           "zScore": {
-            "threshold": 1.8,
-            "outliers": [
-              {
-                "index": 7,
-                "value": 210,
-                "zScore": 2.33
-              }
-            ],
-            "hasAnomalies": true
+            "outliers": []
           }
         },
-        "regression": {
-          "slope": 6.15,
-          "intercept": 123.27,
-          "r2": 0.604,
-          "trendDirection": "UPWARD",
-          "forecastNext": 190.93
-        },
-        "charts": {
-          "trendLine": {
-            "type": "line",
-            "title": "Executive & Strategy Operational Trajectory & Forecast",
-            "labels": [
-              "W1",
-              "W2",
-              "W3",
-              "W4",
-              "W5",
-              "W6",
-              "W7",
-              "W8",
-              "W9",
-              "W10",
-              "Next (Est.)"
-            ],
-            "datasets": [
-              {
-                "label": "Executive & Strategy Metric Throughput",
-                "data": [
-                  120,
-                  142,
-                  138,
-                  155,
-                  148,
-                  162,
-                  159,
-                  210,
-                  165,
-                  172,
-                  190.93
-                ],
-                "borderColor": "#00fff2",
-                "backgroundColor": "rgba(0, 255, 242, 0.15)",
-                "fill": true
-              }
-            ]
-          },
-          "anomalyBar": {
-            "type": "bar",
-            "title": "Executive & Strategy Anomaly Detection Distribution",
-            "labels": [
-              "W1",
-              "W2",
-              "W3",
-              "W4",
-              "W5",
-              "W6",
-              "W7",
-              "W8",
-              "W9",
-              "W10"
-            ],
-            "datasets": [
-              {
-                "label": "Dataset Values",
-                "data": [
-                  120,
-                  142,
-                  138,
-                  155,
-                  148,
-                  162,
-                  159,
-                  210,
-                  165,
-                  172
-                ],
-                "backgroundColor": [
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#ff0055",
-                  "#00fff2",
-                  "#00fff2"
-                ],
-                "hasAnomalies": true,
-                "outlierCount": 1
-              }
-            ]
-          }
-        },
+        "regression": null,
+        "charts": null,
         "metrics": {
-          "totalRecordsAnalyzed": 10,
-          "anomalyRatePct": 10,
-          "confidenceScore": 0.72,
+          "totalRecordsAnalyzed": 0,
+          "anomalyRatePct": null,
+          "confidenceScore": 0,
           "meanResponseTimeMs": null,
-          "mean": 157.1,
-          "stdDev": 22.73
+          "mean": null,
+          "stdDev": null
         },
         "chartData": {
-          "title": "Executive & Strategy Operational Trajectory & Forecast",
-          "labels": [
-            "W1",
-            "W2",
-            "W3",
-            "W4"
-          ],
-          "series": [
-            {
-              "name": "Observed",
-              "data": [
-                120,
-                142,
-                138,
-                155
-              ]
-            }
-          ]
+          "title": "No data analyzed",
+          "labels": [],
+          "series": []
         },
         "insights": [
-          "No numeric series found in query/context — using labeled Executive & Strategy sample series.",
-          "Mean=157.1, median=157, max=210.",
-          "Outliers detected: 210."
+          "No statistical sample was created from department defaults."
         ],
-        "tokensUsed": 200
+        "tokensUsed": 20
       },
       "reporting": {
         "agent": "ReportingAgent",
@@ -206,37 +62,44 @@
         "watermark": "CONFIDENTIAL — GENERATED BY SOVEREIGN AI ON-PREMISE WORKBENCH",
         "sections": [
           {
+            "heading": "Local Model Narrative",
+            "content": "---\n\n### Executive Briefing\n\nThis executive brief compiles the findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## Core Analytical Findings\n\n1. **Data Science Finding**: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n  \n---\n\n## Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## Strategic Recommendations\n\n- **Recommendation 1**: Review the cited evidence and computed metrics before acting on this report."
+          },
+          {
             "heading": "1. Executive Briefing",
-            "content": "This intelligence document compiles findings and verified evidence for Executive & Strategy. All analytical operations, vector embeddings, and inference calculations were executed 100% locally within an air-gapped sovereign perimeter without external cloud transmission."
+            "content": "This report compiles the supplied findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it."
           },
           {
             "heading": "2. Core Analytical Findings",
-            "content": "1. Data Science Finding: No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93."
+            "content": "1. Data Science Finding: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis."
           },
           {
             "heading": "3. Quantitative Telemetry & Key Indicators",
-            "content": "• Sample Mean: 157.1\n• Std Deviation: 22.73\n• Trend Direction: UPWARD"
+            "content": "• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined"
           },
           {
             "heading": "4. Strategic Recommendations",
-            "content": "• Recommendation 1: Maintain daily local vector embeddings synchronization.\n• Recommendation 2: Review detected numerical outliers in upcoming departmental committee meeting.\n• Recommendation 3: Archive current intelligence dossier to immutable on-premise audit log."
+            "content": "• Recommendation 1: Review the cited evidence and computed metrics before acting on this report."
           }
         ],
-        "markdown": "# SOVEREIGN AI EXECUTIVE INTELLIGENCE & AUDIT DOSSIER — EXECUTIVE & STRATEGY\n\n> **Classification**: TOP SECRET // RESTRICTED DEPT DISTRIBUTION\n> **Watermark**: CONFIDENTIAL — GENERATED BY SOVEREIGN AI ON-PREMISE WORKBENCH\n> **Generated**: 2026-09-11T17:44:50.760Z\n\n## 1. Executive Briefing\n\nThis intelligence document compiles findings and verified evidence for Executive & Strategy. All analytical operations, vector embeddings, and inference calculations were executed 100% locally within an air-gapped sovereign perimeter without external cloud transmission.\n\n---\n\n## 2. Core Analytical Findings\n\n1. Data Science Finding: No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93.\n\n---\n\n## 3. Quantitative Telemetry & Key Indicators\n\n• Sample Mean: 157.1\n• Std Deviation: 22.73\n• Trend Direction: UPWARD\n\n---\n\n## 4. Strategic Recommendations\n\n• Recommendation 1: Maintain daily local vector embeddings synchronization.\n• Recommendation 2: Review detected numerical outliers in upcoming departmental committee meeting.\n• Recommendation 3: Archive current intelligence dossier to immutable on-premise audit log.\n\n\n*Sovereign AI Verification Checksum Verified — Air-Gap Secured*",
-        "modelNarrative": "",
+        "markdown": "## Local Model Narrative\n\n---\n\n### Executive Briefing\n\nThis executive brief compiles the findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## Core Analytical Findings\n\n1. **Data Science Finding**: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n  \n---\n\n## Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## Strategic Recommendations\n\n- **Recommendation 1**: Review the cited evidence and computed metrics before acting on this report.\n\n# SOVEREIGN AI EXECUTIVE INTELLIGENCE & AUDIT DOSSIER — EXECUTIVE & STRATEGY\n\n> **Classification**: TOP SECRET // RESTRICTED DEPT DISTRIBUTION\n> **Watermark**: CONFIDENTIAL — GENERATED BY SOVEREIGN AI ON-PREMISE WORKBENCH\n> **Generated**: 2026-09-14T18:37:19.187Z\n\n## 1. Executive Briefing\n\nThis report compiles the supplied findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## 2. Core Analytical Findings\n\n1. Data Science Finding: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n\n---\n\n## 3. Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## 4. Strategic Recommendations\n\n• Recommendation 1: Review the cited evidence and computed metrics before acting on this report.\n\n\n*Report integrity metadata recorded. Verify conclusions against the cited sources and local-model runtime status.*",
+        "modelNarrative": "---\n\n### Executive Briefing\n\nThis executive brief compiles the findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## Core Analytical Findings\n\n1. **Data Science Finding**: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n  \n---\n\n## Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## Strategic Recommendations\n\n- **Recommendation 1**: Review the cited evidence and computed metrics before acting on this report.",
         "inference": {
           "used": true,
-          "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
-          "usedFallback": true,
+          "live": true,
+          "backend": "Ollama (Live Local Daemon)",
+          "usedFallback": false,
+          "modelUsed": "qwen2.5-coder:1.5b",
           "metrics": {
-            "inputTokens": 475,
-            "tokensGenerated": 95,
-            "totalTokens": 570,
-            "latencyMs": 11,
-            "tokensPerSecond": 8636.4
-          }
+            "inputTokens": 378,
+            "tokensGenerated": 140,
+            "totalTokens": 518,
+            "latencyMs": 16339,
+            "tokensPerSecond": 8.6
+          },
+          "error": null
         },
-        "generatedAt": "2026-09-11T17:44:50.760Z",
+        "generatedAt": "2026-09-14T18:37:19.187Z",
         "tokensUsed": 380
       }
     },
@@ -247,44 +110,51 @@
       "watermark": "CONFIDENTIAL — GENERATED BY SOVEREIGN AI ON-PREMISE WORKBENCH",
       "sections": [
         {
+          "heading": "Local Model Narrative",
+          "content": "---\n\n### Executive Briefing\n\nThis executive brief compiles the findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## Core Analytical Findings\n\n1. **Data Science Finding**: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n  \n---\n\n## Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## Strategic Recommendations\n\n- **Recommendation 1**: Review the cited evidence and computed metrics before acting on this report."
+        },
+        {
           "heading": "1. Executive Briefing",
-          "content": "This intelligence document compiles findings and verified evidence for Executive & Strategy. All analytical operations, vector embeddings, and inference calculations were executed 100% locally within an air-gapped sovereign perimeter without external cloud transmission."
+          "content": "This report compiles the supplied findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it."
         },
         {
           "heading": "2. Core Analytical Findings",
-          "content": "1. Data Science Finding: No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93."
+          "content": "1. Data Science Finding: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis."
         },
         {
           "heading": "3. Quantitative Telemetry & Key Indicators",
-          "content": "• Sample Mean: 157.1\n• Std Deviation: 22.73\n• Trend Direction: UPWARD"
+          "content": "• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined"
         },
         {
           "heading": "4. Strategic Recommendations",
-          "content": "• Recommendation 1: Maintain daily local vector embeddings synchronization.\n• Recommendation 2: Review detected numerical outliers in upcoming departmental committee meeting.\n• Recommendation 3: Archive current intelligence dossier to immutable on-premise audit log."
+          "content": "• Recommendation 1: Review the cited evidence and computed metrics before acting on this report."
         }
       ],
-      "markdown": "# SOVEREIGN AI EXECUTIVE INTELLIGENCE & AUDIT DOSSIER — EXECUTIVE & STRATEGY\n\n> **Classification**: TOP SECRET // RESTRICTED DEPT DISTRIBUTION\n> **Watermark**: CONFIDENTIAL — GENERATED BY SOVEREIGN AI ON-PREMISE WORKBENCH\n> **Generated**: 2026-09-11T17:44:50.760Z\n\n## 1. Executive Briefing\n\nThis intelligence document compiles findings and verified evidence for Executive & Strategy. All analytical operations, vector embeddings, and inference calculations were executed 100% locally within an air-gapped sovereign perimeter without external cloud transmission.\n\n---\n\n## 2. Core Analytical Findings\n\n1. Data Science Finding: No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93.\n\n---\n\n## 3. Quantitative Telemetry & Key Indicators\n\n• Sample Mean: 157.1\n• Std Deviation: 22.73\n• Trend Direction: UPWARD\n\n---\n\n## 4. Strategic Recommendations\n\n• Recommendation 1: Maintain daily local vector embeddings synchronization.\n• Recommendation 2: Review detected numerical outliers in upcoming departmental committee meeting.\n• Recommendation 3: Archive current intelligence dossier to immutable on-premise audit log.\n\n\n*Sovereign AI Verification Checksum Verified — Air-Gap Secured*",
-      "modelNarrative": "",
+      "markdown": "## Local Model Narrative\n\n---\n\n### Executive Briefing\n\nThis executive brief compiles the findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## Core Analytical Findings\n\n1. **Data Science Finding**: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n  \n---\n\n## Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## Strategic Recommendations\n\n- **Recommendation 1**: Review the cited evidence and computed metrics before acting on this report.\n\n# SOVEREIGN AI EXECUTIVE INTELLIGENCE & AUDIT DOSSIER — EXECUTIVE & STRATEGY\n\n> **Classification**: TOP SECRET // RESTRICTED DEPT DISTRIBUTION\n> **Watermark**: CONFIDENTIAL — GENERATED BY SOVEREIGN AI ON-PREMISE WORKBENCH\n> **Generated**: 2026-09-14T18:37:19.187Z\n\n## 1. Executive Briefing\n\nThis report compiles the supplied findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## 2. Core Analytical Findings\n\n1. Data Science Finding: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n\n---\n\n## 3. Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## 4. Strategic Recommendations\n\n• Recommendation 1: Review the cited evidence and computed metrics before acting on this report.\n\n\n*Report integrity metadata recorded. Verify conclusions against the cited sources and local-model runtime status.*",
+      "modelNarrative": "---\n\n### Executive Briefing\n\nThis executive brief compiles the findings and citations for Executive & Strategy. Conclusions are limited to the evidence shown below; a local model narrative is included only when a live local model completed it.\n\n---\n\n## Core Analytical Findings\n\n1. **Data Science Finding**: No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.\n  \n---\n\n## Quantitative Telemetry & Key Indicators\n\n• Sample Mean: null\n• Std Deviation: null\n• Trend Direction: undefined\n\n---\n\n## Strategic Recommendations\n\n- **Recommendation 1**: Review the cited evidence and computed metrics before acting on this report.",
       "inference": {
         "used": true,
-        "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
-        "usedFallback": true,
+        "live": true,
+        "backend": "Ollama (Live Local Daemon)",
+        "usedFallback": false,
+        "modelUsed": "qwen2.5-coder:1.5b",
         "metrics": {
-          "inputTokens": 475,
-          "tokensGenerated": 95,
-          "totalTokens": 570,
-          "latencyMs": 11,
-          "tokensPerSecond": 8636.4
-        }
+          "inputTokens": 378,
+          "tokensGenerated": 140,
+          "totalTokens": 518,
+          "latencyMs": 16339,
+          "tokensPerSecond": 8.6
+        },
+        "error": null
       },
-      "generatedAt": "2026-09-11T17:44:50.760Z",
+      "generatedAt": "2026-09-14T18:37:19.187Z",
       "tokensUsed": 380
     },
     "citations": [],
-    "confidence": 0.845,
+    "confidence": 0.96,
     "trace": {
-      "traceId": "trace_4ba8f591",
-      "queryId": "query_1789148690730",
+      "traceId": "trace_d1596e60",
+      "queryId": "query_1789411039187",
       "userQuery": "Retrieve knowledge then analyze statistics and write report",
       "orchestrationMode": "SEQUENTIAL",
       "agentChain": [
@@ -297,11 +167,11 @@
           "agent": "DataScienceAgent",
           "action": "Execute statistical anomaly detection and calculate metrics on retrieved figures",
           "reasoning": "Sequential Pipeline stage 1 of 2. Handed off output to downstream pipeline.",
-          "confidence": 0.72,
+          "confidence": 0.95,
           "sourcesUsed": [],
-          "latencyMs": 30,
-          "tokensUsed": 200,
-          "timestamp": "2026-09-11T17:44:50.760Z"
+          "latencyMs": 0,
+          "tokensUsed": 20,
+          "timestamp": "2026-09-14T18:37:19.187Z"
         },
         {
           "stepNumber": 2,
@@ -310,17 +180,17 @@
           "reasoning": "Sequential Pipeline stage 2 of 2. Handed off output to downstream pipeline.",
           "confidence": 0.97,
           "sourcesUsed": [],
-          "latencyMs": 17,
+          "latencyMs": 16347,
           "tokensUsed": 380,
-          "timestamp": "2026-09-11T17:44:50.777Z"
+          "timestamp": "2026-09-14T18:37:35.534Z"
         }
       ],
       "aggregateMetrics": {
-        "totalTokens": 580,
-        "totalLatencyMs": 47,
-        "averageConfidence": 0.845
+        "totalTokens": 400,
+        "totalLatencyMs": 16347,
+        "averageConfidence": 0.96
       },
-      "completedAt": "2026-09-11T17:44:50.777Z"
+      "completedAt": "2026-09-14T18:37:35.534Z"
     }
   }
 }

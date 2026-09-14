@@ -23,7 +23,9 @@ export class OllamaBackend {
     const configured = String(process.env.OLLAMA_MODEL || '').trim();
     const isCatalogueName = this.CATALOG_MODEL_NAMES.has(requested.toLowerCase());
 
-    if (!requested || isCatalogueName) return configured || 'qwen2.5:3b-instruct-q5_0';
+    // Keep a valid, commonly available local default for direct service/test
+    // usage when dotenv has not been loaded by the server entry point.
+    if (!requested || isCatalogueName) return configured || 'qwen2.5:3b';
     return requested;
   }
 

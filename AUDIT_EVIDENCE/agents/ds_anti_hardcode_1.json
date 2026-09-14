@@ -11,17 +11,20 @@
       "dataSource": "query_numbers",
       "inference": {
         "used": true,
-        "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
-        "usedFallback": true,
+        "live": true,
+        "backend": "Ollama (Live Local Daemon)",
+        "usedFallback": false,
+        "modelUsed": "qwen2.5-coder:1.5b",
         "metrics": {
           "inputTokens": 194,
-          "tokensGenerated": 95,
-          "totalTokens": 289,
-          "latencyMs": 13,
-          "tokensPerSecond": 7307.7
-        }
+          "tokensGenerated": 379,
+          "totalTokens": 573,
+          "latencyMs": 36024,
+          "tokensPerSecond": 10.5
+        },
+        "error": null
       },
-      "modelNarrative": "",
+      "modelNarrative": "The provided metrics summarize data from a query_numbers dataset:\n\n- **count**: 3 data points were collected.\n- **sum**: The total sum of all data points is 600.\n- **mean**: The average value across all data points is 200.\n- **median**: The middle value among the three data points is 200.\n- **min**: The smallest value in the dataset is 100.\n- **max**: The largest value in the dataset is 300.\n- **variance**: The average squared difference from the mean, indicating how spread out the values are. It is 6666.67.\n- **stdDev**: The standard deviation is 81.65, measuring the amount of variation or dispersion around the mean.\n\n**Anomalies:**\nThere are no detected numerical anomalies in the data according to the IQR (Interquartile Range) and Z-score methods provided. The computed statistics confirm that all values are within a reasonable range relative to each other.\n\n**Trend Analysis:**\nThe regression model shows a clear upward trend with an slope of 100, indicating that each new data point is consistently increasing by 100 units from the previous one. The R-squared value of 1 indicates that 100% of the variation in the response variable (the future values) can be explained by the model.\n\n**Actionable Insights:**\nBased on these findings:\n- **Data Validation**: Ensure that the collected data is accurate and free from outliers.\n- **Model Evaluation**: Validate the regression model using a separate dataset to confirm its predictive power.\n- **Forecasting**: Use the model to predict future trends or values if necessary.\n\nThe metrics provide a robust framework for assessing the quality and reliability of the data, which can inform business decisions.",
       "series": [
         100,
         200,
@@ -145,8 +148,8 @@
     "citations": [],
     "confidence": 0.95,
     "trace": {
-      "traceId": "trace_01ea43cf",
-      "queryId": "query_1789148691242",
+      "traceId": "trace_0de90abc",
+      "queryId": "query_1789411057716",
       "userQuery": "series 100 200 300 total",
       "orchestrationMode": "SINGLE",
       "agentChain": [
@@ -160,17 +163,17 @@
           "reasoning": "Selected based on query intent classification (DATA_SCIENCE)",
           "confidence": 0.95,
           "sourcesUsed": [],
-          "latencyMs": 28,
+          "latencyMs": 36035,
           "tokensUsed": 172,
-          "timestamp": "2026-09-11T17:44:51.271Z"
+          "timestamp": "2026-09-14T18:38:13.751Z"
         }
       ],
       "aggregateMetrics": {
         "totalTokens": 172,
-        "totalLatencyMs": 28,
+        "totalLatencyMs": 36035,
         "averageConfidence": 0.95
       },
-      "completedAt": "2026-09-11T17:44:51.271Z"
+      "completedAt": "2026-09-14T18:38:13.751Z"
     }
   }
 }

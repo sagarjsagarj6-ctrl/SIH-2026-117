@@ -14,14 +14,14 @@
       "status": "Active",
       "healthStatus": "Healthy",
       "tpsBench": 58.1,
-      "latencyMs": 13,
-      "avgLatency": 14,
+      "latencyMs": 21200,
+      "avgLatency": 10618,
       "errorRate": 0.001,
-      "lastHealthCheck": "2026-09-11T17:44:50.825Z",
+      "lastHealthCheck": "2026-09-14T18:35:39.397Z",
       "loadedAt": "2026-09-08T15:48:57.713Z",
       "__v": 0,
       "createdAt": "2026-09-08T15:48:57.724Z",
-      "updatedAt": "2026-09-11T17:44:50.826Z"
+      "updatedAt": "2026-09-14T18:35:39.398Z"
     },
     {
       "_id": "6aa02e693217846072a08251",
@@ -35,14 +35,14 @@
       "status": "Active",
       "healthStatus": "Healthy",
       "tpsBench": 94.2,
-      "latencyMs": 24,
-      "avgLatency": 28,
+      "latencyMs": 19,
+      "avgLatency": 24,
       "errorRate": 0.001,
-      "lastHealthCheck": "2026-09-11T17:44:40.055Z",
+      "lastHealthCheck": "2026-09-14T18:32:57.658Z",
       "loadedAt": "2026-09-08T15:48:57.712Z",
       "__v": 0,
       "createdAt": "2026-09-08T15:48:57.722Z",
-      "updatedAt": "2026-09-11T17:44:40.057Z"
+      "updatedAt": "2026-09-14T18:32:57.659Z"
     },
     {
       "_id": "6aa02e693217846072a08254",
@@ -57,13 +57,13 @@
       "healthStatus": "Healthy",
       "tpsBench": 34,
       "latencyMs": 32,
-      "avgLatency": 35,
+      "avgLatency": 32,
       "errorRate": 0.001,
-      "lastHealthCheck": "2026-09-11T17:44:40.073Z",
+      "lastHealthCheck": "2026-09-14T18:32:57.668Z",
       "loadedAt": "2026-09-08T15:48:57.713Z",
       "__v": 0,
       "createdAt": "2026-09-08T15:48:57.724Z",
-      "updatedAt": "2026-09-11T17:44:40.074Z"
+      "updatedAt": "2026-09-14T18:32:57.669Z"
     },
     {
       "_id": "6aa02e693217846072a08252",
@@ -77,14 +77,14 @@
       "status": "Active",
       "healthStatus": "Healthy",
       "tpsBench": 72.5,
-      "latencyMs": 15,
-      "avgLatency": 16,
+      "latencyMs": 1832,
+      "avgLatency": 2127,
       "errorRate": 0.001,
-      "lastHealthCheck": "2026-09-11T17:44:50.945Z",
+      "lastHealthCheck": "2026-09-14T18:37:37.477Z",
       "loadedAt": "2026-09-08T15:48:57.713Z",
       "__v": 0,
       "createdAt": "2026-09-08T15:48:57.724Z",
-      "updatedAt": "2026-09-11T17:44:50.945Z"
+      "updatedAt": "2026-09-14T18:37:37.477Z"
     },
     {
       "_id": "6aa02e693217846072a08255",
@@ -98,14 +98,14 @@
       "status": "Active",
       "healthStatus": "Healthy",
       "tpsBench": 450,
-      "latencyMs": 25,
-      "avgLatency": 29,
+      "latencyMs": 20,
+      "avgLatency": 27,
       "errorRate": 0.001,
-      "lastHealthCheck": "2026-09-11T17:44:40.098Z",
+      "lastHealthCheck": "2026-09-14T18:32:57.687Z",
       "loadedAt": "2026-09-08T15:48:57.714Z",
       "__v": 0,
       "createdAt": "2026-09-08T15:48:57.724Z",
-      "updatedAt": "2026-09-11T17:44:40.100Z"
+      "updatedAt": "2026-09-14T18:32:57.688Z"
     },
     {
       "_id": "6aa02e693217846072a08256",
@@ -119,14 +119,14 @@
       "status": "Active",
       "healthStatus": "Healthy",
       "tpsBench": 48,
-      "latencyMs": 35,
+      "latencyMs": 22,
       "avgLatency": 31,
       "errorRate": 0.001,
-      "lastHealthCheck": "2026-09-11T17:44:40.112Z",
+      "lastHealthCheck": "2026-09-14T18:32:57.697Z",
       "loadedAt": "2026-09-08T15:48:57.714Z",
       "__v": 0,
       "createdAt": "2026-09-08T15:48:57.724Z",
-      "updatedAt": "2026-09-11T17:44:40.113Z"
+      "updatedAt": "2026-09-14T18:32:57.698Z"
     }
   ]
 }

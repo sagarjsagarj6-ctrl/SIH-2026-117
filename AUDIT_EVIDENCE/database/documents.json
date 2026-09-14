@@ -4,6 +4,66 @@
   "json": {
     "documents": [
       {
+        "_id": "6aa6e7978f2e8244a3fdaa8a",
+        "title": "01_financial_risk_guidelines.txt",
+        "category": "Financial Ledger",
+        "department": "Executive & Strategy",
+        "fileType": "TXT",
+        "sensitivity": "Confidential",
+        "snippet": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-FIN-001\nEffective Date: 2026-07-01\n\nFINANCIAL RISK GUIDELINES\n\nPurpose\nThese fictional guidelines define financial risk controls for testing the Executive & Strategy RAG search agent. All organizations, figures, thresholds, and policies in this document are synthetic.\n\nKey risk thre...",
+        "tokenCount": 371,
+        "vectorIndexed": true,
+        "uploadedBy": "System Admin",
+        "createdAt": "2026-09-13T18:12:39.054Z",
+        "updatedAt": "2026-09-13T18:12:39.054Z",
+        "__v": 0
+      },
+      {
+        "_id": "6aa5c9c2b1e6abb8f8604563",
+        "title": "02 compliance checks",
+        "category": "Policy",
+        "department": "Finance & Accounting",
+        "fileType": "TXT",
+        "sensitivity": "Confidential",
+        "snippet": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-COMP-002\nEffective Date: 2026-06-15\n\nEXECUTIVE COMPLIANCE CHECKLIST\n\nBefore approving a strategic initiative, executives should verify:\n\nA. Data handling\n- Sensitive data must have an assigned data owner.\n- Confidential datasets must have documented access controls.\n- Data retention...",
+        "tokenCount": 317,
+        "vectorIndexed": true,
+        "uploadedBy": "managersagar",
+        "createdAt": "2026-09-12T21:53:07.079Z",
+        "updatedAt": "2026-09-12T21:53:07.079Z",
+        "__v": 0
+      },
+      {
+        "_id": "6aa58d2cecbd08770224548b",
+        "title": "Project Alpha Budget Charter",
+        "category": "Financial Ledger",
+        "department": "Executive & Strategy",
+        "fileType": "TXT",
+        "sensitivity": "Confidential",
+        "snippet": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L.",
+        "tokenCount": 80,
+        "vectorIndexed": true,
+        "uploadedBy": "Audit Fixture",
+        "createdAt": "2026-09-12T17:34:36.764Z",
+        "updatedAt": "2026-09-12T17:34:36.764Z",
+        "__v": 0
+      },
+      {
+        "_id": "6aa4bf5a2fe0849be4153fff",
+        "title": "01_financial_risk_guidelines.txt",
+        "category": "Financial Ledger",
+        "department": "Executive & Strategy",
+        "fileType": "TXT",
+        "sensitivity": "Confidential",
+        "snippet": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-FIN-001\nEffective Date: 2026-07-01\n\nFINANCIAL RISK GUIDELINES\n\nPurpose\nThese fictional guidelines define financial risk controls for testing the Executive & Strategy RAG search agent. All organizations, figures, thresholds, and policies in this document are synthetic.\n\nKey risk thre...",
+        "tokenCount": 371,
+        "vectorIndexed": true,
+        "uploadedBy": "System Admin",
+        "createdAt": "2026-09-12T02:56:26.578Z",
+        "updatedAt": "2026-09-12T02:56:26.578Z",
+        "__v": 0
+      },
+      {
         "_id": "6aa432269f35b82ffba9c32d",
         "title": "Project Beta Budget Charter",
         "category": "Financial Ledger",
@@ -16,21 +76,6 @@
         "uploadedBy": "Audit Fixture",
         "createdAt": "2026-09-11T16:53:58.528Z",
         "updatedAt": "2026-09-11T16:53:58.528Z",
-        "__v": 0
-      },
-      {
-        "_id": "6aa432269f35b82ffba9c32a",
-        "title": "Project Alpha Budget Charter",
-        "category": "Financial Ledger",
-        "department": "Executive & Strategy",
-        "fileType": "TXT",
-        "sensitivity": "Confidential",
-        "snippet": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L.",
-        "tokenCount": 80,
-        "vectorIndexed": true,
-        "uploadedBy": "Audit Fixture",
-        "createdAt": "2026-09-11T16:53:58.509Z",
-        "updatedAt": "2026-09-11T16:53:58.509Z",
         "__v": 0
       },
       {
@@ -124,21 +169,6 @@
         "__v": 0
       },
       {
-        "_id": "6aa2fbce6fbc8812c463e974",
-        "title": "02_compliance_checks.txt",
-        "category": "Financial Ledger",
-        "department": "Legal",
-        "fileType": "TXT",
-        "sensitivity": "Confidential",
-        "snippet": "SOVEREIGN AI — SYNTHETIC TEST DOCUMENT\nDepartment: Executive & Strategy\nClassification: Confidential\nDocument ID: ES-COMP-002\nEffective Date: 2026-06-15\n\nEXECUTIVE COMPLIANCE CHECKLIST\n\nBefore approving a strategic initiative, executives should verify:\n\nA. Data handling\n- Sensitive data must have an assigned data owner.\n- Confidential datasets must have documented access controls.\n- Data retention...",
-        "tokenCount": 317,
-        "vectorIndexed": true,
-        "uploadedBy": "sagar",
-        "createdAt": "2026-09-10T18:49:50.654Z",
-        "updatedAt": "2026-09-10T18:49:50.654Z",
-        "__v": 0
-      },
-      {
         "_id": "6aa2b9ce6fbc8812c463e725",
         "title": "Finance Ledger PostgreSQL (LAN) — Table: financial_ledgers.txt",
         "category": "Database Snapshot",
@@ -182,23 +212,8 @@
         "createdAt": "2026-09-10T10:50:07.912Z",
         "updatedAt": "2026-09-10T10:50:07.912Z",
         "__v": 0
-      },
-      {
-        "_id": "6aa036517c75769b2fc3023c",
-        "title": "synthetic-manager.txt",
-        "category": "Synthetic Test Data",
-        "department": "Finance & Accounting",
-        "fileType": "TXT",
-        "sensitivity": "Internal",
-        "snippet": "SYNTHETIC ENTERPRISE TEST DATA\r\n===============================\r\nFixture ID: synthetic-enterprise-2026-09\r\nClassification: Internal Test Data\r\n\r\nFinance:\r\n- Q1 revenue: 1250000 USD\r\n- Q2 revenue: 1375000 USD\r\n- Q3 revenue: 1490000 USD\r\n- Variance threshold: 10 percent\r\n\r\nOperations:\r\n- Local inference jobs: 420\r\n- Average latency target: 150 ms\r\n- Compliance anomalies: 0 critical\r\n\r\nSecurity:\r\n- D...",
-        "tokenCount": 145,
-        "vectorIndexed": true,
-        "uploadedBy": "Synthetic Manager",
-        "createdAt": "2026-09-08T16:22:41.208Z",
-        "updatedAt": "2026-09-08T16:22:41.208Z",
-        "__v": 0
       }
     ],
-    "total": 13
+    "total": 14
   }
 }

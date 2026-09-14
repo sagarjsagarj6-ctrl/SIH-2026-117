@@ -29,7 +29,7 @@
           "sensitivity": "Confidential",
           "category": "Financial Ledger",
           "strategy": "semantic",
-          "indexedAt": "2026-09-11T17:44:39.894Z"
+          "indexedAt": "2026-09-14T18:32:57.431Z"
         },
         "similarityScore": 0.6011,
         "hybridScore": 0.6741,
@@ -40,8 +40,8 @@
         }
       },
       {
-        "chunkId": "6aa432269f35b82ffba9c32a_chunk_1",
-        "docId": "6aa432269f35b82ffba9c32a",
+        "chunkId": "6aa58d2cecbd08770224548b_chunk_1",
+        "docId": "6aa58d2cecbd08770224548b",
         "documentTitle": "Project Alpha Budget Charter",
         "sectionTitle": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modern",
         "text": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L.",
@@ -51,7 +51,7 @@
           "sensitivity": "Confidential",
           "category": "Financial Ledger",
           "strategy": "semantic",
-          "indexedAt": "2026-09-11T17:44:39.893Z"
+          "indexedAt": "2026-09-14T18:32:57.455Z"
         },
         "similarityScore": 0.5711,
         "hybridScore": 0.6546,
@@ -73,7 +73,7 @@
           "sensitivity": "Confidential",
           "category": "Database Snapshot",
           "strategy": "semantic",
-          "indexedAt": "2026-09-11T17:44:39.879Z"
+          "indexedAt": "2026-09-14T18:32:57.341Z"
         },
         "similarityScore": 0.878,
         "hybridScore": 0.5707,
@@ -95,7 +95,7 @@
           "sensitivity": "Confidential",
           "category": "Policy",
           "strategy": "semantic",
-          "indexedAt": "2026-09-11T17:44:39.883Z"
+          "indexedAt": "2026-09-14T18:32:57.358Z"
         },
         "similarityScore": 0.4003,
         "hybridScore": 0.4243,
@@ -117,7 +117,7 @@
           "sensitivity": "Restricted",
           "category": "Technical Telemetry",
           "strategy": "semantic",
-          "indexedAt": "2026-09-11T17:44:39.888Z"
+          "indexedAt": "2026-09-14T18:32:57.398Z"
         },
         "similarityScore": 0.4003,
         "hybridScore": 0.4243,
@@ -141,7 +141,7 @@
       },
       {
         "citationId": "CIT-2",
-        "docId": "6aa432269f35b82ffba9c32a",
+        "docId": "6aa58d2cecbd08770224548b",
         "documentTitle": "Project Alpha Budget Charter",
         "sectionTitle": "Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modern",
         "department": "Executive & Strategy",

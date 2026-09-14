@@ -9,12 +9,13 @@
         "agent": "RAGAgent",
         "query": "Parallel knowledge and stats scan",
         "answer": "No high-confidence documents found matching \"Parallel knowledge and stats scan\" in the Executive & Strategy local vector store. The system will not invent an answer without retrieved evidence.",
+        "answerMode": "EVIDENCE_ONLY",
         "citations": [],
         "matchedChunksCount": 0,
         "inference": {
           "used": false,
           "backend": null,
-          "usedFallback": true
+          "usedFallback": false
         },
         "tokensUsed": 180,
         "rawResults": []
@@ -22,209 +23,76 @@
       "DATA_SCIENCE": {
         "agent": "DataScienceAgent",
         "query": "Parallel knowledge and stats scan",
-        "summary": "No numeric series found in query/context — using labeled Executive & Strategy sample series. Statistical analysis of 10 data points for Executive & Strategy completed. Mean: 157.1, StdDev: 22.73. Identified 1 statistical anomaly (values: 210). Estimated trajectory is UPWARD (R² = 0.604), with next period projection at 190.93.",
-        "dataSource": "department_sample_fallback",
+        "summary": "No numeric dataset or series was supplied. Upload/select a dataset or provide at least two numeric values before requesting analysis.",
+        "dataSource": "no_numeric_input",
         "inference": {
-          "used": true,
-          "backend": "Ollama Engine (Air-Gapped Sovereign Fallback)",
-          "usedFallback": true,
-          "metrics": {
-            "inputTokens": 219,
-            "tokensGenerated": 95,
-            "totalTokens": 314,
-            "latencyMs": 13,
-            "tokensPerSecond": 7307.7
-          }
+          "used": false,
+          "live": false,
+          "usedFallback": false,
+          "backend": null
         },
         "modelNarrative": "",
-        "series": [
-          120,
-          142,
-          138,
-          155,
-          148,
-          162,
-          159,
-          210,
-          165,
-          172
-        ],
+        "series": [],
         "statistics": {
-          "count": 10,
-          "sum": 1571,
-          "mean": 157.1,
-          "median": 157,
-          "min": 120,
-          "max": 210,
-          "variance": 516.69,
-          "stdDev": 22.73
+          "count": 0,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "max": null,
+          "stdDev": null
         },
         "anomalies": {
           "iqr": {
-            "q1": 142,
-            "q3": 165,
-            "iqr": 23,
-            "lowerBound": 107.5,
-            "upperBound": 199.5,
-            "outliers": [
-              210
-            ],
-            "hasAnomalies": true
+            "outliers": []
           },
           "zScore": {
-            "threshold": 1.8,
-            "outliers": [
-              {
-                "index": 7,
-                "value": 210,
-                "zScore": 2.33
-              }
-            ],
-            "hasAnomalies": true
+            "outliers": []
           }
         },
-        "regression": {
-          "slope": 6.15,
-          "intercept": 123.27,
-          "r2": 0.604,
-          "trendDirection": "UPWARD",
-          "forecastNext": 190.93
-        },
-        "charts": {
-          "trendLine": {
-            "type": "line",
-            "title": "Executive & Strategy Operational Trajectory & Forecast",
-            "labels": [
-              "W1",
-              "W2",
-              "W3",
-              "W4",
-              "W5",
-              "W6",
-              "W7",
-              "W8",
-              "W9",
-              "W10",
-              "Next (Est.)"
-            ],
-            "datasets": [
-              {
-                "label": "Executive & Strategy Metric Throughput",
-                "data": [
-                  120,
-                  142,
-                  138,
-                  155,
-                  148,
-                  162,
-                  159,
-                  210,
-                  165,
-                  172,
-                  190.93
-                ],
-                "borderColor": "#00fff2",
-                "backgroundColor": "rgba(0, 255, 242, 0.15)",
-                "fill": true
-              }
-            ]
-          },
-          "anomalyBar": {
-            "type": "bar",
-            "title": "Executive & Strategy Anomaly Detection Distribution",
-            "labels": [
-              "W1",
-              "W2",
-              "W3",
-              "W4",
-              "W5",
-              "W6",
-              "W7",
-              "W8",
-              "W9",
-              "W10"
-            ],
-            "datasets": [
-              {
-                "label": "Dataset Values",
-                "data": [
-                  120,
-                  142,
-                  138,
-                  155,
-                  148,
-                  162,
-                  159,
-                  210,
-                  165,
-                  172
-                ],
-                "backgroundColor": [
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#00fff2",
-                  "#ff0055",
-                  "#00fff2",
-                  "#00fff2"
-                ],
-                "hasAnomalies": true,
-                "outlierCount": 1
-              }
-            ]
-          }
-        },
+        "regression": null,
+        "charts": null,
         "metrics": {
-          "totalRecordsAnalyzed": 10,
-          "anomalyRatePct": 10,
-          "confidenceScore": 0.72,
+          "totalRecordsAnalyzed": 0,
+          "anomalyRatePct": null,
+          "confidenceScore": 0,
           "meanResponseTimeMs": null,
-          "mean": 157.1,
-          "stdDev": 22.73
+          "mean": null,
+          "stdDev": null
         },
         "chartData": {
-          "title": "Executive & Strategy Operational Trajectory & Forecast",
-          "labels": [
-            "W1",
-            "W2",
-            "W3",
-            "W4"
-          ],
-          "series": [
-            {
-              "name": "Observed",
-              "data": [
-                120,
-                142,
-                138,
-                155
-              ]
-            }
-          ]
+          "title": "No data analyzed",
+          "labels": [],
+          "series": []
         },
         "insights": [
-          "No numeric series found in query/context — using labeled Executive & Strategy sample series.",
-          "Mean=157.1, median=157, max=210.",
-          "Outliers detected: 210."
+          "No statistical sample was created from department defaults."
         ],
-        "tokensUsed": 200
+        "tokensUsed": 20
       }
     },
     "citations": [],
-    "confidence": 0.635,
+    "confidence": 0.75,
     "trace": {
-      "traceId": "trace_adb5284c",
-      "queryId": "query_1789148690799",
+      "traceId": "trace_f0acaebe",
+      "queryId": "query_1789411055551",
       "userQuery": "Parallel knowledge and stats scan",
       "orchestrationMode": "PARALLEL",
       "agentChain": [
-        "RAGAgent",
-        "DataScienceAgent"
+        "DataScienceAgent",
+        "RAGAgent"
       ],
       "steps": [
+        {
+          "stepNumber": 2,
+          "agent": "DataScienceAgent",
+          "action": "Concurrent parallel execution for DATA_SCIENCE",
+          "reasoning": "Fan-Out dispatched simultaneously across independent specialist threads",
+          "confidence": 0.95,
+          "sourcesUsed": [],
+          "latencyMs": 2,
+          "tokensUsed": 20,
+          "timestamp": "2026-09-14T18:37:35.553Z"
+        },
         {
           "stepNumber": 1,
           "agent": "RAGAgent",
@@ -234,26 +102,15 @@
           "sourcesUsed": [],
           "latencyMs": 2,
           "tokensUsed": 180,
-          "timestamp": "2026-09-11T17:44:50.802Z"
-        },
-        {
-          "stepNumber": 2,
-          "agent": "DataScienceAgent",
-          "action": "Concurrent parallel execution for DATA_SCIENCE",
-          "reasoning": "Fan-Out dispatched simultaneously across independent specialist threads",
-          "confidence": 0.72,
-          "sourcesUsed": [],
-          "latencyMs": 30,
-          "tokensUsed": 200,
-          "timestamp": "2026-09-11T17:44:50.830Z"
+          "timestamp": "2026-09-14T18:37:35.553Z"
         }
       ],
       "aggregateMetrics": {
-        "totalTokens": 380,
-        "totalLatencyMs": 32,
-        "averageConfidence": 0.635
+        "totalTokens": 200,
+        "totalLatencyMs": 4,
+        "averageConfidence": 0.75
       },
-      "completedAt": "2026-09-11T17:44:50.831Z"
+      "completedAt": "2026-09-14T18:37:35.553Z"
     }
   }
 }
