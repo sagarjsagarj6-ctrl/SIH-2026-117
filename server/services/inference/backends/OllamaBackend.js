@@ -14,8 +14,10 @@ export class OllamaBackend {
     'qwen2-vl-7b-visionocr'
   ]);
 
+  static modelCache = { models: null, expiresAt: 0 };
+
   static get endpoint() {
-    return process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+    return (process.env.OLLAMA_HOST || 'http://127.0.0.1:11434').replace(/\/+$/, '');
   }
 
   static resolveModel(requestedModel) {
@@ -29,20 +31,54 @@ export class OllamaBackend {
     return requested;
   }
 
-  static async isAvailable() {
+  static async getInstalledModels() {
+    if (this.modelCache.models && Date.now() < this.modelCache.expiresAt) {
+      return this.modelCache.models;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1200);
     try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 1200);
-      const res = await fetch(`${this.endpoint}/api/tags`, { signal: controller.signal });
-      clearTimeout(id);
-      return res.ok;
+      const response = await fetch(`${this.endpoint}/api/tags`, { signal: controller.signal });
+      if (!response.ok) return null;
+      const data = await response.json();
+      const models = Array.isArray(data.models) ? data.models : [];
+      this.modelCache = { models, expiresAt: Date.now() + 30_000 };
+      return models;
     } catch {
-      return false;
+      return null;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
+  static resolveInstalledModel(requestedModel, installedModels) {
+    const requested = String(requestedModel || '').trim();
+    const configured = String(process.env.OLLAMA_MODEL || '').trim();
+    const catalogueName = this.CATALOG_MODEL_NAMES.has(requested.toLowerCase());
+    const names = (installedModels || []).map((model) => String(model.name || model.model || '').trim()).filter(Boolean);
+    const lowerNames = new Map(names.map((name) => [name.toLowerCase(), name]));
+
+    // A direct Ollama tag always wins when it is installed.
+    if (lowerNames.has(requested.toLowerCase())) return lowerNames.get(requested.toLowerCase());
+    if (configured && lowerNames.has(configured.toLowerCase())) return lowerNames.get(configured.toLowerCase());
+
+    // UI catalogue labels (including Advanced-mode defaults) are aliases, not
+    // literal Ollama tags. Use the first installed local model if no explicit
+    // OLLAMA_MODEL was configured, so a valid local daemon is still usable.
+    if (!requested || catalogueName) return names[0] || this.resolveModel(requested);
+    return requested;
+  }
+
+  static async isAvailable() {
+    return (await this.getInstalledModels()) !== null;
+  }
+
   static async generate({ model, prompt, stream = false }) {
-    const resolvedModel = this.resolveModel(model);
+    const installedModels = await this.getInstalledModels();
+    const resolvedModel = installedModels
+      ? this.resolveInstalledModel(model, installedModels)
+      : this.resolveModel(model);
     const online = await this.isAvailable();
     if (online) {
       try {

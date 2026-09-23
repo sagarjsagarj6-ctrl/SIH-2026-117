@@ -102,6 +102,125 @@ const definitions = [
     roles: ['Admin', 'Manager', 'Employee']
   },
   {
+    type: 'logic.if',
+    category: 'LOGIC',
+    name: 'If Condition',
+    description: 'Route execution to True or False branch based on condition.',
+    icon: '⑂',
+    inputs: ['data'],
+    outputs: ['true', 'false'],
+    config: [
+      { key: 'property', label: 'Field or expression', type: 'text', default: '{{$json.status}}' },
+      { key: 'operator', label: 'Operator', type: 'select', options: ['equals', 'not_equals', 'contains', 'greater_than', 'less_than', 'is_empty', 'is_not_empty'], default: 'equals' },
+      { key: 'value', label: 'Compare value', type: 'text', default: 'success' }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
+    type: 'tool.code',
+    category: 'TOOL',
+    name: 'Code (JavaScript)',
+    description: 'Transform data using custom JavaScript like n8n Code node.',
+    icon: 'JS',
+    inputs: ['input'],
+    outputs: ['output'],
+    config: [
+      {
+        key: 'code',
+        label: 'JavaScript Code',
+        type: 'textarea',
+        default: 'return {\n  ...items,\n  processedAt: new Date().toISOString(),\n  summary: items.answer || items.text || "Processed by Code node"\n};'
+      }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
+    type: 'tool.http',
+    category: 'TOOL',
+    name: 'HTTP Request',
+    description: 'Make a local or LAN HTTP request to an internal API.',
+    icon: '⇄',
+    inputs: ['data'],
+    outputs: ['response'],
+    config: [
+      { key: 'method', label: 'Method', type: 'select', options: ['GET', 'POST', 'PUT', 'DELETE'], default: 'GET' },
+      { key: 'url', label: 'URL', type: 'text', default: 'http://127.0.0.1:5001/api/health' },
+      { key: 'body', label: 'Body (JSON)', type: 'textarea', default: '{\n  "query": "{{$json.query}}"\n}' }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
+    type: 'tool.set',
+    category: 'TOOL',
+    name: 'Edit Fields (Set)',
+    description: 'Set, override, or rename fields on the workflow data.',
+    icon: '✎',
+    inputs: ['data'],
+    outputs: ['result'],
+    config: [
+      { key: 'key', label: 'Field name', type: 'text', default: 'summary' },
+      { key: 'value', label: 'Field value', type: 'text', default: '{{$json.answer}}' }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
+    type: 'tool.excel',
+    category: 'TOOL',
+    name: 'Read Excel / CSV',
+    description: 'Load rows and columns from Excel (.xlsx/.xls) or CSV files.',
+    icon: '▦',
+    inputs: ['trigger'],
+    outputs: ['rows', 'firstRow', 'summary'],
+    config: [
+      { key: 'dataset', label: 'Dataset / Source', type: 'select', options: ['sample_hardware_inventory', 'sample_financial_ledger', 'sample_employee_roster', 'custom_path'], default: 'sample_hardware_inventory' },
+      { key: 'customPath', label: 'Custom File Path (if custom)', type: 'text', default: 'data/demo-documents/financial_report.csv' },
+      { key: 'sheetName', label: 'Sheet Name (optional)', type: 'text', default: 'Sheet1' },
+      { key: 'maxRows', label: 'Max Rows', type: 'number', default: 25 }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
+    type: 'output.email',
+    category: 'OUTPUT',
+    name: 'Send Email / Gmail',
+    description: 'Automate sending email via Gmail or local SMTP with Private LAN fallback.',
+    icon: '✉',
+    inputs: ['data'],
+    outputs: ['sent', 'details'],
+    config: [
+      { key: 'provider', label: 'Email Provider', type: 'select', options: ['gmail', 'lan_smtp', 'lan_direct'], default: 'gmail' },
+      { key: 'to', label: 'Recipient (To)', type: 'text', default: '{{$json.supplierEmail}}' },
+      { key: 'subject', label: 'Subject', type: 'text', default: 'Automated Alert: Stock notice for {{$json.part}}' },
+      { key: 'body', label: 'Body (HTML or Text)', type: 'textarea', default: 'Hello,\n\nAutomated message from Sovereign AI Workbench:\nItem: {{$json.part}}\nCurrent Count: {{$json.count}}\nStatus: {{$json.status}}\n\nPlease review immediately.' },
+      { key: 'smtpUser', label: 'Gmail / SMTP User (optional)', type: 'text', default: '' },
+      { key: 'smtpPass', label: 'Gmail App Password (optional)', type: 'text', default: '' }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
+    type: 'output.lan-message',
+    category: 'OUTPUT',
+    name: 'Dispatch LAN Message',
+    description: 'Broadcast automated alerts across the Private LAN to connected devices.',
+    icon: '🔔',
+    inputs: ['data'],
+    outputs: ['delivered', 'count'],
+    config: [
+      { key: 'scope', label: 'Target Scope', type: 'select', options: ['all_connected_lan', 'department', 'current_user'], default: 'all_connected_lan' },
+      { key: 'title', label: 'Notification Title', type: 'text', default: 'Automated Notice: {{$json.part}}' },
+      { key: 'message', label: 'Message Text', type: 'textarea', default: 'Automated workflow execution alert:\n{{$json.summary}}' },
+      { key: 'priority', label: 'Priority', type: 'select', options: ['info', 'warning', 'critical'], default: 'warning' }
+    ],
+    paletteGroup: 'core',
+    roles: ['Admin', 'Manager', 'Employee']
+  },
+  {
     type: 'output.database',
     category: 'OUTPUT',
     name: 'Save Result',

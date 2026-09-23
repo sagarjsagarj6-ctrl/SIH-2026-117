@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOVEREIGN.AI - Tech Stack & Entity Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --card: #ffffff;
+      --text: #14171e;
+      --muted: #3a4256;
+      --soft: #7c7a72;
+      --border: #e9e3d6;
+      --accent: #2f6f5e;
+      --accent-light: rgba(47, 111, 94, 0.08);
+      --blue: #3b82f6;
+      --blue-light: rgba(59, 130, 246, 0.08);
+      --amber: #c97b3f;
+      --amber-light: rgba(201, 123, 63, 0.08);
+      --rose: #b06367;
+      --rose-light: rgba(176, 99, 103, 0.08);
+      --violet: #6366f1;
+      --violet-light: rgba(99, 102, 241, 0.08);
+      --shadow: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px -2px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100dvh;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; }
+    
+    /* Header */
+    .header { text-align: center; margin-bottom: 56px; }
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent-light); color: var(--accent);
+      padding: 6px 14px; border-radius: 100px;
+      font-size: 13px; font-weight: 500; margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 42px; font-weight: 700; letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .header p { color: var(--muted); font-size: 18px; max-width: 600px; margin: 0 auto; }
+    
+    /* Section titles */
+    .section-title {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--soft); margin-bottom: 20px;
+    }
+    
+    /* Architecture Diagram */
+    .diagram-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: var(--shadow);
+      margin-bottom: 48px;
+      overflow-x: auto;
+    }
+    .diagram-card h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .diagram-card .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    
+    /* Layer colors */
+    .layer-client { --layer-color: #3b82f6; --layer-bg: rgba(59,130,246,0.06); }
+    .layer-api { --layer-color: #2f6f5e; --layer-bg: rgba(47,111,94,0.06); }
+    .layer-agent { --layer-color: #c97b3f; --layer-bg: rgba(201,123,63,0.06); }
+    .layer-data { --layer-color: #6366f1; --layer-bg: rgba(99,102,241,0.06); }
+    .layer-llm { --layer-color: #b06367; --layer-bg: rgba(176,99,103,0.06); }
+    
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      min-width: 900px;
+    }
+    .arch-layer {
+      background: var(--layer-bg);
+      border: 1.5px solid var(--layer-color);
+      border-radius: 14px;
+      padding: 18px 22px;
+    }
+    .arch-layer-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .arch-layer-icon {
+      width: 32px; height: 32px;
+      background: var(--layer-color);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+    }
+    .arch-layer-icon svg { width: 18px; height: 18px; }
+    .arch-layer-name {
+      font-size: 14px; font-weight: 600;
+      color: var(--layer-color);
+    }
+    .arch-layer-desc { font-size: 12px; color: var(--soft); }
+    
+    .arch-items {
+      display: flex; flex-wrap: wrap; gap: 10px;
+    }
+    .arch-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .arch-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .arch-item-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--layer-color);
+    }
+    .arch-item-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--muted);
+    }
+    
+    /* Flow arrows */
+    .arch-flow {
+      display: flex; justify-content: center; align-items: center; gap: 6px;
+      padding: 2px 0;
+      color: var(--soft);
+    }
+    .arch-flow svg { width: 20px; height: 20px; opacity: 0.5; }
+    .arch-flow span { font-size: 11px; }
+    
+    /* Entity Map */
+    .entity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .entity-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .entity-card-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .entity-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+    }
+    .entity-icon svg { width: 20px; height: 20px; }
+    .entity-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .entity-card .entity-path { font-size: 12px; color: var(--soft); font-family: 'JetBrains Mono', monospace; }
+    
+    .entity-list { list-style: none; }
+    .entity-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 7px 0;
+      font-size: 13px;
+      border-bottom: 1px dashed rgba(0,0,0,0.05);
+    }
+    .entity-list li:last-child { border-bottom: none; }
+    .entity-bullet {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--soft);
+      margin-top: 6px; flex-shrink: 0;
+    }
+    .entity-list code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--bg);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--muted);
+    }
+    
+    /* Color coding for entity cards */
+    .entity-card.auth { --ec: var(--accent); --ec-bg: var(--accent-light); }
+    .entity-card.agent { --ec: var(--amber); --ec-bg: var(--amber-light); }
+    .entity-card.api { --ec: var(--blue); --ec-bg: var(--blue-light); }
+    .entity-card.data { --ec: var(--violet); --ec-bg: var(--violet-light); }
+    .entity-card.service { --ec: var(--rose); --ec-bg: var(--rose-light); }
+    
+    .entity-card .entity-icon { background: var(--ec); }
+    .entity-card .entity-bullet { background: var(--ec); }
+    .entity-card.auth .entity-bullet { background: var(--accent); }
+    .entity-card.agent .entity-bullet { background: var(--amber); }
+    .entity-card.api .entity-bullet { background: var(--blue); }
+    .entity-card.data .entity-bullet { background: var(--violet); }
+    .entity-card.service .entity-bullet { background: var(--rose); }
+    
+    /* Tech Stack Table */
+    .stack-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 48px;
+    }
+    .stack-table th {
+      text-align: left;
+      padding: 14px 20px;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--soft);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .stack-table td {
+      padding: 14px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .stack-table tr:last-child td { border-bottom: none; }
+    .stack-table tr:hover td { background: rgba(0,0,0,0.015); }
+    .stack-table .layer-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px; font-weight: 500;
+    }
+    .badge-client { background: var(--blue-light); color: var(--blue); }
+    .badge-api { background: var(--accent-light); color: var(--accent); }
+    .badge-agent { background: var(--amber-light); color: var(--amber); }
+    .badge-data { background: var(--violet-light); color: var(--violet); }
+    .badge-llm { background: var(--rose-light); color: var(--rose); }
+    
+    .tech-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: var(--bg);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin: 2px;
+    }
+    
+    /* Agent Flow Diagram */
+    .flow-section { margin-bottom: 48px; }
+    .flow-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: var(--shadow);
+    }
+    .flow-card h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .flow-card .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    
+    .flow-steps {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .flow-step {
+      flex: 1; min-width: 140px;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      gap: 12px;
+    }
+    .flow-step-box {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 14px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+    .flow-step-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+      color: white;
+    }
+    .flow-step-icon svg { width: 18px; height: 18px; }
+    .flow-step-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .flow-step-desc { font-size: 11px; color: var(--soft); line-height: 1.4; }
+    .flow-arrow { color: var(--soft); flex-shrink: 0; display: flex; align-items: center; }
+    .flow-arrow svg { width: 24px; height: 24px; opacity: 0.4; }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 { font-size: 30px; }
+      .entity-grid { grid-template-columns: 1fr; }
+      .stack-table { font-size: 12px; }
+      .stack-table td, .stack-table th { padding: 10px 12px; }
+      .flow-steps { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Architecture Reference
+    </div>
+    <h1>SOVEREIGN.AI Enterprise Workbench</h1>
+    <p>Tech Stack & Entity Map — Privacy-first, on-premise multi-agent orchestration platform</p>
+  </div>
+
+  <!-- Architecture Diagram -->
+  <div class="section-title">System Architecture</div>
+  <div class="diagram-card">
+    <h2>Layered System Design</h2>
+    <p class="subtitle">Five-tier architecture from UI to LLM inference backends</p>
+    
+    <div class="arch-grid">
+      <!-- Client Layer -->
+      <div class="arch-layer layer-client">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <div>
+            <div class="arch-layer-name">Client Layer</div>
+            <div class="arch-layer-desc">React SPA — Auth, Dashboards, Agent Interface</div>
+          </div>
+        </div>
+        <div class="arch-items">
+          <div class="arch-item"><div class="arch-item-dot"></div>React 19 + Vite 8</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>Tailwind CSS 4</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>AuthContext (JWT Bearer)</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>Tab Dashboards</div>
+          <div class="arch-item"><code class="arch-item-code">localhost:5173</code></div>
+        </div>
+      </div>
+
+      <div class="arch-flow">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        <span>fetch /api/*</span>
+      </div>
+
+      <!-- API Layer -->
+      <div class="arch-layer layer-api">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+          </div>
+          <div>
+            <div class="arch-layer-name">API Gateway Layer</div>
+            <div class="arch-layer-desc">Express Router — Auth, Agents, Documents, Knowledge</div>
+          </div>
+        </div>
+        <div class="arch-items">
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/auth <code class="arch-item-code">JWT</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/agents</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/documents</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/knowledge</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/inference</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/models</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/analytics</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/workflows</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/audit</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/quality</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/hardware</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>/api/notifications</div>
+          <div class="arch-item"><code class="arch-item-code">localhost:5001</code></div>
+        </div>
+      </div>
+
+      <div class="arch-flow">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        <span>orchestrate()</span>
+      </div>
+
+      <!-- Agent Layer -->
+      <div class="arch-layer layer-agent">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          </div>
+          <div>
+            <div class="arch-layer-name">Agent Orchestration Layer</div>
+            <div class="arch-layer-desc">Registry, Orchestrator, Task Decomposer, Memory</div>
+          </div>
+        </div>
+        <div class="arch-items">
+          <div class="arch-item"><div class="arch-item-dot"></div>AgentOrchestrator</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>TaskDecomposer</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>AgentRegistry</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>BaseAgent</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>AgentMemory</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>ExplainabilityEngine</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>AgentAuditLogger</div>
+        </div>
+      </div>
+
+      <div class="arch-flow">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        <span>rag | data-science | vision | reporting</span>
+      </div>
+
+      <!-- Specialist Agents Row -->
+      <div class="arch-layer layer-agent">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon" style="background: var(--amber)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div>
+            <div class="arch-layer-name">Specialist Agents</div>
+            <div class="arch-layer-desc">Domain-specific agents registered in AgentRegistry</div>
+          </div>
+        </div>
+        <div class="arch-items">
+          <div class="arch-item"><div class="arch-item-dot"></div>RAG Agent <code class="arch-item-code">knowledge retrieval</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>DataScience Agent <code class="arch-item-code">stats & analysis</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>Vision Agent <code class="arch-item-code">image OCR</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>Reporting Agent <code class="arch-item-code">template synthesis</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>ComparisonPrediction Agent</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>HardwareManual Agent</div>
+        </div>
+      </div>
+
+      <div class="arch-flow">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        <span>hybrid search | generate()</span>
+      </div>
+
+      <!-- Data Layer -->
+      <div class="arch-layer layer-data">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          </div>
+          <div>
+            <div class="arch-layer-name">Data & Storage Layer</div>
+            <div class="arch-layer-desc">MongoDB (documents, users, audit) + Vector DB (embeddings)</div>
+          </div>
+        </div>
+        <div class="arch-items">
+          <div class="arch-item"><div class="arch-item-dot"></div>MongoDB <code class="arch-item-code">users</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>MongoDB <code class="arch-item-code">documents</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>MongoDB <code class="arch-item-code">audit_logs</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>MongoDB <code class="arch-item-code">workflows</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>MongoDB <code class="arch-item-code">analytics</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>Vector DB <code class="arch-item-code">BM25 + ANN</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>In-memory fallback</div>
+        </div>
+      </div>
+
+      <div class="arch-flow">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        <span>ollama | vllm | llamacpp</span>
+      </div>
+
+      <!-- LLM Backend Layer -->
+      <div class="arch-layer layer-llm">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div>
+            <div class="arch-layer-name">LLM Inference Backends</div>
+            <div class="arch-layer-desc">Air-gapped, local-first inference — no external API calls</div>
+          </div>
+        </div>
+        <div class="arch-items">
+          <div class="arch-item"><div class="arch-item-dot"></div>Ollama <code class="arch-item-code">127.0.0.1:11434</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>vLLM <code class="arch-item-code">localhost:8000</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>LlamaCpp <code class="arch-item-code">./models/*.gguf</code></div>
+          <div class="arch-item"><div class="arch-item-dot"></div>InferenceRouter</div>
+          <div class="arch-item"><div class="arch-item-dot"></div>Telemetry Service</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech Stack Table -->
+  <div class="section-title">Tech Stack Reference</div>
+  <table class="stack-table">
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>Technology</th>
+        <th>Purpose</th>
+        <th>Key Files</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="layer-badge badge-client">Client</span></td>
+        <td><span class="tech-tag">React 19</span><span class="tech-tag">Vite 8</span><span class="tech-tag">Tailwind 4</span></td>
+        <td>Frontend SPA, Auth UI, Agent dashboards</td>
+        <td><code>client/</code></td>
+      </tr>
+      <tr>
+        <td><span class="layer-badge badge-api">API</span></td>
+        <td><span class="tech-tag">Node.js ESM</span><span class="tech-tag">Express 4</span><span class="tech-tag">JWT</span><span class="tech-tag">bcrypt</span></td>
+        <td>REST API, RBAC middleware, security</td>
+        <td><code>server/routes/</code> <code>server/middleware/</code></td>
+      </tr>
+      <tr>
+        <td><span class="layer-badge badge-agent">Agent</span></td>
+        <td><span class="tech-tag">AgentRegistry</span><span class="tech-tag">Orchestrator</span><span class="tech-tag">TaskDecomposer</span></td>
+        <td>Multi-agent orchestration, task routing</td>
+        <td><code>server/agents/*.js</code></td>
+      </tr>
+      <tr>
+        <td><span class="layer-badge badge-agent">Specialists</span></td>
+        <td><span class="tech-tag">RAG</span><span class="tech-tag">DataScience</span><span class="tech-tag">Vision</span><span class="tech-tag">Reporting</span></td>
+        <td>Domain-specific agents with tool access</td>
+        <td><code>server/agents/specialists/</code></td>
+      </tr>
+      <tr>
+        <td><span class="layer-badge badge-data">Database</span></td>
+        <td><span class="tech-tag">MongoDB</span><span class="tech-tag">Mongoose 8</span><span class="tech-tag">JSON VectorDB</span></td>
+        <td>Primary DB, audit logs, workflows, vector search</td>
+        <td><code>server/config/db.js</code> <code>server/config/vectordb.js</code></td>
+      </tr>
+      <tr>
+        <td><span class="layer-badge badge-data">Upload</span></td>
+        <td><span class="tech-tag">Multer 50MB</span><span class="tech-tag">pdf-parse</span><span class="tech-tag">mammoth</span><span class="tech-tag">xlsx</span></td>
+        <td>File parsing — PDF, DOCX, CSV, XLSX, images</td>
+        <td><code>server/routes/documentRoutes.js</code></td>
+      </tr>
+      <tr>
+        <td><span class="layer-badge badge-llm">LLM</span></td>
+        <td><span class="tech-tag">Ollama</span><span class="tech-tag">vLLM</span><span class="tech-tag">LlamaCpp</span></td>
+        <td>Local inference, embedding models</td>
+        <td><code>server/routes/inferenceRoutes.js</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Entity Map -->
+  <div class="section-title">Entity Map — File Structure</div>
+  <div class="entity-grid">
+    
+    <!-- Auth -->
+    <div class="entity-card auth">
+      <div class="entity-card-header">
+        <div class="entity-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <div>
+          <h3>Authentication & Security</h3>
+          <div class="entity-path">server/middleware/</div>
+        </div>
+      </div>
+      <ul class="entity-list">
+        <li><div class="entity-bullet"></div><code>auth.js</code> — JWT verify, user extraction, route protection</li>
+        <li><div class="entity-bullet"></div><code>security.js</code> — CORS, rate limiting, request ID tracking</li>
+        <li><div class="entity-bullet"></div><code>rbacMiddleware.js</code> — Role gates: Admin, Manager, Employee</li>
+      </ul>
+    </div>
+
+    <!-- Routes -->
+    <div class="entity-card api">
+      <div class="entity-card-header">
+        <div class="entity-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+        </div>
+        <div>
+          <h3>API Routes</h3>
+          <div class="entity-path">server/routes/</div>
+        </div>
+      </div>
+      <ul class="entity-list">
+        <li><div class="entity-bullet"></div><code>authRoutes.js</code> — login, register, me, profile</li>
+        <li><div class="entity-bullet"></div><code>agentRoutes.js</code> — query, orchestrate, registry, decompose</li>
+        <li><div class="entity-bullet"></div><code>documentRoutes.js</code> — upload, list, delete, ingest</li>
+        <li><div class="entity-bullet"></div><code>knowledgeRoutes.js</code> — hybrid search, stats, rebuild index</li>
+        <li><div class="entity-bullet"></div><code>inferenceRoutes.js</code> — backends, generate, telemetry</li>
+        <li><div class="entity-bullet"></div><code>workflowRoutes.js</code> — queue, events, state transitions</li>
+        <li><div class="entity-bullet"></div><code>auditRoutes.js</code> — logs, export, PII scan</li>
+      </ul>
+    </div>
+
+    <!-- Core Agents -->
+    <div class="entity-card agent">
+      <div class="entity-card-header">
+        <div class="entity-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
+        </div>
+        <div>
+          <h3>Agent Core</h3>
+          <div class="entity-path">server/agents/</div>
+        </div>
+      </div>
+      <ul class="entity-list">
+        <li><div class="entity-bullet"></div><code>BaseAgent.js</code> — Abstract agent with plan → execute → validate → report</li>
+        <li><div class="entity-bullet"></div><code>AgentOrchestrator.js</code> — Routes tasks to agents, manages execution modes</li>
+        <li><div class="entity-bullet"></div><code>AgentRegistry.js</code> — Agent registration, lookup, capability mapping</li>
+        <li><div class="entity-bullet"></div><code>TaskDecomposer.js</code> — Keyword heuristics for breaking down complex queries</li>
+        <li><div class="entity-bullet"></div><code>AgentMemory.js</code> — Per-agent session context storage</li>
+        <li><div class="entity-bullet"></div><code>AgentAuditLogger.js</code> — Full execution audit trail</li>
+        <li><div class="entity-bullet"></div><code>ExplainabilityEngine.js</code> — Trace agent reasoning & decisions</li>
+      </ul>
+    </div>
+
+    <!-- Specialist Agents -->
+    <div class="entity-card agent">
+      <div class="entity-card-header">
+        <div class="entity-icon" style="background: var(--amber)">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <h3>Specialist Agents</h3>
+          <div class="entity-path">server/agents/specialists/</div>
+        </div>
+      </div>
+      <ul class="entity-list">
+        <li><div class="entity-bullet"></div><code>RAG Agent</code> — Knowledge base retrieval, hybrid vector + BM25</li>
+        <li><div class="entity-bullet"></div><code>DataScienceAgent.js</code> — Statistical analysis, trend detection</li>
+        <li><div class="entity-bullet"></div><code>VisionAgent.js</code> — Image analysis, OCR with Tesseract fallback</li>
+        <li><div class="entity-bullet"></div><code>ReportingAgent.js</code> — Template-based report synthesis</li>
+        <li><div class="entity-bullet"></div><code>ComparisonPredictionAgent.js</code> — Comparative analysis & forecasting</li>
+        <li><div class="entity-bullet"></div><code>HardwareManualAgent.js</code> — Hardware documentation lookup</li>
+      </ul>
+    </div>
+
+    <!-- Config & Data -->
+    <div class="entity-card data">
+      <div class="entity-card-header">
+        <div class="entity-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/></svg>
+        </div>
+        <div>
+          <h3>Config & Data Layer</h3>
+          <div class="entity-path">server/config/</div>
+        </div>
+      </div>
+      <ul class="entity-list">
+        <li><div class="entity-bullet"></div><code>db.js</code> — MongoDB connection via Mongoose 8</li>
+        <li><div class="entity-bullet"></div><code>vectordb.js</code> — Custom JSON ANN + BM25 index</li>
+        <li><div class="entity-bullet"></div><code>datasources.js</code> — External data source configuration</li>
+        <li><div class="entity-bullet"></div><code>identity.js</code> — JWT signing, token generation</li>
+        <li><div class="entity-bullet"></div><code>agentTools.js</code> — Tool permission service for agents</li>
+      </ul>
+    </div>
+
+    <!-- Services -->
+    <div class="entity-card service">
+      <div class="entity-card-header">
+        <div class="entity-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div>
+          <h3>Services & Protocol</h3>
+          <div class="entity-path">server/services/ & protocol/</div>
+        </div>
+      </div>
+      <ul class="entity-list">
+        <li><div class="entity-bullet"></div><code>notificationService.js</code> — In-memory notification delivery</li>
+        <li><div class="entity-bullet"></div><code>AgentMessage.js</code> — Inter-agent message schema</li>
+        <li><div class="entity-bullet"></div><code>AgentChannel.js</code> — Agent communication channel abstraction</li>
+        <li><div class="entity-bullet"></div><code>workflowRoutes.js</code> — LAN workspace & workflow queue</li>
+        <li><div class="entity-bullet"></div><code>qualityRoutes.js</code> — PII detection & redaction</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Agent Orchestration Flow -->
+  <div class="section-title">Agent Execution Flow</div>
+  <div class="flow-card">
+    <h2>Multi-Agent Orchestration Pipeline</h2>
+    <p class="subtitle">From user query → task decomposition → parallel/sequential agent execution → report</p>
+    
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-box">
+          <div class="flow-step-icon" style="background: var(--blue)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div class="flow-step-title">User Query</div>
+          <div class="flow-step-desc">Natural language request from React frontend</div>
+        </div>
+        <div class="flow-arrow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-step-box">
+          <div class="flow-step-icon" style="background: var(--amber)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </div>
+          <div class="flow-step-title">Task Decomposer</div>
+          <div class="flow-step-desc">Keyword heuristics split query into sub-tasks</div>
+        </div>
+        <div class="flow-arrow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-step-box">
+          <div class="flow-step-icon" style="background: var(--accent)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
+          </div>
+          <div class="flow-step-title">AgentRegistry</div>
+          <div class="flow-step-desc">Route sub-tasks to registered specialist agents</div>
+        </div>
+        <div class="flow-arrow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-step-box">
+          <div class="flow-step-icon" style="background: var(--violet)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+          </div>
+          <div class="flow-step-title">Execute Agents</div>
+          <div class="flow-step-desc">Parallel or sequential execution per orchestration mode</div>
+        </div>
+        <div class="flow-arrow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-step-box">
+          <div class="flow-step-icon" style="background: var(--rose)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+          </div>
+          <div class="flow-step-title">Reporting Agent</div>
+          <div class="flow-step-desc">Synthesize results into structured report</div>
+        </div>
+        <div class="flow-arrow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-step-box">
+          <div class="flow-step-icon" style="background: var(--blue)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          </div>
+          <div class="flow-step-title">Explainability</div>
+          <div class="flow-step-desc">Trace reasoning + audit log + PII redaction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -20,6 +20,48 @@ export class EmbeddingService {
     return process.env.EMBEDDING_MODEL || 'nomic-embed-text';
   }
 
+  static fallbackEmbedding(text = '') {
+    return {
+      embedding: this.generateEmbedding(text),
+      source: 'deterministic-local-hash',
+      usedFallback: true
+    };
+  }
+
+  static markEmbeddingUnavailable(text = '') {
+    this.embeddingBackendAvailable = false;
+    this.embeddingProbeUntil = Date.now() + 30_000;
+    return this.fallbackEmbedding(text);
+  }
+
+  /**
+   * Check the configured Ollama model before calling an embeddings endpoint.
+   * A normal Ollama completion model (for example qwen2.5-coder) is not an
+   * embedding model, and older Ollama builds return 404 for both embedding
+   * routes. The vector store already has a deterministic local fallback, so
+   * avoid repeatedly probing unsupported routes in that configuration.
+   */
+  static async hasConfiguredOllamaEmbeddingModel(host, signal) {
+    const response = await fetch(`${host}/api/tags`, { signal });
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    const modelName = this.embeddingModel.toLowerCase();
+    const installed = (data.models || []).find((model) => {
+      const name = String(model.name || model.model || '').toLowerCase();
+      return name === modelName || name === `${modelName}:latest`;
+    });
+
+    if (!installed) return false;
+
+    // Newer Ollama versions expose capabilities. If present, require the
+    // explicit embedding capability; older versions omit the field.
+    const capabilities = Array.isArray(installed.capabilities)
+      ? installed.capabilities.map((capability) => String(capability).toLowerCase())
+      : [];
+    return capabilities.length === 0 || capabilities.includes('embedding');
+  }
+
   static async generateEmbeddingAsync(text, { preferredSource = '' } = {}) {
     if (preferredSource === 'deterministic-local-hash' || this.configuredBackend === 'hash') {
       return { embedding: this.generateEmbedding(text), source: 'deterministic-local-hash', usedFallback: true };
@@ -30,41 +72,54 @@ export class EmbeddingService {
       if (this.embeddingBackendAvailable === false && Date.now() < this.embeddingProbeUntil) {
         return { embedding: this.generateEmbedding(text), source: 'deterministic-local-hash', usedFallback: true };
       }
-      const host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+      const host = (process.env.OLLAMA_HOST || 'http://127.0.0.1:11434').replace(/\/+$/, '');
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), Number(process.env.EMBEDDING_TIMEOUT_MS || 2500));
       try {
-        let response = await fetch(`${host}/api/embeddings`, {
+        const hasEmbeddingModel = await this.hasConfiguredOllamaEmbeddingModel(host, controller.signal);
+        if (!hasEmbeddingModel) {
+          return this.markEmbeddingUnavailable(text);
+        }
+
+        // /api/embed is the current Ollama route. Keep the legacy route as a
+        // compatibility fallback for older local daemons.
+        let response = await fetch(`${host}/api/embed`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: this.embeddingModel, prompt: String(text || '') }),
+          body: JSON.stringify({ model: this.embeddingModel, input: String(text || '') }),
           signal: controller.signal
         });
         if (!response.ok) {
-          response = await fetch(`${host}/api/embed`, {
+          response = await fetch(`${host}/api/embeddings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: this.embeddingModel, input: String(text || '') }),
+            body: JSON.stringify({ model: this.embeddingModel, prompt: String(text || '') }),
             signal: controller.signal
           });
         }
-        const data = await response.json();
-        const embedding = data.embedding || data.embeddings?.[0] || data.data?.[0]?.embedding;
-        if (Array.isArray(embedding) && embedding.length > 0) {
-          this.embeddingBackendAvailable = true;
-          this.embeddingProbeUntil = Date.now() + 60_000;
-          clearTimeout(timeout);
-          return { embedding, source: `ollama:${this.embeddingModel}`, usedFallback: false };
+        if (response.ok) {
+          const data = await response.json();
+          const embedding = data.embedding || data.embeddings?.[0] || data.data?.[0]?.embedding;
+          if (Array.isArray(embedding) && embedding.length > 0) {
+            this.embeddingBackendAvailable = true;
+            this.embeddingProbeUntil = Date.now() + 60_000;
+            return { embedding, source: `ollama:${this.embeddingModel}`, usedFallback: false };
+          }
         }
+
+        return this.markEmbeddingUnavailable(text);
       } catch {
         // Fall through to deterministic local embeddings in offline mode.
-        this.embeddingBackendAvailable = false;
-        this.embeddingProbeUntil = Date.now() + 30_000;
+        return this.markEmbeddingUnavailable(text);
       } finally {
         clearTimeout(timeout);
       }
     }
 
+    return this.fallbackEmbeddingForText(text);
+  }
+
+  static fallbackEmbeddingForText(text) {
     return {
       embedding: this.generateEmbedding(text),
       source: 'deterministic-local-hash',

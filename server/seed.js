@@ -7,6 +7,7 @@ import KnowledgeDoc from './models/KnowledgeDoc.js';
 import FineTuneJob from './models/FineTuneJob.js';
 import AuditLog from './models/AuditLog.js';
 import DataQualityReport from './models/DataQualityReport.js';
+import { loadDemoDocuments } from './services/knowledge/demoDocuments.js';
 
 export const seedInitialData = async () => {
   try {
@@ -169,64 +170,10 @@ export const seedInitialData = async () => {
       }
     ];
 
-    // Initial Knowledge Documents
-    const seedDocs = [
-      {
-        title: 'Q3 Enterprise Financial Risk Audit',
-        category: 'Financial Ledger',
-        department: 'Finance & Accounting',
-        fileType: 'PDF',
-        sensitivity: 'Confidential',
-        snippet: 'Summary of quarterly revenue variance, capital expenditure audit, and local tax compliance checks across regional divisions.',
-        tokenCount: 1840,
-        vectorIndexed: true,
-        uploadedBy: 'Elena Vance'
-      },
-      {
-        title: 'Corporate Intellectual Property & Patent Filings 2026',
-        category: 'Legal Portfolio',
-        department: 'Legal & Compliance',
-        fileType: 'PDF',
-        sensitivity: 'Top Secret',
-        snippet: 'Comprehensive index of patent claims, air-gap software licenses, and non-disclosure governance terms for enterprise AI deployment.',
-        tokenCount: 3200,
-        vectorIndexed: true,
-        uploadedBy: 'David Sterling'
-      },
-      {
-        title: 'Air-Gapped Sovereign AI System Architecture Specs',
-        category: 'Technical Schematic',
-        department: 'R&D / Engineering',
-        fileType: 'Markdown',
-        sensitivity: 'Confidential',
-        snippet: 'Technical specification for local LAN cluster orchestration, vLLM acceleration endpoints, and CUDA memory management.',
-        tokenCount: 2450,
-        vectorIndexed: true,
-        uploadedBy: 'Dr. Marcus Vance'
-      },
-      {
-        title: 'Enterprise Employee Compensation & Benefit Guidelines',
-        category: 'HR Policy',
-        department: 'Human Resources',
-        fileType: 'DOCX',
-        sensitivity: 'Restricted',
-        snippet: 'Annual salary bands, remote work allowances, healthcare benefit structures, and employee performance review criteria.',
-        tokenCount: 1600,
-        vectorIndexed: true,
-        uploadedBy: 'Sarah Connor'
-      },
-      {
-        title: 'Sovereign AI Security Governance Charter',
-        category: 'Enterprise Policy',
-        department: 'All',
-        fileType: 'PDF',
-        sensitivity: 'Internal',
-        snippet: 'Mandatory enterprise safety protocol prohibiting external cloud data transmission. Specifies zero-trust RBAC/ABAC rules.',
-        tokenCount: 2100,
-        vectorIndexed: true,
-        uploadedBy: 'System Admin'
-      }
-    ];
+    // Initial Knowledge Documents. The seven synthetic demo documents are
+    // loaded from server/data/demo-documents so the seed and vector index use
+    // the same reproducible source content.
+    const seedDocs = await loadDemoDocuments();
 
     // Initial Fine-Tune Jobs
     const seedJobs = [
@@ -373,6 +320,13 @@ export const seedInitialData = async () => {
           await Model.insertMany(missingModels);
           console.log(`[Seed] Restored ${missingModels.length} missing local model registry entries.`);
         }
+
+        const existingKnowledgeTitles = new Set((await KnowledgeDoc.find().select('title')).map(doc => doc.title));
+        const missingKnowledgeDocs = seedDocs.filter(doc => !existingKnowledgeTitles.has(doc.title));
+        if (missingKnowledgeDocs.length > 0) {
+          await KnowledgeDoc.insertMany(missingKnowledgeDocs);
+          console.log(`[Seed] Restored ${missingKnowledgeDocs.length} missing built-in knowledge document(s).`);
+        }
         const qualityReportCount = await DataQualityReport.countDocuments();
         if (qualityReportCount === 0) {
           await DataQualityReport.insertMany(seedQualityReports);
@@ -402,6 +356,12 @@ export const seedInitialData = async () => {
           .filter(department => !existingDepartmentCodes.has(department.code))
           .map((department, index) => ({ _id: `dept_seed_restored_${Date.now()}_${index}`, ...department }));
         if (missingDepartments.length > 0) state.memoryDb.departments.push(...missingDepartments);
+
+        const existingKnowledgeTitles = new Set(state.memoryDb.knowledgeDocs.map(doc => doc.title));
+        const missingKnowledgeDocs = seedDocs
+          .filter(doc => !existingKnowledgeTitles.has(doc.title))
+          .map((doc, index) => ({ _id: `doc_seed_restored_${Date.now()}_${index}`, createdAt: new Date(), ...doc }));
+        if (missingKnowledgeDocs.length > 0) state.memoryDb.knowledgeDocs.push(...missingKnowledgeDocs);
       }
     }
   } catch (err) {

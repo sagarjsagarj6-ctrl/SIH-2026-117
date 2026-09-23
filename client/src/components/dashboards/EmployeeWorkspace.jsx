@@ -67,7 +67,13 @@ export const EmployeeWorkspace = () => {
     setActiveAgent(agentKey);
     setQueryResult(null);
     if (agentKey === 'RAG') {
-      setPrompt(`Summarize key financial risk guidelines and compliance checks in our ${user.department} repository.`);
+      const ragPromptByDepartment = {
+        'Finance & Accounting': 'Summarize key financial risk guidelines and compliance checks in our Finance & Accounting repository.',
+        'Legal & Compliance': 'Summarize the key legal compliance controls and governance checks in our Legal & Compliance repository.',
+        'R&D / Engineering': 'Summarize the key engineering architecture, local AI infrastructure, and security compliance checks in our R&D / Engineering repository.',
+        'Executive & Strategy': 'Summarize the key strategic risk guidelines and governance decisions in our Executive & Strategy repository.'
+      };
+      setPrompt(ragPromptByDepartment[user.department] || `Summarize the key compliance and operational controls in our ${user.department} repository.`);
     } else if (agentKey === 'DATA_SCIENCE') {
       setPrompt(`Analyze quarterly operational metrics and detect anomalies in the ${user.department} dataset.`);
     } else if (agentKey === 'VISION') {

@@ -4,6 +4,7 @@ const categoryColors = {
   TRIGGER: 'var(--accent-green)',
   AGENT: 'var(--accent-cyan)',
   TOOL: 'var(--accent-purple)',
+  LOGIC: '#818cf8',
   OUTPUT: 'var(--accent-amber)',
   TRAIN: '#fb7185',
   INPUT: 'var(--accent-amber)'

@@ -1,45 +1,20 @@
 /**
- * Ensures controlled RAG fixture documents exist for anti-hardcode / relevance tests.
+ * Ensures the complete synthetic demo document bundle exists for RAG and
+ * repository demonstrations. The source content is kept in data/demo-documents.
  */
 import { state } from '../../config/db.js';
 import KnowledgeDoc from '../../models/KnowledgeDoc.js';
-const FIXTURES = [
-  {
-    title: 'Project Alpha Budget Charter',
-    category: 'Financial Ledger',
-    department: 'Executive & Strategy',
-    fileType: 'TXT',
-    sensitivity: 'Confidential',
-    snippet:
-      'Project Alpha budget is ₹50 lakh. Project Alpha is the sovereign platform modernization initiative for FY2026. Authorized owner: Executive & Strategy. Capex code: ALPHA-CAP-50L.',
-    tokenCount: 80,
-    vectorIndexed: true,
-    uploadedBy: 'Audit Fixture'
-  },
-  {
-    title: 'Project Beta Budget Charter',
-    category: 'Financial Ledger',
-    department: 'Executive & Strategy',
-    fileType: 'TXT',
-    sensitivity: 'Confidential',
-    snippet:
-      'Project Beta budget is ₹20 lakh. Project Beta covers field operations telemetry expansion. Authorized owner: Executive & Strategy. Capex code: BETA-CAP-20L.',
-    tokenCount: 70,
-    vectorIndexed: true,
-    uploadedBy: 'Audit Fixture'
-  }
-];
+import { loadDemoDocuments } from './demoDocuments.js';
 
 export async function ensureRAGFixtures() {
+  const fixtures = await loadDemoDocuments();
   let upserted = 0;
 
-  for (const fixture of FIXTURES) {
+  for (const fixture of fixtures) {
     if (state.isMongooseConnected) {
       const existing = await KnowledgeDoc.findOne({ title: fixture.title });
       if (existing) {
-        existing.snippet = fixture.snippet;
-        existing.department = fixture.department;
-        existing.vectorIndexed = true;
+        Object.assign(existing, fixture);
         await existing.save();
       } else {
         await KnowledgeDoc.create(fixture);
@@ -57,6 +32,6 @@ export async function ensureRAGFixtures() {
     }
   }
 
-  console.log(`[RAGFixtures] Ensured Project Alpha/Beta budget documents (new=${upserted}).`);
-  return { upserted, total: FIXTURES.length };
+  console.log(`[DemoDocuments] Ensured ${fixtures.length} synthetic demo documents (new=${upserted}).`);
+  return { upserted, total: fixtures.length };
 }

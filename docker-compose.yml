@@ -1,0 +1,109 @@
+services:
+  # =================================================================
+  # Database: Enterprise MongoDB 7.0 Daemon
+  # =================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: sovereign-mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: sovereign_ai_db
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - sovereign-network
+
+  # =================================================================
+  # Backend API Server: Express, Vector Indexer & Multi-Agent Engine
+  # =================================================================
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: sovereign-server
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-5001}:5001"
+    environment:
+      PORT: 5001
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/sovereign_ai_db
+      JWT_SECRET: ${JWT_SECRET:-sovereign_ai_enterprise_super_secret_jwt_key_2026}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost,http://localhost:80,http://localhost:3000,http://localhost:5173}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:1.5b}
+      ALLOW_DETERMINISTIC_FALLBACK: ${ALLOW_DETERMINISTIC_FALLBACK:-true}
+      VLLM_HOST: ${VLLM_HOST:-http://host.docker.internal:8000}
+      LLAMACPP_HOST: ${LLAMACPP_HOST:-http://host.docker.internal:8080}
+      ALLOW_LAN_ONLY: ${ALLOW_LAN_ONLY:-true}
+      AIRGAP_MODE: ${AIRGAP_MODE:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    extra_hosts:
+      # Allows containers to access Ollama/vLLM running natively on the host machine
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - server_data:/app/data
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:5001/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - sovereign-network
+
+  # =================================================================
+  # Frontend Client: Vite React Served via Nginx Reverse Proxy
+  # =================================================================
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: sovereign-client
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_PORT:-3000}:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - sovereign-network
+
+  # =================================================================
+  # Optional: Containerized Ollama Service (Run with --profile with-llm)
+  # =================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sovereign-ollama
+    profiles: ["with-llm"]
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - sovereign-network
+
+volumes:
+  mongo_data:
+    name: sovereign_mongo_data
+  server_data:
+    name: sovereign_server_data
+  ollama_data:
+    name: sovereign_ollama_data
+
+networks:
+  sovereign-network:
+    name: sovereign-ai-network
+    driver: bridge

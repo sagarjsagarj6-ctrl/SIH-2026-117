@@ -56,6 +56,7 @@ export const CreationPlayground = () => {
   const [workflows, setWorkflows] = useState([]);
   const [workflow, setWorkflow] = useState(blankWorkflow);
   const [selectedNodeId, setSelectedNodeId] = useState('knowledge-search');
+  const [selectedEdgeId, setSelectedEdgeId] = useState(null);
   const [connectionStart, setConnectionStart] = useState(null);
   const [run, setRun] = useState(null);
   const [logs, setLogs] = useState([]);
@@ -69,6 +70,7 @@ export const CreationPlayground = () => {
   const headers = { Authorization: `Bearer ${token}` };
   const selectedNode = workflow.nodes.find((node) => node.id === selectedNodeId) || null;
   const selectedDefinition = definitions.find((definition) => definition.type === selectedNode?.type) || null;
+  const selectedNodeRunData = run?.nodes?.find((n) => n.nodeId === selectedNodeId) || null;
 
   const loadWorkflows = async () => {
     const [nodeData, workflowData, imageModelData] = await Promise.all([
@@ -101,6 +103,7 @@ export const CreationPlayground = () => {
     const node = { id, type, position: { x, y }, data: { label: definition.name, config } };
     updateWorkflow({ nodes: [...workflow.nodes, node] });
     setSelectedNodeId(id);
+    setSelectedEdgeId(null);
   };
 
   const updateNode = (updatedNode) => updateWorkflow({ nodes: workflow.nodes.map((node) => node.id === updatedNode.id ? updatedNode : node) });
@@ -110,14 +113,48 @@ export const CreationPlayground = () => {
     if (selectedNodeId === id) setSelectedNodeId(null);
   };
 
-  const finishConnection = (targetId, targetHandle) => {
+  const deleteEdge = (edgeId) => {
+    updateWorkflow({ edges: workflow.edges.filter((edge) => edge.id !== edgeId) });
+    if (selectedEdgeId === edgeId) setSelectedEdgeId(null);
+  };
+
+  const handleSelectNode = (id) => {
+    setSelectedNodeId(id);
+    if (id) setSelectedEdgeId(null);
+  };
+
+  const handleSelectEdge = (id) => {
+    setSelectedEdgeId(id);
+    if (id) setSelectedNodeId(null);
+  };
+
+  const finishConnection = (targetId, targetHandle = 'input') => {
     if (!connectionStart || connectionStart.nodeId === targetId) {
       setConnectionStart(null);
       return;
     }
-    const duplicate = workflow.edges.some((edge) => edge.source === connectionStart.nodeId && edge.target === targetId);
+    const sourceId = connectionStart.nodeId;
+    const sourceHandle = connectionStart.handle || 'output';
+    const duplicate = workflow.edges.some(
+      (edge) =>
+        edge.source === sourceId &&
+        edge.target === targetId &&
+        edge.sourceHandle === sourceHandle &&
+        edge.targetHandle === targetHandle
+    );
     if (!duplicate) {
-      updateWorkflow({ edges: [...workflow.edges, { id: `edge-${Date.now()}`, source: connectionStart.nodeId, sourceHandle: connectionStart.handle, target: targetId, targetHandle }] });
+      updateWorkflow({
+        edges: [
+          ...workflow.edges,
+          {
+            id: `edge-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            source: sourceId,
+            sourceHandle,
+            target: targetId,
+            targetHandle
+          }
+        ]
+      });
     }
     setConnectionStart(null);
   };
@@ -277,10 +314,33 @@ export const CreationPlayground = () => {
             <input value={workflow.name} onChange={(event) => updateWorkflow({ name: event.target.value })} placeholder="Workflow name" style={{ flex: 1, padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', fontSize: '0.76rem' }} />
             <input value={workflow.description || ''} onChange={(event) => updateWorkflow({ description: event.target.value })} placeholder="Description" style={{ flex: 1.4, padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', fontSize: '0.76rem' }} />
           </div>
-          <Canvas nodes={workflow.nodes} edges={workflow.edges} definitions={definitions} selectedNodeId={selectedNodeId} connectionStart={connectionStart} onDropNode={addNode} onSelectNode={setSelectedNodeId} onMoveNode={moveNode} onDeleteNode={deleteNode} onStartConnection={(nodeId, handle) => setConnectionStart({ nodeId, handle })} onFinishConnection={finishConnection} />
+          <Canvas
+            nodes={workflow.nodes}
+            edges={workflow.edges}
+            definitions={definitions}
+            selectedNodeId={selectedNodeId}
+            selectedEdgeId={selectedEdgeId}
+            connectionStart={connectionStart}
+            run={run}
+            onDropNode={addNode}
+            onSelectNode={handleSelectNode}
+            onSelectEdge={handleSelectEdge}
+            onDeleteEdge={deleteEdge}
+            onMoveNode={moveNode}
+            onDeleteNode={deleteNode}
+            onStartConnection={(nodeId, handle) => setConnectionStart({ nodeId, handle })}
+            onFinishConnection={finishConnection}
+            onCancelConnection={() => setConnectionStart(null)}
+          />
           <ExecutionLog run={run} logs={logs} />
         </div>
-        <PropertiesPanel node={selectedNode} definition={selectedDefinition} onChange={updateNode} onDelete={deleteNode} />
+        <PropertiesPanel
+          node={selectedNode}
+          definition={selectedDefinition}
+          runData={selectedNodeRunData}
+          onChange={updateNode}
+          onDelete={deleteNode}
+        />
       </div>
 
       {error && <div className="glass-card" style={{ padding: '9px 12px', color: 'var(--accent-rose)', borderColor: 'rgba(244,63,94,0.35)', fontSize: '0.72rem' }}>{error}</div>}

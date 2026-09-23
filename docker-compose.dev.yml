@@ -1,0 +1,88 @@
+services:
+  # =================================================================
+  # Database: MongoDB 7.0 for Development
+  # =================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: sovereign-mongodb-dev
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: sovereign_ai_db
+    volumes:
+      - mongo_data_dev:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - sovereign-network-dev
+
+  # =================================================================
+  # Backend API Server: Express with Live Hot Reload (node --watch)
+  # =================================================================
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: sovereign-server-dev
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-5001}:5001"
+    environment:
+      PORT: 5001
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb:27017/sovereign_ai_db
+      JWT_SECRET: ${JWT_SECRET:-sovereign_ai_enterprise_super_secret_jwt_key_2026}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173,http://localhost:3000,http://localhost:80}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:1.5b}
+      ALLOW_DETERMINISTIC_FALLBACK: ${ALLOW_DETERMINISTIC_FALLBACK:-true}
+      VLLM_HOST: ${VLLM_HOST:-http://host.docker.internal:8000}
+      LLAMACPP_HOST: ${LLAMACPP_HOST:-http://host.docker.internal:8080}
+      ALLOW_LAN_ONLY: "false"
+      AIRGAP_MODE: "false"
+      LOG_LEVEL: debug
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - sovereign-network-dev
+
+  # =================================================================
+  # Frontend Client: Vite Dev Server with Live HMR
+  # =================================================================
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: sovereign-client-dev
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_DEV_PORT:-5173}:5173"
+    environment:
+      VITE_DEV_BACKEND_URL: http://server:5001
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    networks:
+      - sovereign-network-dev
+
+volumes:
+  mongo_data_dev:
+    name: sovereign_mongo_data_dev
+
+networks:
+  sovereign-network-dev:
+    name: sovereign-ai-network-dev
+    driver: bridge

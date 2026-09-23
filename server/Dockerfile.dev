@@ -1,0 +1,25 @@
+# Development Dockerfile for Sovereign AI Workbench Backend (Live Hot-Reload)
+FROM node:20-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=development \
+    PORT=5001
+
+# Install all dependencies (including devDependencies if needed)
+COPY package*.json ./
+RUN npm install
+
+# Copy application source code
+COPY . .
+
+# Ensure storage directories exist
+RUN mkdir -p data/vectordb data/demo-documents data/image-models data/training data/temp \
+    && chown -R node:node /app
+
+USER node
+
+EXPOSE 5001
+
+# Run with Node watch mode for automatic restart on code changes
+CMD ["npm", "run", "dev"]

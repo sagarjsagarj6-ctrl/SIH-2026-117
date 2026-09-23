@@ -241,7 +241,9 @@ router.delete('/demo-data', authenticateToken, requireRole('Admin'), async (req,
       'Corporate Intellectual Property & Patent Filings 2026',
       'Air-Gapped Sovereign AI System Architecture Specs',
       'Enterprise Employee Compensation & Benefit Guidelines',
-      'Sovereign AI Security Governance Charter'
+      'Sovereign AI Security Governance Charter',
+      'Project Alpha Budget Charter',
+      'Project Beta Budget Charter'
     ];
     const demoJobNames = ['Finance_Domain_QLoRA_v2', 'Legal_Contract_Analysis_LoRA'];
     const demoDepartments = [

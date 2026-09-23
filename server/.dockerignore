@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.*
+!.env.example
+data/temp/*
+data/test_tmp/*
+data/training/*
+data/image-models/*
+test/
+logs/
+.git
+.gitignore
+.vscode
+.idea
+*.log
+npm-debug.log*
+.DS_Store

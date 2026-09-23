@@ -1,0 +1,14 @@
+# Root .dockerignore
+.git
+.gitignore
+.vscode
+.idea
+*.log
+npm-debug.log*
+node_modules
+client/node_modules
+server/node_modules
+client/dist
+AUDIT_EVIDENCE
+.continue
+.DS_Store

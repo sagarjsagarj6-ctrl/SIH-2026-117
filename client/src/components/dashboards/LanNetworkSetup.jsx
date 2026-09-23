@@ -4,7 +4,6 @@ import {
   Check,
   Clipboard,
   Copy,
-  KeyRound,
   Network,
   PowerOff,
   RefreshCw,
@@ -267,47 +266,13 @@ export const LanNetworkSetup = () => {
 
   return (
     <div style={{ maxWidth: '1420px', margin: '0 auto', padding: '22px 14px 40px', color: 'var(--text-main)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(320px, 0.9fr)', alignItems: 'start', gap: '18px', marginBottom: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: 'clamp(1.55rem, 3vw, 2.0rem)', margin: '0 0 7px', fontWeight: 500 }}>Private LAN Setup</h1>
-        </div>
-        <div className="glass-panel" style={{ padding: '13px 14px', border: accessToken ? '1px solid rgba(57,255,20,0.42)' : undefined }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <KeyRound size={17} color={accessToken ? 'var(--accent-green)' : 'var(--accent-cyan)'} />
-            <div>
-              <h2 style={{ fontSize: '0.95rem', margin: 0 }}>Secure access token</h2>
-            </div>
+      <div style={{ marginBottom: '16px' }}>
+        <h1 style={{ fontSize: 'clamp(1.55rem, 3vw, 2.0rem)', margin: '0 0 7px', fontWeight: 500 }}>Private LAN Setup</h1>
+        {createdNetwork?.status === 'Stopped' && (
+          <div style={{ border: '1px solid rgba(244,63,94,0.3)', borderRadius: '8px', padding: '12px 10px', color: '#fb7185', fontSize: '0.68rem', lineHeight: 1.35 }}>
+            This LAN is stopped. All devices were disconnected and its previous access token was revoked.
           </div>
-          {accessToken ? (
-            <>
-              <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(57,255,20,0.28)', borderRadius: '8px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                <code className="mono" style={{ color: 'var(--accent-green)', fontSize: '0.9rem', letterSpacing: '0.06em', overflowWrap: 'anywhere' }}>{accessToken}</code>
-                <button className="btn-secondary" type="button" onClick={copyToken} title="Copy LAN access token" style={{ padding: '6px 8px', flexShrink: 0 }}>
-                  {copied ? <Check size={14} color="var(--accent-green)" /> : <Copy size={14} />}
-                </button>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px', marginTop: '8px' }}>
-                <div style={{ padding: '7px 8px', borderRadius: '7px', background: 'rgba(6,182,212,0.07)' }}><div style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>CONNECTED</div><strong style={{ fontSize: '0.78rem' }}>{createdNetwork.connectedDevices || createdNetwork.members?.length || 0} / {createdNetwork.deviceCapacity || createdNetwork.maxDevices}</strong></div>
-                <div style={{ padding: '7px 8px', borderRadius: '7px', background: 'rgba(245,158,11,0.07)' }}><div style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>INVITATIONS</div><strong style={{ fontSize: '0.78rem' }}>{createdNetwork.inviteCount || 0} delivered</strong></div>
-              </div>
-              <button className="btn-secondary" type="button" onClick={resendInvitations} disabled={resending} style={{ width: '100%', marginTop: '8px', padding: '6px 8px', fontSize: '0.68rem' }}>
-                <Send size={13} /> {resending ? 'Resending invitations...' : 'Resend to managers & employees'}
-              </button>
-              <button className="btn-secondary" type="button" onClick={resetNetwork} disabled={resetting} style={{ width: '100%', marginTop: '6px', padding: '6px 8px', fontSize: '0.68rem', color: 'var(--accent-rose)' }}>
-                <PowerOff size={13} /> {resetting ? 'Stopping LAN & disconnecting devices...' : 'Reset LAN & disconnect all devices'}
-              </button>
-            </>
-          ) : createdNetwork?.status === 'Stopped' ? (
-            <div style={{ border: '1px solid rgba(244,63,94,0.3)', borderRadius: '8px', padding: '12px 10px', color: '#fb7185', fontSize: '0.68rem', lineHeight: 1.35 }}>
-              This LAN is stopped. All devices were disconnected and its previous access token was revoked.
-            </div>
-          ) : (
-            <div style={{ border: '1px dashed var(--border-color)', borderRadius: '8px', padding: '12px 10px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: 1.35 }}>
-              <Clipboard size={18} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />
-              <div>Your one-time setup token will appear here after the LAN is created.</div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '20px' }}>

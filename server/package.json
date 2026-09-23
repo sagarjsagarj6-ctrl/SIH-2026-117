@@ -9,13 +9,15 @@
     "dev": "node --watch index.js",
     "seed": "node seed.js",
     "check:env": "node check-env.js",
-    "test": "node test/categoryA.test.js && node test/categoryB.test.js && node test/categoryC.test.js && node test/categoryD.test.js && node test/categoryE.test.js",
+    "test": "node test/demoDocuments.test.js && node test/categoryA.test.js && node test/categoryB.test.js && node test/categoryC.test.js && node test/categoryD.test.js && node test/categoryE.test.js",
+    "test:demo": "node test/demoDocuments.test.js",
     "test:a": "node test/categoryA.test.js",
     "test:b": "node test/categoryB.test.js",
     "test:c": "node test/categoryC.test.js",
     "test:d": "node test/categoryD.test.js",
     "test:e": "node test/categoryE.test.js",
-    "test:image-model": "node test/imageModel.test.js"
+    "test:image-model": "node test/imageModel.test.js",
+    "test:playground": "node test/playground.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -23,10 +25,11 @@
     "csv-parse": "^7.0.2",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "mammoth": "^1.12.2",
     "mongoose": "^8.9.5",
     "multer": "^2.3.0",
+    "nodemailer": "^10.0.10",
     "pdf-parse": "^2.4.5",
     "uuid": "^14.0.2",
     "xlsx": "^0.18.5"
